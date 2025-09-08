@@ -7,9 +7,9 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "ext-pdo": "*",
         "filament/filament": "^4.0",
         "laravel/framework": "^12.0",
-        "ext-pdo": "*",
         "laravel/tinker": "^2.10.1",
         "spatie/laravel-backup": "^9.3",
         "spatie/laravel-medialibrary": "^11.14",
@@ -40,7 +40,8 @@
     "scripts": {
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php artisan filament:upgrade"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
