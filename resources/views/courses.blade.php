@@ -10,7 +10,6 @@
 <body class="bg-gray-100 min-h-screen">
 
 <div class="container mx-auto py-8">
-    <h1 class="text-3xl font-bold mb-6">Список курсов</h1>
 
     @livewire('course-list')
 </div>
