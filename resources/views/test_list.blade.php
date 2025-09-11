@@ -1,5 +1,5 @@
 <div class="flex justify-between items-center mb-6">
-    <h2 class="text-2xl font-semibold">Доступные тесты тест</h2>
+    <h2 class="text-2xl font-semibold">Доступные тесты тест222</h2>
     <a href="/tests/create" class="btn btn-primary">Создать новый тест</a>
 </div>
 <div class="space-y-4">
