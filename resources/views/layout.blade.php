@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Система Тестирования</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @yield('head')
     <style>
         body { font-family: "Inter", sans-serif; }
         .card {
@@ -24,14 +26,13 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-<div class="container mx-auto px-4 py-8">
-    <header class="mb-8">
-        <a href="/"><h1 class="text-3xl font-bold text-center text-blue-700">Система Тестирования</h1></a>
-    </header>
-    <main>
-        {!! $content !!}
-    </main>
-</div>
+<body class="min-h-screen bg-gray-100">
+    <div class="p-4 sm:p-6 md:p-8">
+        @if(isset($content))
+            {!! $content !!}
+        @else
+            @yield('content')
+        @endif
+    </div>
 </body>
-</html>'
+</html>
