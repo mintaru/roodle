@@ -5,9 +5,9 @@
             <p class="text-gray-600 mt-2">{{ $test->description }}</p>
         </div>
         <div class="card">
-            <h3 class="text-xl font-bold mb-4">Вопросы в тесте ({{ $questions->count() }})</h3>
+            <h3 class="text-xl font-bold mb-4">Вопросы в тесте ({{ $test->questions->count() }})</h3>
             <div class="space-y-4">
-                @forelse($questions as $question)
+                @forelse($test->questions as $question)
                     <div class="border p-4 rounded-lg bg-gray-50">
                         <p class="font-semibold">{{ $loop->iteration }}. {{ $question->question_text }}</p>
                         <ul class="list-disc pl-5 mt-2">
