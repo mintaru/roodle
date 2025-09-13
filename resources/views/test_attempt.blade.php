@@ -13,7 +13,7 @@
         <form action="/tests/{{ $test->id }}/result" method="POST">
             @csrf
             <div class="space-y-8">
-                @foreach($questions as $question)
+                @foreach($test->questions as $question)
                     <div class="border-t pt-6">
                         <p class="font-semibold text-lg mb-4">{{ $loop->iteration }}. {{ $question->question_text }}</p>
                         <div class="space-y-3 pl-4">

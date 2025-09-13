@@ -1,9 +1,23 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\{Route, Schema, DB};
+use App\Http\Controllers\TestController; // Импортируем наш созданный контроллер
+use App\Models\Test; // Импортируем модель Test
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
+
+// Основные маршруты Laravel (аутентификация, профиль)
 Route::get('/', function () {
     return view('welcome');
 });
@@ -18,28 +32,28 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Пример маршрута для курсов (если он вам нужен)
 Route::get('/courses', function () {
     return view('courses');
 });
 
+// Маршрут для настройки базы данных
 Route::get('/setup', function () {
-    // Удаляем таблицы в правильном порядке (сначала зависимые таблицы)
-    Schema::dropIfExists('temporary_answers'); // Зависит от users, tests, questions и options
-    Schema::dropIfExists('answers'); // Если осталась от предыдущей версии
-    Schema::dropIfExists('options'); // Зависит от questions
-    Schema::dropIfExists('questions'); // Зависит от tests
-    Schema::dropIfExists('tests'); // Независимая таблица
+    // Удаление таблиц в правильном порядке (сначала зависимые)
+    Schema::dropIfExists('temporary_answers');
+    Schema::dropIfExists('options');
+    Schema::dropIfExists('questions');
+    Schema::dropIfExists('tests');
 
-    // Создаем таблицы в правильном порядке (сначала независимые)
-    Schema::create('tests', function (Blueprint $table) {
+    // Создание таблиц
+    Schema::create('tests', function (Illuminate\Database\Schema\Blueprint $table) {
         $table->id();
         $table->string('title');
         $table->text('description')->nullable();
         $table->timestamps();
     });
 
-    // Создаем таблицу для вопросов
-    Schema::create('questions', function (Blueprint $table) {
+    Schema::create('questions', function (Illuminate\Database\Schema\Blueprint $table) {
         $table->id();
         $table->foreignId('test_id')->constrained('tests')->onDelete('cascade');
         $table->text('question_text');
@@ -47,8 +61,7 @@ Route::get('/setup', function () {
         $table->timestamps();
     });
 
-    // Создаем таблицу для вариантов ответов
-    Schema::create('options', function (Blueprint $table) {
+    Schema::create('options', function (Illuminate\Database\Schema\Blueprint $table) {
         $table->id();
         $table->foreignId('question_id')->constrained('questions')->onDelete('cascade');
         $table->text('option_text');
@@ -56,8 +69,7 @@ Route::get('/setup', function () {
         $table->timestamps();
     });
 
-    // Создаем таблицу для временных ответов
-    Schema::create('temporary_answers', function (Blueprint $table) {
+    Schema::create('temporary_answers', function (Illuminate\Database\Schema\Blueprint $table) {
         $table->id();
         $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
         $table->foreignId('test_id')->constrained('tests')->onDelete('cascade');
@@ -69,174 +81,108 @@ Route::get('/setup', function () {
     return 'База данных успешно настроена! <a href="/">Перейти на главную</a>';
 });
 
-Route::get('/', function () {
-    if (!Schema::hasTable('tests')) {
-        return 'Пожалуйста, сначала настройте базу данных, перейдя по адресу <a href="/setup">/setup</a>';
-    }
-    $tests = DB::table('tests')->orderBy('created_at', 'desc')->get();
-    return view('layout')->with('content', view('test_list', ['tests' => $tests]));
-});
+// --- Маршруты для управления тестами (используя TestController) ---
 
-// Страница с формой для создания нового теста
-Route::get('/tests/create', function () {
-    return view('layout', [
-        'content' => view('test_create_form')
-    ]);
-});
+// Главная страница: отображает список всех тестов
+// Перенаправлен на метод index() в TestController
+Route::get('/', [TestController::class, 'index'])->name('tests.index');
 
-// Обработка формы создания теста
-Route::post('/tests', function () {
-    // FIX: Заменяем инъекцию (Request $request) на глобальный хелпер request(),
-    // чтобы избежать проблем с внедрением зависимостей.
-    request()->validate([
-        'title' => 'required|string|max:255',
-        'description' => 'nullable|string',
-    ]);
+// Страница создания нового теста
+// Перенаправлен на метод create() в TestController
+Route::get('/tests/create', [TestController::class, 'create'])->name('tests.create');
 
-    $id = DB::table('tests')->insertGetId([
-        'title' => request('title'),
-        'description' => request('description'),
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
+// Обработка формы создания теста (POST-запрос)
+// Перенаправлен на метод store() в TestController
+Route::post('/tests', [TestController::class, 'store'])->name('tests.store');
 
-    return redirect('/tests/' . $id);
-});
+// Страница просмотра одного теста (включая вопросы)
+// Eloquent автоматически найдет тест по ID благодаря Route Model Binding
+// Перенаправлен на метод show() в TestController
+Route::get('/tests/{test}', [TestController::class, 'show'])->name('tests.show');
 
-// Страница для просмотра теста и добавления в него вопросов
-Route::get('/tests/{testId}', function ($testId) {
-    $test = DB::table('tests')->find($testId);
-    if (!$test) {
-        abort(404);
-    }
+// Обработка добавления нового вопроса к тесту (POST-запрос)
+// Перенаправлен на метод storeQuestion() в TestController
+Route::post('/tests/{test}/questions', [TestController::class, 'storeQuestion'])->name('tests.store_question');
 
-    $questions = DB::table('questions')
-        ->where('test_id', $testId)
-        ->get()
-        ->map(function ($question) {
-            $question->options = DB::table('options')->where('question_id', $question->id)->get();
-            return $question;
-        });
 
-    return view('layout', [
-        'content' => view('test_show', ['test' => $test, 'questions' => $questions])
-    ]);
-});
+// --- Маршруты для прохождения теста (требуют доработки в TestController) ---
+// Эти маршруты показывают, как можно их вынести в контроллер для единообразия.
 
-// Обработка формы добавления вопроса к тесту
-Route::post('/tests/{testId}/questions', function ($testId) {
-    // FIX: Здесь также заменяем инъекцию на хелпер request().
-    request()->validate([
-        'question_text' => 'required|string',
-        'options' => 'required|array|min:2',
-        'options.*' => 'required|string',
-        'correct_option' => 'required|integer',
-    ]);
+// Страница для начала прохождения теста
+Route::get('/tests/{test}/attempt', function (Test $test) { // Используем Route Model Binding
+    // Eager loading для перемешивания вопросов и опций
+    $test->load(['questions' => function ($query) {
+        $query->with(['options' => function ($query) {
+            $query->inRandomOrder(); // Перемешиваем опции
+        }]);
+    }]);
 
-    $questionId = DB::table('questions')->insertGetId([
-        'test_id' => $testId,
-        'question_text' => request('question_text'),
-        'question_type' => 'single_choice', // Упрощенно, только один тип
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
-
-    foreach (request('options') as $key => $optionText) {
-        DB::table('options')->insert([
-            'question_id' => $questionId,
-            'option_text' => $optionText,
-            'is_correct' => ($key == request('correct_option')),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    }
-
-    return back()->with('success', 'Вопрос успешно добавлен!');
-});
-
-// Страница для прохождения теста
-Route::get('/tests/{testId}/attempt', function ($testId) {
-    $test = DB::table('tests')->find($testId);
-    if (!$test) {
-        abort(404);
-    }
-
-    $questions = DB::table('questions')
-        ->where('test_id', $testId)
-        ->get()
-        ->map(function ($question) {
-            $question->options = DB::table('options')
-                ->where('question_id', $question->id)
-                ->inRandomOrder()
-                ->get();
-            return $question;
-        });
-
-    // Загружаем сохраненные ответы пользователя
-    $savedAnswers = session("test_{$testId}_answers", []);
+    // Загружаем сохраненные ответы пользователя из сессии
+    $savedAnswers = session("test_{$test->id}_answers", []);
 
     return view('layout', [
         'content' => view('test_attempt', [
             'test' => $test,
-            'questions' => $questions,
             'savedAnswers' => $savedAnswers
         ])
     ]);
-});
+})->name('tests.attempt');
 
-// Сохранение временного ответа
-Route::post('/tests/{testId}/save-answer', function ($testId) {
+// Обработка сохранения временного ответа (AJAX)
+Route::post('/tests/{test}/save-answer', function (Test $test) { // Используем Route Model Binding
     $questionId = request('question_id');
     $optionId = request('option_id');
 
     // Сохраняем ответ в сессии
-    $answers = session("test_{$testId}_answers", []);
+    $answers = session("test_{$test->id}_answers", []);
     $answers[$questionId] = $optionId;
-    session(["test_{$testId}_answers" => $answers]);
+    session(["test_{$test->id}_answers" => $answers]);
 
     // Если пользователь авторизован, сохраняем также в БД
     if (auth()->check()) {
         $userId = auth()->id();
 
-        DB::table('temporary_answers')
-            ->where('user_id', $userId)
-            ->where('test_id', $testId)
+        // Удаляем предыдущий ответ на этот вопрос, если он существует
+        \App\Models\TemporaryAnswer::where('user_id', $userId)
+            ->where('test_id', $test->id)
             ->where('question_id', $questionId)
             ->delete();
 
-        DB::table('temporary_answers')->insert([
+        // Вставляем новый временный ответ
+        \App\Models\TemporaryAnswer::create([
             'user_id' => $userId,
-            'test_id' => $testId,
+            'test_id' => $test->id,
             'question_id' => $questionId,
             'option_id' => $optionId,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
     }
 
     return response()->json(['success' => true]);
-});
+})->name('tests.save_answer');
 
-// Обработка ответов и подсчет результатов
-Route::post('/tests/{testId}/result', function ($testId) {
-    $answers = request()->input('answers', []);
+// Обработка отправки ответов и подсчета результатов
+Route::post('/tests/{test}/result', function (Test $test) { // Используем Route Model Binding
+    $answers = request()->input('answers', []); // Ответы из формы
     $totalQuestions = count($answers);
     $correctAnswers = 0;
 
-    foreach ($answers as $questionId => $optionId) {
-        $isCorrect = DB::table('options')
-            ->where('id', $optionId)
-            ->where('question_id', $questionId)
-            ->where('is_correct', true)
-            ->exists();
+    // Загружаем правильные ответы для теста
+    $test->load(['questions.options' => function ($query) {
+        $query->where('is_correct', true); // Получаем только правильные опции
+    }]);
 
-        if ($isCorrect) {
-            $correctAnswers++;
+    foreach ($answers as $questionId => $optionId) {
+        $question = $test->questions->find($questionId); // Находим вопрос
+        if ($question) {
+            $correctOption = $question->options->first(); // Получаем правильный вариант (если он есть)
+            // Сравниваем ID выбранного ответа с ID правильного ответа
+            if ($correctOption && $correctOption->id == $optionId) {
+                $correctAnswers++;
+            }
         }
     }
 
     $score = $totalQuestions > 0 ? ($correctAnswers / $totalQuestions) * 100 : 0;
-    $test = DB::table('tests')->find($testId);
 
     return view('layout', [
         'content' => view('test_result', [
@@ -246,6 +192,8 @@ Route::post('/tests/{testId}/result', function ($testId) {
             'totalQuestions' => $totalQuestions,
         ])
     ]);
-})->middleware('auth');
+})->middleware('auth')->name('tests.result');
 
+
+// Подключение маршрутов аутентификации Laravel
 require __DIR__.'/auth.php';
