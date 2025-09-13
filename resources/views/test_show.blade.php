@@ -1,61 +1,75 @@
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $test->title }}</title>
+    <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+<header class="header">
+    <img src="{{ asset('images/Logo.png') }}" alt="Логотип" class="logo">
+    <button id="theme-toggle" class="theme-toggle-btn">🌙 Тёмная тема</button>
+</header>
+
+<div class="container-main">
     <div>
-        <div class="card mb-6">
-            <h2 class="text-2xl font-bold">{{ $test->title }}</h2>
-            <p class="text-gray-600 mt-2">{{ $test->description }}</p>
+        <div class="card-title">
+            <h2>{{ $test->title }}</h2>
+            <p>{{ $test->description }}</p>
         </div>
         <div class="card">
-            <h3 class="text-xl font-bold mb-4">Вопросы в тесте ({{ $questions->count() }})</h3>
-            <div class="space-y-4">
+            <h3>Вопросы в тесте ({{ $questions->count() }})</h3>
+            <div class="questions-list">
                 @forelse($questions as $question)
-                    <div class="border p-4 rounded-lg bg-gray-50">
-                        <p class="font-semibold">{{ $loop->iteration }}. {{ $question->question_text }}</p>
-                        <ul class="list-disc pl-5 mt-2">
+                    <div class="question-item">
+                        <p class="question-text">{{ $loop->iteration }}. {{ $question->question_text }}</p>
+                        <ul class="options-list">
                             @foreach($question->options as $option)
-                                <li class="{{ $option->is_correct ? 'font-bold text-green-600' : '' }}">
+                                <li class="{{ $option->is_correct ? 'correct-answer' : '' }}">
                                     {{ $option->option_text }}
                                     @if($option->is_correct)
-                                        (Верный ответ)
+                                        <span class="correct-label">(Верный ответ)</span>
                                     @endif
                                 </li>
                             @endforeach
                         </ul>
                     </div>
                 @empty
-                    <p>В этом тесте еще нет вопросов.</p>
+                    <p class="no-questions">В этом тесте еще нет вопросов.</p>
                 @endforelse
             </div>
         </div>
     </div>
     <div>
         <div class="card">
-            <h3 class="text-xl font-bold mb-4">Добавить новый вопрос</h3>
+            <h3>Добавить новый вопрос</h3>
             @if (session('success'))
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert">
+                <div class="success-message">
                     <p>{{ session('success') }}</p>
                 </div>
             @endif
             <form action="/tests/{{ $test->id }}/questions" method="POST" id="question-form">
                 @csrf
-                <div class="mb-4">
-                    <label for="question_text" class="block font-semibold mb-2">Текст вопроса</label>
-                    <textarea name="question_text" id="question_text" rows="3" class="w-full px-4 py-2 border rounded-lg" required></textarea>
+                <div class="form-group">
+                    <label for="question_text">Текст вопроса</label>
+                    <textarea name="question_text" id="question_text" rows="3" required></textarea>
                 </div>
-                <div class="mb-4">
-                    <label class="block font-semibold mb-2">Варианты ответов</label>
-                    <div id="options-container" class="space-y-2">
-                        <div class="flex items-center space-x-2">
-                            <input type="radio" name="correct_option" value="0" class="h-5 w-5" required>
-                            <input type="text" name="options[0]" class="w-full px-4 py-2 border rounded-lg" placeholder="Вариант 1" required>
+                <div class="form-group">
+                    <label>Варианты ответов</label>
+                    <div id="options-container" class="options-container">
+                        <div class="option-item">
+                            <input type="radio" name="correct_option" value="0" required>
+                            <input type="text" name="options[0]" placeholder="Вариант 1" required>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <input type="radio" name="correct_option" value="1" class="h-5 w-5">
-                            <input type="text" name="options[1]" class="w-full px-4 py-2 border rounded-lg" placeholder="Вариант 2" required>
+                        <div class="option-item">
+                            <input type="radio" name="correct_option" value="1">
+                            <input type="text" name="options[1]" placeholder="Вариант 2" required>
                         </div>
                     </div>
-                    <button type="button" id="add-option" class="mt-2 text-sm text-blue-600 hover:underline">+ Добавить вариант</button>
+                    <button type="button" id="add-option" class="add-option-btn">+ Добавить вариант</button>
                 </div>
-                <button type="submit" class="btn btn-primary w-full">Добавить вопрос</button>
+                <button type="submit" class="submit-btn">Добавить вопрос</button>
             </form>
         </div>
     </div>
@@ -66,11 +80,24 @@
         const container = document.getElementById("options-container");
         const index = container.children.length;
         const newOption = document.createElement("div");
-        newOption.className = "flex items-center space-x-2";
+        newOption.className = "option-item";
         newOption.innerHTML = `
-            <input type="radio" name="correct_option" value="${index}" class="h-5 w-5">
-            <input type="text" name="options[${index}]" class="w-full px-4 py-2 border rounded-lg" placeholder="Вариант ${index + 1}" required>
+            <input type="radio" name="correct_option" value="${index}">
+            <input type="text" name="options[${index}]" placeholder="Вариант ${index + 1}" required>
         `;
         container.appendChild(newOption);
     });
+
+    const toggleBtn = document.getElementById("theme-toggle");
+    toggleBtn.addEventListener("click", () => {
+        document.body.classList.toggle("dark-theme");
+        if (document.body.classList.contains("dark-theme")) {
+            toggleBtn.textContent = "☀️ Светлая тема";
+        } else {
+            toggleBtn.textContent = "🌙 Тёмная тема";
+        }
+    });
 </script>
+
+</body>
+</html>
