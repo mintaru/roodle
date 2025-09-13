@@ -8,7 +8,7 @@
 </head>
 <body>
 <header class="header">
-    <img src="{{ asset('images/Logo.png') }}" alt="Логотип" class="logo">
+    <img src="{{ asset('Images/Logo.png') }}" alt="Логотип" class="logo">
     <button id="theme-toggle" class="theme-toggle-btn">🌙 Тёмная тема</button>
 </header>
 
