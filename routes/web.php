@@ -5,6 +5,7 @@ use App\Http\Controllers\TestController; // Импортируем наш соз
 use App\Models\Test; // Импортируем модель Test
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
+use App\Http\Controllers\CourseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +37,10 @@ Route::middleware('auth')->group(function () {
 Route::get('/courses', function () {
     return view('courses');
 });
+
+
+Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
+
 
 // Маршрут для настройки базы данных
 Route::get('/setup', function () {
@@ -89,11 +94,11 @@ Route::get('/', [TestController::class, 'index'])->name('tests.index');
 
 // Страница создания нового теста
 // Перенаправлен на метод create() в TestController
-Route::get('/tests/create', [TestController::class, 'create'])->name('tests.create');
+Route::get('/courses/{course}/tests/create', [TestController::class, 'create'])->name('tests.create');
 
 // Обработка формы создания теста (POST-запрос)
 // Перенаправлен на метод store() в TestController
-Route::post('/tests', [TestController::class, 'store'])->name('tests.store');
+Route::post('/courses/{course}/tests', [TestController::class, 'store'])->name('tests.store');
 
 // Страница просмотра одного теста (включая вопросы)
 // Eloquent автоматически найдет тест по ID благодаря Route Model Binding

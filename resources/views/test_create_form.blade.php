@@ -1,7 +1,7 @@
 <div class="max-w-2xl mx-auto">
     <div class="card">
         <h2 class="text-2xl font-bold mb-6 text-center">Создание нового теста</h2>
-        <form action="/tests" method="POST">
+        <form action="{{ route('tests.store', $course) }}" method="POST">
             @csrf
             <div class="mb-4">
                 <label for="title" class="block text-gray-700 font-semibold mb-2">Название теста</label>

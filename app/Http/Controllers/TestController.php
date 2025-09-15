@@ -2,51 +2,43 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Test, Question, Option};
+use App\Models\{Test, Question, Option, Course};
 use Illuminate\Http\Request;
 
 class TestController extends Controller
 {
-    /**
-     * Отображает список всех тестов.
-     */
+    // Список тестов
     public function index()
     {
         $tests = Test::orderBy('created_at', 'desc')->get();
         return view('layout')->with('content', view('test_list', ['tests' => $tests]));
     }
 
-    /**
-     * Отображает форму для создания нового теста.
-     */
-    public function create()
+    // Форма создания нового теста для конкретного курса
+    public function create(Course $course)
     {
-        return view('layout', ['content' => view('test_create_form')]);
+        return view('layout', [
+            'content' => view('test_create_form', ['course' => $course])
+        ]);
     }
 
-    /**
-     * Сохраняет новый тест в базе данных.
-     */
-    public function store(Request $request)
+    // Сохраняем новый тест для курса
+    public function store(Request $request, Course $course)
     {
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
-        $test = Test::create($validatedData);
+        $test = $course->tests()->create($validatedData);
 
-        return redirect()->route('tests.show', $test->id);
+        return redirect()->route('tests.show', $test);
     }
 
-    /**
-     * Отображает один тест с вопросами.
-     */
+    // Отображение теста с вопросами
     public function show(Test $test)
     {
-        // Eager loading для загрузки вопросов и опций одним запросом
         $test->load('questions.options');
-
         return view('layout', [
             'content' => view('test_show', ['test' => $test])
         ]);
