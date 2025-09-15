@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\Course;
 
 use Illuminate\Http\Request;
 
@@ -33,9 +34,12 @@ class CourseController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Course $course)
     {
-        //
+        // Eager loading для тестов
+        $course->load('tests');
+
+        return view('courses.show', compact('course'));
     }
 
     /**
