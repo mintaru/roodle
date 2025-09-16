@@ -6,7 +6,8 @@ use App\Models\Test; // Импортируем модель Test
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\CourseController;
-
+use App\Models\Lecture;
+use App\Http\Controllers\LectureController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -199,6 +200,10 @@ Route::post('/tests/{test}/result', function (Test $test) { // Использу�
     ]);
 })->middleware('auth')->name('tests.result');
 
+Route::get('/courses/{course}/lectures/create', [LectureController::class, 'create'])->name('lectures.create');
+Route::post('/courses/{course}/lectures', [LectureController::class, 'store'])->name('lectures.store');
 
+// Новый маршрут для просмотра лекции через курс
+Route::get('/courses/{course}/lectures/{lecture}', [LectureController::class, 'show'])->name('lectures.show');
 // Подключение маршрутов аутентификации Laravel
 require __DIR__.'/auth.php';
