@@ -19,10 +19,7 @@ use App\Http\Controllers\LectureController;
 |
 */
 
-// Основные маршруты Laravel (аутентификация, профиль)
-Route::get('/', function () {
-    return view('welcome');
-});
+
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -39,7 +36,11 @@ Route::get('/courses', function () {
     return view('courses');
 });
 
+Route::get('/', function () {
+    return view('courses');
+});
 
+Route::get('/courses/create', [CourseController::class, 'create'])->name('courses.create');
 Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
 
 
@@ -91,7 +92,6 @@ Route::get('/setup', function () {
 
 // Главная страница: отображает список всех тестов
 // Перенаправлен на метод index() в TestController
-Route::get('/', [TestController::class, 'index'])->name('tests.index');
 
 // Страница создания нового теста
 // Перенаправлен на метод create() в TestController
@@ -203,7 +203,9 @@ Route::post('/tests/{test}/result', function (Test $test) { // Использу�
 Route::get('/courses/{course}/lectures/create', [LectureController::class, 'create'])->name('lectures.create');
 Route::post('/courses/{course}/lectures', [LectureController::class, 'store'])->name('lectures.store');
 
+
 // Новый маршрут для просмотра лекции через курс
 Route::get('/courses/{course}/lectures/{lecture}', [LectureController::class, 'show'])->name('lectures.show');
 // Подключение маршрутов аутентификации Laravel
+Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
 require __DIR__.'/auth.php';

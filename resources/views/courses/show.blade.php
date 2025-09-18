@@ -26,6 +26,7 @@
     @forelse($course->tests as $test)
         <li>
             <a href="{{ route('tests.show', $test) }}">{{ $test->title }}</a>
+            <a href="{{ route('tests.attempt', $test) }}">пройти тест</a>
         </li>
     @empty
         <li>Тестов пока нет</li>

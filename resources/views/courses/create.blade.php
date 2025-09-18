@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Создание курса</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-8">
+
+<div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-2xl font-bold mb-4">Создать курс</h1>
+
+    @if(session('success'))
+        <div class="p-3 bg-green-200 text-green-800 rounded mb-4">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="p-3 bg-red-200 text-red-800 rounded mb-4">
+            <ul class="list-disc pl-5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form action="{{ route('courses.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+        @csrf
+
+        <div>
+            <label class="block font-medium">Название курса *</label>
+            <input type="text" name="title" value="{{ old('title') }}"
+                   class="w-full border rounded p-2">
+        </div>
+
+        <div>
+            <label class="block font-medium">Описание *</label>
+            <textarea name="description" rows="4"
+                      class="w-full border rounded p-2">{{ old('description') }}</textarea>
+        </div>
+
+
+        <div>
+            <label class="block font-medium">Изображение</label>
+            <input type="file" name="image_path" class="w-full">
+        </div>
+
+        <button type="submit"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Сохранить
+        </button>
+    </form>
+</div>
+
+</body>
+</html>

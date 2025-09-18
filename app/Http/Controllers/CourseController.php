@@ -20,7 +20,7 @@ class CourseController extends Controller
      */
     public function create()
     {
-        //
+        return view('courses.create'); // вернем Blade форму
     }
 
     /**
@@ -28,7 +28,21 @@ class CourseController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'title'       => 'required|string|max:255',
+            'description' => 'required|string',
+            'instructor'  => 'nullable|string|max:255',
+            'image_path'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        // загрузка картинки если есть
+        if ($request->hasFile('image_path')) {
+            $validated['image_path'] = $request->file('image_path')->store('courses', 'public');
+        }
+
+        Course::create($validated);
+
+        return redirect()->route('courses.create')->with('success', 'Курс успешно создан!');
     }
 
     /**
