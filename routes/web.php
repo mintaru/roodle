@@ -208,4 +208,9 @@ Route::post('/courses/{course}/lectures', [LectureController::class, 'store'])->
 Route::get('/courses/{course}/lectures/{lecture}', [LectureController::class, 'show'])->name('lectures.show');
 // Подключение маршрутов аутентификации Laravel
 Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
+
+Route::get('/courses', [CourseController::class, 'index'])->name('courses.index'); // список
+Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->name('courses.edit'); // форма редактирования
+Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+
 require __DIR__.'/auth.php';
