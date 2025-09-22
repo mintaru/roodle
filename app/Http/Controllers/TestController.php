@@ -108,29 +108,24 @@ class TestController extends Controller
         return back()->with('success', 'Вопрос добавлен из банка!');
     }
 
-    public function result(Test $test)
+    public function result(Test $test, Request $request)
     {
-        $userId = auth()->id();
-
-        // Загружаем вопросы и варианты
-        $test->load(['questions.options', 'questions.temporaryAnswers' => function($query) use ($userId) {
-            $query->where('user_id', $userId);
-        }]);
-
-        $totalQuestions = $test->questions->count();
+        $answers = $request->input('answers', []); // ответы пользователя из формы
+        $totalQuestions = $test->questions()->count();
         $correctAnswers = 0;
 
+        // загружаем вопросы с вариантами
+        $test->load('questions.options');
+
         foreach ($test->questions as $question) {
-            // Получаем все ответы пользователя на этот вопрос
-            $userOptionIds = $question->temporaryAnswers
-                ->where('user_id', $userId)
-                ->pluck('option_id')
-                ->map(fn($id) => (int) $id) // приводим к integer
+            // ответы пользователя по этому вопросу
+            $userOptionIds = collect($answers[$question->id] ?? [])
+                ->map(fn($id) => (int) $id)
                 ->sort()
                 ->values()
                 ->toArray();
 
-            // Получаем все правильные варианты
+            // правильные варианты
             $correctOptionIds = $question->options
                 ->where('is_correct', true)
                 ->pluck('id')
@@ -139,20 +134,20 @@ class TestController extends Controller
                 ->values()
                 ->toArray();
 
-            // Для вопросов с одиночным выбором достаточно одного совпадения
             if ($question->question_type === 'single_choice') {
-                if (count($userOptionIds) === 1 && count($correctOptionIds) === 1 && $userOptionIds[0] === $correctOptionIds[0]) {
+                // пользователь выбрал ровно 1 вариант, и он совпадает с правильным
+                if (count($userOptionIds) === 1
+                    && count($correctOptionIds) === 1
+                    && $userOptionIds[0] === $correctOptionIds[0]) {
                     $correctAnswers++;
                 }
-            }
-            // Для вопросов с множественным выбором нужно точное совпадение всех вариантов
-            else if ($question->question_type === 'multiple_choice') {
+            } elseif ($question->question_type === 'multiple_choice') {
+                // точное совпадение множества выбранных и правильных вариантов
                 if ($userOptionIds === $correctOptionIds) {
                     $correctAnswers++;
                 }
             }
         }
-
 
         $score = $totalQuestions > 0 ? ($correctAnswers / $totalQuestions) * 100 : 0;
 
