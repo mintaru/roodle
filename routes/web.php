@@ -167,38 +167,9 @@ Route::post('/tests/{test}/save-answer', function (Test $test) { // Исполь
 })->name('tests.save_answer');
 
 // Обработка отправки ответов и подсчета результатов
-Route::post('/tests/{test}/result', function (Test $test) { // Используем Route Model Binding
-    $answers = request()->input('answers', []); // Ответы из формы
-    $totalQuestions = count($answers);
-    $correctAnswers = 0;
-
-    // Загружаем правильные ответы для теста
-    $test->load(['questions.options' => function ($query) {
-        $query->where('is_correct', true); // Получаем только правильные опции
-    }]);
-
-    foreach ($answers as $questionId => $optionId) {
-        $question = $test->questions->find($questionId); // Находим вопрос
-        if ($question) {
-            $correctOption = $question->options->first(); // Получаем правильный вариант (если он есть)
-            // Сравниваем ID выбранного ответа с ID правильного ответа
-            if ($correctOption && $correctOption->id == $optionId) {
-                $correctAnswers++;
-            }
-        }
-    }
-
-    $score = $totalQuestions > 0 ? ($correctAnswers / $totalQuestions) * 100 : 0;
-
-    return view('layout', [
-        'content' => view('test_result', [
-            'test' => $test,
-            'score' => round($score),
-            'correctAnswers' => $correctAnswers,
-            'totalQuestions' => $totalQuestions,
-        ])
-    ]);
-})->middleware('auth')->name('tests.result');
+Route::post('/tests/{test}/result', [TestController::class, 'result'])
+    ->middleware('auth')
+    ->name('tests.result');
 
 Route::get('/courses/{course}/lectures/create', [LectureController::class, 'create'])->name('lectures.create');
 Route::post('/courses/{course}/lectures', [LectureController::class, 'store'])->name('lectures.store');
