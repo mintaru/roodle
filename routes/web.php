@@ -45,48 +45,6 @@ Route::get('/courses/{course}', [CourseController::class, 'show'])->name('course
 
 
 // Маршрут для настройки базы данных
-Route::get('/setup', function () {
-    // Удаление таблиц в правильном порядке (сначала зависимые)
-    Schema::dropIfExists('temporary_answers');
-    Schema::dropIfExists('options');
-    Schema::dropIfExists('questions');
-    Schema::dropIfExists('tests');
-
-    // Создание таблиц
-    Schema::create('tests', function (Illuminate\Database\Schema\Blueprint $table) {
-        $table->id();
-        $table->string('title');
-        $table->text('description')->nullable();
-        $table->timestamps();
-    });
-
-    Schema::create('questions', function (Illuminate\Database\Schema\Blueprint $table) {
-        $table->id();
-        $table->foreignId('test_id')->constrained('tests')->onDelete('cascade');
-        $table->text('question_text');
-        $table->string('question_type')->default('single_choice');
-        $table->timestamps();
-    });
-
-    Schema::create('options', function (Illuminate\Database\Schema\Blueprint $table) {
-        $table->id();
-        $table->foreignId('question_id')->constrained('questions')->onDelete('cascade');
-        $table->text('option_text');
-        $table->boolean('is_correct')->default(false);
-        $table->timestamps();
-    });
-
-    Schema::create('temporary_answers', function (Illuminate\Database\Schema\Blueprint $table) {
-        $table->id();
-        $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-        $table->foreignId('test_id')->constrained('tests')->onDelete('cascade');
-        $table->foreignId('question_id')->constrained('questions')->onDelete('cascade');
-        $table->foreignId('option_id')->constrained('options')->onDelete('cascade');
-        $table->timestamps();
-    });
-
-    return 'База данных успешно настроена! <a href="/">Перейти на главную</a>';
-});
 
 // --- Маршруты для управления тестами (используя TestController) ---
 
@@ -135,70 +93,46 @@ Route::get('/tests/{test}/attempt', function (Test $test) { // Использу�
 })->name('tests.attempt');
 
 // Обработка сохранения временного ответа (AJAX)
-Route::post('/tests/{test}/save-answer', function (Test $test) { // Используем Route Model Binding
+Route::post('/tests/{test}/save-answer', function (Test $test) {
     $questionId = request('question_id');
-    $optionId = request('option_id');
+    $optionIds = request('option_id');
 
-    // Сохраняем ответ в сессии
+    // Убедимся, что $optionIds всегда массив
+    $optionIds = (array) $optionIds;
+
+    // Сохраняем в сессии
     $answers = session("test_{$test->id}_answers", []);
-    $answers[$questionId] = $optionId;
+    $answers[$questionId] = $optionIds;
     session(["test_{$test->id}_answers" => $answers]);
 
-    // Если пользователь авторизован, сохраняем также в БД
     if (auth()->check()) {
         $userId = auth()->id();
 
-        // Удаляем предыдущий ответ на этот вопрос, если он существует
+        // Удаляем предыдущие ответы на этот вопрос
         \App\Models\TemporaryAnswer::where('user_id', $userId)
             ->where('test_id', $test->id)
             ->where('question_id', $questionId)
             ->delete();
 
-        // Вставляем новый временный ответ
-        \App\Models\TemporaryAnswer::create([
-            'user_id' => $userId,
-            'test_id' => $test->id,
-            'question_id' => $questionId,
-            'option_id' => $optionId,
-        ]);
+        // Вставляем новый(е) ответ(ы)
+        foreach ($optionIds as $optionId) {
+            \App\Models\TemporaryAnswer::create([
+                'user_id' => $userId,
+                'test_id' => $test->id,
+                'question_id' => $questionId,
+                'option_id' => $optionId,
+            ]);
+        }
     }
 
     return response()->json(['success' => true]);
 })->name('tests.save_answer');
 
+
 // Обработка отправки ответов и подсчета результатов
-Route::post('/tests/{test}/result', function (Test $test) { // Используем Route Model Binding
-    $answers = request()->input('answers', []); // Ответы из формы
-    $totalQuestions = count($answers);
-    $correctAnswers = 0;
-
-    // Загружаем правильные ответы для теста
-    $test->load(['questions.options' => function ($query) {
-        $query->where('is_correct', true); // Получаем только правильные опции
-    }]);
-
-    foreach ($answers as $questionId => $optionId) {
-        $question = $test->questions->find($questionId); // Находим вопрос
-        if ($question) {
-            $correctOption = $question->options->first(); // Получаем правильный вариант (если он есть)
-            // Сравниваем ID выбранного ответа с ID правильного ответа
-            if ($correctOption && $correctOption->id == $optionId) {
-                $correctAnswers++;
-            }
-        }
-    }
-
-    $score = $totalQuestions > 0 ? ($correctAnswers / $totalQuestions) * 100 : 0;
-
-    return view('layout', [
-        'content' => view('test_result', [
-            'test' => $test,
-            'score' => round($score),
-            'correctAnswers' => $correctAnswers,
-            'totalQuestions' => $totalQuestions,
-        ])
-    ]);
-})->middleware('auth')->name('tests.result');
+Route::post('/tests/{test}/result', [TestController::class, 'result'])
+    ->middleware('auth')
+    ->name('tests.result');
 
 Route::get('/courses/{course}/lectures/create', [LectureController::class, 'create'])->name('lectures.create');
 Route::post('/courses/{course}/lectures', [LectureController::class, 'store'])->name('lectures.store');
@@ -212,5 +146,7 @@ Route::post('/courses', [CourseController::class, 'store'])->name('courses.store
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index'); // список
 Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->name('courses.edit'); // форма редактирования
 Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+
+Route::post('/tests/{test}/add-from-bank', [TestController::class, 'addFromBank'])->name('tests.add_from_bank');
 
 require __DIR__.'/auth.php';
