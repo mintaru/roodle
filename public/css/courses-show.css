@@ -1,0 +1,132 @@
+/* ====== Общие стили ====== */
+body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f0f4f8, #e9eef3);
+    margin: 0;
+    padding: 40px;
+    color: #2c3e50;
+}
+
+/* Контейнер */
+.container {
+    max-width: 1000px;
+    margin: auto;
+    background: #fff;
+    padding: 30px 40px;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Заголовки */
+h1 {
+    font-size: 2.4rem;
+    color: #1a202c;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+h2 {
+    margin-top: 40px;
+    font-size: 1.8rem;
+    color: #2b6cb0;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 8px;
+}
+
+/* ====== Кнопки ====== */
+a.btn {
+    display: inline-block;
+    padding: 12px 20px;
+    margin: 12px 8px 20px 0;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+a.btn-primary {
+    background: #3182ce;
+    color: #fff;
+}
+a.btn-primary:hover {
+    background: #2b6cb0;
+    transform: translateY(-2px);
+}
+
+a.btn-success {
+    background: #38a169;
+    color: #fff;
+}
+a.btn-success:hover {
+    background: #2f855a;
+    transform: translateY(-2px);
+}
+
+/* ====== Списки ====== */
+ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+}
+
+ul li {
+    background: #ffffff;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+ul li:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* ====== Ссылки внутри списка ====== */
+/* ====== Ссылки внутри списка ====== */
+ul li a {
+    display: inline-block;
+    color: #3182ce;
+    font-weight: 600;
+    text-decoration: none;   /* убираем подчёркивание */
+    margin-bottom: 6px;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+/* Эффект "подсветки" при наведении */
+ul li a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    width: 0;
+    height: 2px;
+    background: #3182ce;
+    transition: width 0.3s ease;
+    border-radius: 2px;
+}
+
+ul li a:hover {
+    color: #2b6cb0;
+}
+
+ul li a:hover::after {
+    width: 100%; /* плавная линия при наведении */
+}
+
+/* Кнопка "пройти тест" (делаем её чуть мягче) */
+ul li a:last-child {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #4a5568;
+}
+
+ul li a:last-child:hover {
+    color: #2d3748;
+}

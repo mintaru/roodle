@@ -22,9 +22,9 @@
             <h3 class="text-xl font-bold mb-4">Вопросы в тесте ({{ $test->questions->count() }})</h3>
             <div class="space-y-4">
                 @forelse($test->questions as $question)
-                    <div class="border p-4 rounded-lg bg-gray-50">
+                    <div class="question-item">
                         <p class="font-semibold">{{ $loop->iteration }}. {{ $question->question_text }}</p>
-                        <ul class="list-disc pl-5 mt-2">
+                        <ul class="options-list mt-2">
                             @foreach($question->options as $option)
                                 <li class="{{ $option->is_correct ? 'correct-answer' : '' }}">
                                     {{ $option->option_text }}
