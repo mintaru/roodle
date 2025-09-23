@@ -13,6 +13,7 @@
 </header>
 
 <div class="container-main">
+    <!-- Список вопросов теста -->
     <div>
         <div class="card-title">
             <h2>{{ $test->title }}</h2>
@@ -22,9 +23,9 @@
             <h3 class="text-xl font-bold mb-4">Вопросы в тесте ({{ $test->questions->count() }})</h3>
             <div class="space-y-4">
                 @forelse($test->questions as $question)
-                    <div class="border p-4 rounded-lg bg-gray-50">
+                    <div class="question-item">
                         <p class="font-semibold">{{ $loop->iteration }}. {{ $question->question_text }}</p>
-                        <ul class="list-disc pl-5 mt-2">
+                        <ul class="options-list mt-2">
                             @foreach($question->options as $option)
                                 <li class="{{ $option->is_correct ? 'correct-answer' : '' }}">
                                     {{ $option->option_text }}
@@ -41,20 +42,37 @@
             </div>
         </div>
     </div>
+
+    <!-- Форма добавления нового вопроса -->
     <div>
         <div class="card">
             <h3>Добавить новый вопрос</h3>
+
             @if (session('success'))
                 <div class="success-message">
                     <p>{{ session('success') }}</p>
                 </div>
             @endif
+
             <form action="/tests/{{ $test->id }}/questions" method="POST" id="question-form">
                 @csrf
+
+                <!-- Текст вопроса -->
                 <div class="form-group">
                     <label for="question_text">Текст вопроса</label>
                     <textarea name="question_text" id="question_text" rows="3" required></textarea>
                 </div>
+
+                <!-- Тип вопроса -->
+                <div class="form-group">
+                    <label>Тип вопроса</label>
+                    <select name="question_type" id="question_type" required>
+                        <option value="single_choice">Один правильный ответ (радиокнопки)</option>
+                        <option value="multiple_choice">Несколько правильных ответов (чекбоксы)</option>
+                    </select>
+                </div>
+
+                <!-- Варианты ответов -->
                 <div class="form-group">
                     <label>Варианты ответов</label>
                     <div id="options-container" class="options-container">
@@ -69,35 +87,78 @@
                     </div>
                     <button type="button" id="add-option" class="add-option-btn">+ Добавить вариант</button>
                 </div>
-                <button type="submit" class="submit-btn">Добавить вопрос</button>
+
+                <button type="submit" class="submit-btn">Создать вопрос</button>
+            </form>
+
+            <hr>
+
+            <!-- Добавление вопроса из банка -->
+            <h3>Добавить вопрос из банка</h3>
+            <form action="/tests/{{ $test->id }}/add-from-bank" method="POST">
+                @csrf
+                <div class="form-group">
+                    <label>Выбрать вопрос</label>
+                    <select name="question_id" required>
+                        @foreach($allQuestions as $question)
+                            <option value="{{ $question->id }}">{{ $question->question_text }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Добавить из банка</button>
             </form>
         </div>
     </div>
 </div>
 
 <script>
-    document.getElementById("add-option").addEventListener("click", function() {
-        const container = document.getElementById("options-container");
-        const index = container.children.length;
-        const newOption = document.createElement("div");
-        newOption.className = "option-item";
-        newOption.innerHTML = `
-            <input type="radio" name="correct_option" value="${index}">
-            <input type="text" name="options[${index}]" placeholder="Вариант ${index + 1}" required>
-        `;
-        container.appendChild(newOption);
-    });
-
+    // Переключение темы
     const toggleBtn = document.getElementById("theme-toggle");
     toggleBtn.addEventListener("click", () => {
         document.body.classList.toggle("dark-theme");
-        if (document.body.classList.contains("dark-theme")) {
-            toggleBtn.textContent = "☀️ Светлая тема";
-        } else {
-            toggleBtn.textContent = "🌙 Тёмная тема";
-        }
+        toggleBtn.textContent = document.body.classList.contains("dark-theme")
+            ? "☀️ Светлая тема"
+            : "🌙 Тёмная тема";
+    });
+
+    // Работа с вариантами
+    const questionTypeSelect = document.getElementById('question_type');
+    const optionsContainer = document.getElementById('options-container');
+    const addBtn = document.getElementById("add-option");
+
+    function updateOptionInputs() {
+        const type = questionTypeSelect.value;
+        Array.from(optionsContainer.children).forEach((optionDiv, index) => {
+            const input = optionDiv.querySelector('input[type="radio"], input[type="checkbox"]');
+            if (type === 'single_choice') {
+                input.type = 'radio';
+                input.name = 'correct_option';
+                input.required = true;
+            } else {
+                input.type = 'checkbox';
+                input.name = 'correct_options[]';
+                input.required = false;
+            }
+        });
+    }
+
+    questionTypeSelect.addEventListener('change', updateOptionInputs);
+    updateOptionInputs();
+
+    addBtn.addEventListener("click", function() {
+        const index = optionsContainer.children.length;
+        const type = questionTypeSelect.value;
+        const inputType = type === 'single_choice' ? 'radio' : 'checkbox';
+        const nameAttr = type === 'single_choice' ? 'correct_option' : 'correct_options[]';
+
+        const newOption = document.createElement("div");
+        newOption.className = "option-item";
+        newOption.innerHTML = `
+            <input type="${inputType}" name="${nameAttr}" value="${index}">
+            <input type="text" name="options[${index}]" placeholder="Вариант ${index + 1}" required>
+        `;
+        optionsContainer.appendChild(newOption);
     });
 </script>
-
 </body>
 </html>
