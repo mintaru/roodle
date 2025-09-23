@@ -1,0 +1,61 @@
+/* lecture-show.css */
+
+body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f7f9fc;
+    margin: 0;
+    padding: 0;
+    color: #2c3e50;
+}
+
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    text-align: center; /* центрируем текст */
+}
+
+h1 {
+    font-size: 30px;
+    margin-bottom: 20px;
+    color: #2c3e50;
+    font-weight: 700;
+}
+
+p {
+    margin: 12px 0;
+    font-size: 17px;
+}
+
+a {
+    color: #3498db;
+    font-weight: 600;
+    text-decoration: none; /* убрали подчёркивание */
+    padding: 10px 16px;
+    border: 1px solid #3498db;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+a:hover {
+    background: #3498db;
+    color: white;
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.lecture-content {
+    margin-top: 25px;
+    padding: 20px;
+    background: #f9fbfd;
+    border: 1px solid #e0e6ed;
+    border-radius: 12px;
+    line-height: 1.6;
+    font-size: 16px;
+    white-space: pre-line;
+    text-align: left; /* чтобы лекция читалась нормально */
+}
