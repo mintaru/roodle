@@ -10,6 +10,7 @@ class TestAttempt extends Model
         'user_id',
         'test_id',
         'score',
+        'attempt_number'
     ];
 
     public function test()

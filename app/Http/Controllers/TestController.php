@@ -70,12 +70,16 @@ class TestController extends Controller
     {
         $user = Auth::user();
 
-        $userAttempts = $test->attempts()->where('user_id', $user->id)->count();
+        // Количество попыток пользователя
+        $userAttemptsCount = $test->attempts()->where('user_id', $user->id)->count();
+        $userAttempts = $test->attempts()->where('user_id', $user->id)->get();
+
+        // Оставшиеся попытки
         $remaining = $test->max_attempts == 0
             ? '∞'
-            : max(0, $test->max_attempts - $userAttempts);
+            : max(0, $test->max_attempts - $userAttemptsCount);
 
-        return view('tests.view', compact('test', 'userAttempts', 'remaining'));
+        return view('tests.view', compact('test', 'userAttemptsCount', 'userAttempts', 'remaining'));
     }
 
     /**
@@ -186,11 +190,22 @@ class TestController extends Controller
 
         $score = $totalQuestions > 0 ? ($correctAnswers / $totalQuestions) * 100 : 0;
 
-        // 🔹 3. Создаём запись в таблице попыток
+        // Ищем максимальный attempt_number у пользователя для этого теста
+        $lastAttemptNumber = \App\Models\TestAttempt::where('test_id', $test->id)
+            ->where('user_id', $user->id)
+            ->max('attempt_number');
+        
+        // Если есть предыдущие попытки, увеличиваем на 1, иначе ставим 1
+        $newAttemptNumber = $lastAttemptNumber + 1;
+        
+        // Создаем новую попытку с вычисленным номером
         $test->attempts()->create([
             'user_id' => $user->id,
             'score' => round($score),
+            'attempt_number' => $newAttemptNumber,
         ]);
+        
+    
 
         // 🔹 4. Показываем результат
         return view('layout', [
