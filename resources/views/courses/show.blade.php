@@ -25,7 +25,18 @@
     <ul>
         @forelse($course->tests as $test)
             <li>
-                <a href="{{ route('tests.show', $test) }}">{{ $test->title }}</a><br>
+                <a href="{{ route('tests.view', $test) }}">{{ $test->title }}</a><br>
+                <a href="{{ route('tests.show', $test) }}">Редактировать тест</a><br>
+                <a>
+                    @php
+                        $userAttempts = $test->attempts()->where('user_id', auth()->id())->count();
+                        $remaining = $test->max_attempts == 0
+                            ? '∞'
+                            : max(0, $test->max_attempts - $userAttempts);
+                    @endphp
+                
+                    попытки:{{ $remaining }}
+                </a>
                 <a href="{{ route('tests.attempt', $test) }}">пройти тест</a>
             </li>
         @empty

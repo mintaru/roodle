@@ -5,6 +5,7 @@ use App\Http\Controllers\TestController; // Импортируем наш соз
 use App\Models\Test; // Импортируем модель Test
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\CourseController;
 use App\Models\Lecture;
 use App\Http\Controllers\LectureController;
@@ -59,6 +60,7 @@ Route::get('/courses/{course}/tests/create', [TestController::class, 'create'])-
 // Перенаправлен на метод store() в TestController
 Route::post('/courses/{course}/tests', [TestController::class, 'store'])->name('tests.store');
 
+Route::get('/tests/{test}/view', [TestController::class, 'view'])->name('tests.view');
 // Страница просмотра одного теста (включая вопросы)
 // Eloquent автоматически найдет тест по ID благодаря Route Model Binding
 // Перенаправлен на метод show() в TestController
@@ -74,11 +76,28 @@ Route::post('/tests/{test}/questions', [TestController::class, 'storeQuestion'])
 
 // Страница для начала прохождения теста
 Route::get('/tests/{test}/attempt', function (Test $test) { // Используем Route Model Binding
-    // Eager loading для перемешивания вопросов и опций
+    $user = Auth::user();
+
+    // Проверка количества попыток
+    if ($test->max_attempts > 0) {
+        $userAttempts = $test->attempts()->where('user_id', $user->id)->count();
+
+        if ($userAttempts >= $test->max_attempts) {
+            return redirect()->back()->with('error', 'Вы исчерпали все попытки для этого теста.');
+        }
+    }
+
+
+    // если рандом
+    // $test->load(['questions' => function ($query) {
+    //     $query->with(['options' => function ($query) {
+    //         $query->inRandomOrder(); // Перемешиваем опции
+    //     }]);
+    // }]); 
+
+    //по обычному
     $test->load(['questions' => function ($query) {
-        $query->with(['options' => function ($query) {
-            $query->inRandomOrder(); // Перемешиваем опции
-        }]);
+        $query->with('options');
     }]);
 
     // Загружаем сохраненные ответы пользователя из сессии
@@ -105,8 +124,8 @@ Route::post('/tests/{test}/save-answer', function (Test $test) {
     $answers[$questionId] = $optionIds;
     session(["test_{$test->id}_answers" => $answers]);
 
-    if (auth()->check()) {
-        $userId = auth()->id();
+    if (Auth::check()) {
+        $userId = Auth::id();
 
         // Удаляем предыдущие ответы на этот вопрос
         \App\Models\TemporaryAnswer::where('user_id', $userId)

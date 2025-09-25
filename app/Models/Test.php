@@ -17,6 +17,7 @@ class Test extends Model
     protected $fillable = [
         'title',
         'description',
+        'max_attempts', // Добавляем max_attempts в массив fillable
     ];
 
     /**
@@ -42,6 +43,11 @@ class Test extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function attempts()
+    {
+        return $this->hasMany(TestAttempt::class);
     }
 
 }
