@@ -1,3 +1,15 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание нового теста</title>
+    {{-- Меню: ПРАВИЛЬНОЕ МЕСТО (сразу после открытия <body>) --}}
+    @include('components.menu')
+    <!-- Подключение CSS -->
+    <link rel="stylesheet" href="{{ asset('css/test-create-form.css') }}">
+</head>
+<body>
 <div class="max-w-2xl mx-auto">
     <div class="card">
         <h2 class="text-2xl font-bold mb-6 text-center">Создание нового теста</h2>
@@ -44,3 +56,5 @@
         </form>
     </div>
 </div>
+</body>
+</html>

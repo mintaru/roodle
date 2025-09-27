@@ -1,34 +1,39 @@
-/* lecture-create.css */
-
+/* Общие стили */
 body {
     font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f7f9fc; /* оставили однотонный фон */
-    margin: 0;
+    background: #f7f9fc;
+    margin: -32px;
     padding: 0;
 }
 
-h1 {
-    text-align: center;
-    margin: 30px 0 20px;
-    color: #2c3e50;
-    font-size: 28px;
-    font-weight: 700;
+/* Центрирование контейнера */
+.max-w-2xl {
+    max-width: 720px;
+    margin: 40px auto;
+    padding: 0 15px;
 }
 
-form {
-    max-width: 520px;
-    margin: 20px auto 40px;
-    padding: 30px;
+/* Карточка формы */
+.card {
     background: #ffffff;
     border-radius: 16px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    transition: transform 0.3s ease;
+    padding: 30px 40px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-form:hover {
-    transform: translateY(-2px);
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
 }
 
+/* Заголовок */
+.card h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+/* Мета-стили для формы */
 form div {
     margin-bottom: 20px;
 }
@@ -39,14 +44,13 @@ label {
     font-weight: 600;
     font-size: 14px;
     color: #34495e;
-    letter-spacing: 0.3px;
 }
 
+/* Поля ввода */
 input[type="text"],
-input[type="file"],
-input[type="number"] {
+textarea {
     width: 100%;
-    padding: 12px;
+    padding: 12px 15px;
     border: 1px solid #dcdde1;
     border-radius: 10px;
     font-size: 15px;
@@ -56,16 +60,15 @@ input[type="number"] {
 }
 
 input[type="text"]:focus,
-input[type="file"]:focus,
-input[type="number"]:focus {
+textarea:focus {
     border-color: #3498db;
     box-shadow: 0 0 6px rgba(52, 152, 219, 0.25);
     background: #ffffff;
 }
 
-button[type="submit"] {
-    width: 100%;
-    padding: 14px;
+/* Кнопка */
+button.btn {
+    padding: 14px 25px;
     background: #3498db;
     border: none;
     border-radius: 10px;
@@ -74,29 +77,25 @@ button[type="submit"] {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    letter-spacing: 0.4px;
 }
 
-button[type="submit"]:hover {
+button.btn:hover {
     background: #2980b9;
     box-shadow: 0 6px 12px rgba(41, 128, 185, 0.25);
     transform: translateY(-2px);
 }
 
-button[type="submit"]:active {
+button.btn:active {
     transform: scale(0.98);
 }
 
-
+/* Плавные переходы для всех элементов */
 * {
     transition: background-color 0.2s ease, color 0.2s ease;
 }
-a {
-    text-decoration: none; /* убираем подчеркивание */
-    color: inherit; /* сохраняем цвет текста ссылки как у родителя */
-    transition: color 0.2s ease; /* плавное изменение цвета при hover */
-}
 
-a:hover {
-    color: #3498db; /* можно добавить эффект при наведении */
+/* Ссылки */
+a {
+    text-decoration: none;
+    color: inherit;
 }

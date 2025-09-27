@@ -3,21 +3,20 @@ body {
     font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #f0f4f8, #e9eef3);
     margin: 0;
-    padding: 40px;
+    padding: 0;
     color: #2c3e50;
 }
 
-/* Контейнер */
+
 .container {
     max-width: 1000px;
-    margin: auto;
+    margin: 50px auto;
     background: #fff;
     padding: 30px 40px;
     border-radius: 16px;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
-/* Заголовки */
 h1 {
     font-size: 2.4rem;
     color: #1a202c;
@@ -33,7 +32,7 @@ h2 {
     padding-bottom: 8px;
 }
 
-/* ====== Кнопки ====== */
+
 a.btn {
     display: inline-block;
     padding: 12px 20px;
@@ -64,7 +63,6 @@ a.btn-success:hover {
     transform: translateY(-2px);
 }
 
-/* ====== Списки ====== */
 ul {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -87,19 +85,16 @@ ul li:hover {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
-/* ====== Ссылки внутри списка ====== */
-/* ====== Ссылки внутри списка ====== */
 ul li a {
     display: inline-block;
     color: #3182ce;
     font-weight: 600;
-    text-decoration: none;   /* убираем подчёркивание */
+    text-decoration: none;
     margin-bottom: 6px;
     position: relative;
     transition: color 0.3s ease;
 }
 
-/* Эффект "подсветки" при наведении */
 ul li a::after {
     content: "";
     position: absolute;
@@ -117,10 +112,9 @@ ul li a:hover {
 }
 
 ul li a:hover::after {
-    width: 100%; /* плавная линия при наведении */
+    width: 100%;
 }
 
-/* Кнопка "пройти тест" (делаем её чуть мягче) */
 ul li a:last-child {
     font-size: 0.9rem;
     font-weight: 500;
@@ -129,4 +123,27 @@ ul li a:last-child {
 
 ul li a:last-child:hover {
     color: #2d3748;
+}
+.nav-bar {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    padding: 10px;
+    background: white;
+}
+
+nav {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: #3498db;
 }

@@ -1,3 +1,4 @@
+@include('components.menu')
     <h1>{{ $lecture->title }}</h1>
     <link rel="stylesheet" href="{{ asset('css/lecture-show.css') }}">
     <p>Курс: {{ $lecture->course->title }}</p>

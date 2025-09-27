@@ -1,4 +1,5 @@
-
+{{-- Меню --}}
+@include('components.menu')
     <h1>Добавить лекцию к курсу: {{ $course->title }}</h1>
     <link rel="stylesheet" href="{{ asset('css/lecture-create.css') }}">
     <form action="{{ route('lectures.store', $course) }}" method="POST" enctype="multipart/form-data">
