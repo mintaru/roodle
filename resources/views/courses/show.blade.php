@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $course->title }}</title>
     <link rel="stylesheet" href="{{ asset('css/courses-show.css') }}">
+    {{-- Если вам нужны другие CSS/JS, они должны быть здесь --}}
 </head>
 <body>
+{{-- Меню: ПРАВИЛЬНОЕ МЕСТО (сразу после открытия <body>) --}}
+@include('components.menu')
+
 <div class="container">
     <h1>{{ $course->title }}</h1>
     <p>{{ $course->description }}</p>

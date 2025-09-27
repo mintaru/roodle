@@ -2,7 +2,7 @@
 
 body {
     font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f7f9fc;
+    background:linear-gradient(135deg, #f0f4f8, #e9eef3);
     margin: 0;
     padding: 0;
     color: #2c3e50;
@@ -12,7 +12,7 @@ body {
     max-width: 800px;
     margin: 40px auto;
     padding: 30px;
-    background: #ffffff;
+    background: #fff;
     border-radius: 16px;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
     text-align: center; /* центрируем текст */
@@ -58,4 +58,18 @@ a:hover {
     font-size: 16px;
     white-space: pre-line;
     text-align: left; /* чтобы лекция читалась нормально */
+}
+.nav-bar {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    padding: 10px;
+    background: white;
+}
+
+nav {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 15px;
 }
