@@ -41,7 +41,8 @@
                 
                     попытки:{{ $remaining }}
                 </a>
-                <a href="{{ route('tests.attempt', $test) }}">пройти тест</a>
+                {{-- <a href="{{ route('tests.attempt', $test) }}">пройти тест</a> --}}
+                <a href="{{ route('tests.attempt.page', [$test->id, 1]) }}">пройти тест</a>
             </li>
         @empty
             <li>Тестов пока нет</li>

@@ -111,6 +111,40 @@ Route::get('/tests/{test}/attempt', function (Test $test) { // Использу�
     ]);
 })->name('tests.attempt');
 
+Route::get('/tests/{test}/attempt/{questionIndex?}', function (Test $test, $questionIndex = 1) {
+    $user = Auth::user();
+
+    // Проверка количества попыток
+    if ($test->max_attempts > 0) {
+        $userAttempts = $test->attempts()->where('user_id', $user->id)->count();
+        if ($userAttempts >= $test->max_attempts) {
+            return redirect()->back()->with('error', 'Вы исчерпали все попытки для этого теста.');
+        }
+    }
+
+    // Загружаем вопросы с опциями
+    $test->load(['questions.options']);
+    $questions = $test->questions;
+
+    // Проверка выхода за пределы
+    if ($questionIndex < 1) $questionIndex = 1;
+    if ($questionIndex > $questions->count()) $questionIndex = $questions->count();
+
+    $question = $questions[$questionIndex - 1]; // текущий вопрос
+    $savedAnswers = session("test_{$test->id}_answers", []);
+
+    return view('layout', [
+        'content' => view('test_attempt_page', [
+            'test' => $test,
+            'question' => $question,
+            'questionIndex' => $questionIndex,
+            'totalQuestions' => $questions->count(),
+            'savedAnswers' => $savedAnswers,
+        ])
+    ]);
+})->name('tests.attempt.page');
+
+
 // Обработка сохранения временного ответа (AJAX)
 Route::post('/tests/{test}/save-answer', function (Test $test) {
     $questionId = request('question_id');

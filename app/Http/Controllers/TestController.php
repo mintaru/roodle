@@ -140,39 +140,51 @@ class TestController extends Controller
     public function result(Test $test, Request $request)
     {
         $user = Auth::user();
-
-        // 🔹 1. Проверяем количество попыток
+    
+        // Проверка количества попыток
         if ($test->max_attempts > 0) {
             $userAttempts = $test->attempts()->where('user_id', $user->id)->count();
-
             if ($userAttempts >= $test->max_attempts) {
                 return redirect()->route('tests.show', $test)
                     ->with('error', 'Вы исчерпали все попытки для этого теста.');
             }
         }
-
-        // 🔹 2. Подсчёт результата
-        $answers = $request->input('answers', []);
+    
+        // Берём ответы из сессии (AJAX) и из POST (последняя страница)
+        $sessionKey = "test_{$test->id}_answers";
+        $sessionAnswers = session($sessionKey, []);
+        $postAnswers = $request->input('answers', []);
+    
+        // Объединяем: POST имеет приоритет — но нормализуем оба (всегда массивы)
+        $merged = $sessionAnswers;
+    
+        foreach ($postAnswers as $qId => $val) {
+            $merged[$qId] = is_array($val) ? $val : [$val];
+        }
+    
+        // Подсчёт
+        $test->load('questions.options');
         $totalQuestions = $test->questions()->count();
         $correctAnswers = 0;
-
-        $test->load('questions.options');
-
+    
         foreach ($test->questions as $question) {
-            $userOptionIds = collect($answers[$question->id] ?? [])
-                ->map(fn ($id) => (int) $id)
+            $raw = $merged[$question->id] ?? [];
+            // Нормализация: массив целых
+            $userOptionIds = collect($raw)
+                ->filter() // убираем null/пустые
+                ->map(fn($id) => (int)$id)
                 ->sort()
                 ->values()
                 ->toArray();
-
+    
             $correctOptionIds = $question->options
                 ->where('is_correct', true)
                 ->pluck('id')
-                ->map(fn ($id) => (int) $id)
+                ->map(fn($id) => (int)$id)
                 ->sort()
                 ->values()
                 ->toArray();
-
+    
             if ($question->question_type === 'single_choice') {
                 if (
                     count($userOptionIds) === 1 &&
@@ -187,27 +199,25 @@ class TestController extends Controller
                 }
             }
         }
-
+    
         $score = $totalQuestions > 0 ? ($correctAnswers / $totalQuestions) * 100 : 0;
-
-        // Ищем максимальный attempt_number у пользователя для этого теста
+    
+        // Создаём запись попытки
         $lastAttemptNumber = \App\Models\TestAttempt::where('test_id', $test->id)
             ->where('user_id', $user->id)
             ->max('attempt_number');
-        
-        // Если есть предыдущие попытки, увеличиваем на 1, иначе ставим 1
+    
         $newAttemptNumber = $lastAttemptNumber + 1;
-        
-        // Создаем новую попытку с вычисленным номером
+    
         $test->attempts()->create([
             'user_id' => $user->id,
             'score' => round($score),
             'attempt_number' => $newAttemptNumber,
         ]);
-        
     
-
-        // 🔹 4. Показываем результат
+        // ОЧИСТИТЬ сохранённые ответы из сессии (важно)
+        session()->forget($sessionKey);
+    
         return view('layout', [
             'content' => view('test_result', [
                 'test' => $test,
@@ -217,4 +227,5 @@ class TestController extends Controller
             ]),
         ]);
     }
+    
 }
