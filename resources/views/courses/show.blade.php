@@ -30,7 +30,9 @@
         @forelse($course->tests as $test)
             <li>
                 <a href="{{ route('tests.view', $test) }}">{{ $test->title }}</a><br>
+                @can('edit courses')
                 <a href="{{ route('tests.show', $test) }}">Редактировать тест</a><br>
+                @endcan
                 <a>
                     @php
                         $userAttempts = $test->attempts()->where('user_id', auth()->id())->count();

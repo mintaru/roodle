@@ -7,7 +7,7 @@
         <nav>
             <a href="/" style="margin-right:15px;">В начало</a>
             <a href="/profile">Личный кабинет</a>
-            <a href="/courses">Мои курсы</a>
+            <a href="/">Мои курсы</a>
         </nav>
     </div>
 </div>
