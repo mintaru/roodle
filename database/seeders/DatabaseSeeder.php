@@ -17,13 +17,13 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
 
-        $admin   = Role::create(['name' => 'admin']);
-        $teacher = Role::create(['name' => 'teacher']);
-        $student = Role::create(['name' => 'student']);
+        $admin   = Role::firstOrCreate(['name' => 'admin']);
+        $teacher = Role::firstOrCreate(['name' => 'teacher']);
+        $student = Role::firstOrCreate(['name' => 'student']);
     
         // Создаём права
-        Permission::create(['name' => 'edit courses']);
-        Permission::create(['name' => 'view courses']);
+        Permission::firstOrCreate(['name' => 'edit courses']);
+        Permission::firstOrCreate(['name' => 'view courses']);
     
         // Раздаём права ролям
         $admin->givePermissionTo(['edit courses', 'view courses']);
