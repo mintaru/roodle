@@ -142,7 +142,7 @@ Route::get('/tests/{test}/attempt/{questionIndex?}', function (Test $test, $ques
             'savedAnswers' => $savedAnswers,
         ])
     ]);
-})->name('tests.attempt.page');
+})->middleware('auth')->name('tests.attempt.page');
 
 
 // Обработка сохранения временного ответа (AJAX)
