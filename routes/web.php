@@ -41,7 +41,7 @@ Route::get('/', function () {
     return view('courses');
 });
 
-Route::get('/courses/create', [CourseController::class, 'create'])->name('courses.create');
+Route::get('/courses/create', [CourseController::class, 'create'])->middleware('auth')->name('courses.create');
 Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
 
 
@@ -54,17 +54,17 @@ Route::get('/courses/{course}', [CourseController::class, 'show'])->name('course
 
 // Страница создания нового теста
 // Перенаправлен на метод create() в TestController
-Route::get('/courses/{course}/tests/create', [TestController::class, 'create'])->name('tests.create');
+Route::get('/courses/{course}/tests/create', [TestController::class, 'create'])->middleware('auth')->name('tests.create');
 
 // Обработка формы создания теста (POST-запрос)
 // Перенаправлен на метод store() в TestController
 Route::post('/courses/{course}/tests', [TestController::class, 'store'])->name('tests.store');
 
-Route::get('/tests/{test}/view', [TestController::class, 'view'])->name('tests.view');
+Route::get('/tests/{test}/view', [TestController::class, 'view'])->middleware('auth')->name('tests.view');
 // Страница просмотра одного теста (включая вопросы)
 // Eloquent автоматически найдет тест по ID благодаря Route Model Binding
 // Перенаправлен на метод show() в TestController
-Route::get('/tests/{test}', [TestController::class, 'show'])->name('tests.show');
+Route::get('/tests/{test}', [TestController::class, 'show'])->middleware('auth')->name('tests.show');
 
 // Обработка добавления нового вопроса к тесту (POST-запрос)
 // Перенаправлен на метод storeQuestion() в TestController
@@ -187,17 +187,17 @@ Route::post('/tests/{test}/result', [TestController::class, 'result'])
     ->middleware('auth')
     ->name('tests.result');
 
-Route::get('/courses/{course}/lectures/create', [LectureController::class, 'create'])->name('lectures.create');
-Route::post('/courses/{course}/lectures', [LectureController::class, 'store'])->name('lectures.store');
+Route::get('/courses/{course}/lectures/create', [LectureController::class, 'create'])->middleware('auth')->name('lectures.create');
+Route::post('/courses/{course}/lectures', [LectureController::class, 'store'])->middleware('auth')->name('lectures.store');
 
 
 // Новый маршрут для просмотра лекции через курс
-Route::get('/courses/{course}/lectures/{lecture}', [LectureController::class, 'show'])->name('lectures.show');
+Route::get('/courses/{course}/lectures/{lecture}', [LectureController::class, 'show'])->middleware('auth')->name('lectures.show');
 // Подключение маршрутов аутентификации Laravel
 Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
 
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index'); // список
-Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->name('courses.edit'); // форма редактирования
+Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->middleware('auth')->name('courses.edit'); // форма редактирования
 Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
 
 Route::post('/tests/{test}/add-from-bank', [TestController::class, 'addFromBank'])->name('tests.add_from_bank');
