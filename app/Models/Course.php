@@ -19,4 +19,9 @@ class Course extends Model
         return $this->hasMany(Lecture::class);
     }
 
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class);
+    }
+
 }
