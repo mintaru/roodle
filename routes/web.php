@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\CourseController;
 use App\Models\Lecture;
 use App\Http\Controllers\LectureController;
+use App\Http\Controllers\Admin\GroupUserController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -201,5 +202,15 @@ Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->middlew
 Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
 
 Route::post('/tests/{test}/add-from-bank', [TestController::class, 'addFromBank'])->name('tests.add_from_bank');
+
+Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
+    Route::get('/admin/groups', [GroupUserController::class, 'index'])->name('groups.index');
+    Route::get('/admin/groups/create', [GroupUserController::class, 'create'])->name('groups.create');
+    Route::post('/admin/groups', [GroupUserController::class, 'store'])->name('groups.store');
+    Route::get('/admin/groups/{group}', [GroupUserController::class, 'show'])->name('groups.show');
+    Route::post('/admin/groups/{group}/assign', [GroupUserController::class, 'assign'])->name('groups.assign');
+    Route::delete('/admin/groups/{group}/remove/{user}', [GroupUserController::class, 'remove'])->name('groups.remove');
+});
+
 
 require __DIR__.'/auth.php';
