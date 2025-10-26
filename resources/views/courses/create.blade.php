@@ -41,11 +41,27 @@
                       class="w-full border rounded p-2">{{ old('description') }}</textarea>
         </div>
 
-
         <div>
             <label class="block font-medium">Изображение</label>
             <input type="file" name="image_path" class="w-full">
         </div>
+
+        @if(isset($groups) && $groups->count() > 0)
+            <div>
+                <label class="block font-medium mb-2">Доступен группам:</label>
+                <div class="grid grid-cols-2 gap-2">
+                    @foreach($groups as $group)
+                        <label class="flex items-center space-x-2 border rounded p-2 hover:bg-gray-50">
+                            <input type="checkbox" name="groups[]" value="{{ $group->id }}"
+                                   class="text-blue-600 focus:ring-blue-500">
+                            <span>{{ $group->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+        @else
+            <p class="text-gray-500">Пока нет созданных групп. <a href="{{ route('groups.create') }}" class="text-blue-600 underline">Создать группу</a></p>
+        @endif
 
         <button type="submit"
                 class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">

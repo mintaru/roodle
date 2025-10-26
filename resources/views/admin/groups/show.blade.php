@@ -5,7 +5,7 @@
     @csrf
     <select name="user_id">
         @foreach($students as $student)
-            <option value="{{ $student->id }}">{{ $student->name }} ({{ $student->email }})</option>
+            <option value="{{ $student->id }}">{{ $student->name }}</option>
         @endforeach
     </select>
     <button type="submit">Добавить</button>

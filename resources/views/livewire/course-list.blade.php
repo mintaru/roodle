@@ -2,6 +2,19 @@
     <h1 class="text-3xl font-bold text-center mb-10">Наши курсы</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        @if(auth()->check())
+    <div class="p-4 bg-gray-100 rounded mb-4">
+        <strong>Ваши группы:</strong>
+        @forelse(auth()->user()->groups as $group)
+            <span class="inline-block bg-blue-200 text-blue-800 px-2 py-1 rounded mr-2">
+                {{ $group->name }}
+            </span>
+        @empty
+            <span class="text-gray-500">Вы пока не в группе</span>
+        @endforelse
+    </div>
+@endif
+
         @forelse($courses as $course)
             <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition p-6 flex flex-col">
                 @if($course->image_path)
