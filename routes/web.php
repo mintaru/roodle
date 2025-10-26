@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\CourseController;
 use App\Models\Lecture;
 use App\Http\Controllers\LectureController;
+use App\Http\Controllers\Admin\GroupUserController;
+use App\Http\Controllers\Admin\UserManagementController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -39,7 +41,7 @@ Route::get('/courses', function () {
 
 Route::get('/', function () {
     return view('courses');
-});
+})->middleware('auth');
 
 Route::get('/courses/create', [CourseController::class, 'create'])->middleware('auth')->name('courses.create');
 Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
@@ -201,5 +203,23 @@ Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->middlew
 Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
 
 Route::post('/tests/{test}/add-from-bank', [TestController::class, 'addFromBank'])->name('tests.add_from_bank');
+
+Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
+    //для групп
+    Route::get('/admin/groups', [GroupUserController::class, 'index'])->name('groups.index');
+    Route::get('/admin/groups/create', [GroupUserController::class, 'create'])->name('groups.create');
+    Route::post('/admin/groups', [GroupUserController::class, 'store'])->name('groups.store');
+    Route::get('/admin/groups/{group}', [GroupUserController::class, 'show'])->name('groups.show');
+    Route::post('/admin/groups/{group}/assign', [GroupUserController::class, 'assign'])->name('groups.assign');
+    Route::delete('/admin/groups/{group}/remove/{user}', [GroupUserController::class, 'remove'])->name('groups.remove');
+    //для юзеров
+    Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');
+    Route::get('/admin/users/create', [UserManagementController::class, 'create'])->name('admin.users.create');
+    Route::post('/admin/users', [UserManagementController::class, 'store'])->name('admin.users.store');
+    Route::get('/admin/users/{user}/edit', [UserManagementController::class, 'edit'])->name('admin.users.edit');
+    Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
+    Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
+});
+
 
 require __DIR__.'/auth.php';

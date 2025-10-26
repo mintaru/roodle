@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Course extends Model
 {
-    protected $fillable = ['title', 'description', 'image_path'];
+    protected $fillable = ['title', 'description', 'image_path', 'user_id'];
     //
 
     public function tests()
@@ -21,7 +21,12 @@ class Course extends Model
 
     public function groups()
     {
-        return $this->belongsToMany(Group::class);
+        return $this->belongsToMany(Group::class, 'course_group', 'course_id', 'group_id');
+    }
+
+    public function author()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
 }
