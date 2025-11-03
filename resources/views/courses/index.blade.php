@@ -21,7 +21,6 @@
         <tr class="bg-gray-200">
             <th class="p-2 border">ID</th>
             <th class="p-2 border">Название</th>
-            <th class="p-2 border">Инструктор</th>
             <th class="p-2 border">Изображение</th>
             <th class="p-2 border">Действия</th>
         </tr>
@@ -31,7 +30,6 @@
             <tr>
                 <td class="p-2 border">{{ $course->id }}</td>
                 <td class="p-2 border">{{ $course->title }}</td>
-                <td class="p-2 border">{{ $course->instructor }}</td>
                 <td class="p-2 border">
                     @if($course->image_path)
                         <img src="{{ asset('storage/' . $course->image_path) }}" alt="" class="w-16 h-16 object-cover">
