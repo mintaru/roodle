@@ -220,6 +220,7 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
 });
+Route::get('/test-livewire', fn() => view('test-livewire'));
 
 
 require __DIR__.'/auth.php';

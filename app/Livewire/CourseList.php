@@ -8,30 +8,35 @@ use Illuminate\Support\Facades\Auth;
 
 class CourseList extends Component
 {
-    public $courses;
-
-    public function mount()
-    {
-        $user = Auth::user();
-    
-        if ($user->hasRole('admin')) {
-            $this->courses = Course::with('groups', 'author')->get();
-        } elseif ($user->hasRole('teacher')) {
-            $this->courses = Course::with('groups', 'author')
-                ->where('user_id', $user->id)
-                ->get();
-        } else {
-            $groupIds = $user->groups->pluck('id');
-            $this->courses = Course::with('groups', 'author')
-                ->whereHas('groups', function ($q) use ($groupIds) {
-                    $q->whereIn('groups.id', $groupIds);
-                })
-                ->get();
-        }
-    }
+    public $search = '';
 
     public function render()
     {
-        return view('livewire.course-list');
+        $user = Auth::user();
+
+        $courses = Course::with('groups', 'author');
+
+        if ($user->hasRole('admin')) {
+            // ничего не фильтруем
+        } elseif ($user->hasRole('teacher')) {
+            $courses->where('user_id', $user->id);
+        } else {
+            $groupIds = $user->groups->pluck('id');
+            $courses->whereHas('groups', function ($q) use ($groupIds) {
+                $q->whereIn('groups.id', $groupIds);
+            });
+        }
+
+        // Поиск по названию или описанию
+        if ($this->search) {
+            $courses->where(function($query) {
+                $query->where('title', 'like', '%' . $this->search . '%')
+                      ->orWhere('description', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        return view('livewire.course-list', [
+            'courses' => $courses->latest()->get(),
+        ]);
     }
 }

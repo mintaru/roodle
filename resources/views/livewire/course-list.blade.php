@@ -1,7 +1,17 @@
 <div class="py-10 px-6">
     <h1 class="text-3xl font-bold text-center mb-10">Наши курсы</h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div class="p-6">
+        <h1 class="text-xl font-bold mb-3">Поиск</h1>
+    
+        <input type="text" wire:model.live="search" placeholder="Введите текст..." class="border rounded p-2">
+    
+    </div>
+    
+
+    
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         @if(auth()->check())
     <div class="p-4 bg-gray-100 rounded mb-4">
         <strong>Ваши группы:</strong>
