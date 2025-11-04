@@ -11,6 +11,8 @@ use App\Models\Lecture;
 use App\Http\Controllers\LectureController;
 use App\Http\Controllers\Admin\GroupUserController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\AdminController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -198,7 +200,7 @@ Route::get('/courses/{course}/lectures/{lecture}', [LectureController::class, 's
 // Подключение маршрутов аутентификации Laravel
 Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
 
-Route::get('/courses', [CourseController::class, 'index'])->name('courses.index'); // список
+Route::get('/courses', [CourseController::class, 'index'])->name('admin.courses.index'); // список
 Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->middleware('auth')->name('courses.edit'); // форма редактирования
 Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
 
@@ -220,7 +222,9 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
 });
-Route::get('/test-livewire', fn() => view('test-livewire'));
 
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+});
 
 require __DIR__.'/auth.php';
