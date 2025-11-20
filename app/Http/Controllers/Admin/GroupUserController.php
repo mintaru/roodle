@@ -45,6 +45,18 @@ public function create()
     return view('admin.groups.create');
 }
 
+public function destroy(Group $group)
+{
+    $group->delete();
+
+    return redirect()->route('admin.groups.index')->with('success', 'Группа успешно удалена!');
+}
+
+public function edit(Group $group)
+{
+    return view('admin.groups.edit', compact('group'));
+}
+
 // Сохранение новой группы
 public function store(Request $request)
 {

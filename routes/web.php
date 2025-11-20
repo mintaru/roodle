@@ -36,10 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Пример маршрута для курсов (если он вам нужен)
-Route::get('/courses', function () {
-    return view('courses');
-});
+
 
 Route::get('/', function () {
     return view('courses');
@@ -200,7 +197,7 @@ Route::get('/courses/{course}/lectures/{lecture}', [LectureController::class, 's
 // Подключение маршрутов аутентификации Laravel
 Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
 
-Route::get('/courses', [CourseController::class, 'index'])->name('admin.courses.index'); // список
+
 Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->middleware('auth')->name('courses.edit'); // форма редактирования
 Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
 
@@ -208,12 +205,13 @@ Route::post('/tests/{test}/add-from-bank', [TestController::class, 'addFromBank'
 
 Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     //для групп
-    Route::get('/admin/groups', [GroupUserController::class, 'index'])->name('groups.index');
-    Route::get('/admin/groups/create', [GroupUserController::class, 'create'])->name('groups.create');
-    Route::post('/admin/groups', [GroupUserController::class, 'store'])->name('groups.store');
-    Route::get('/admin/groups/{group}', [GroupUserController::class, 'show'])->name('groups.show');
-    Route::post('/admin/groups/{group}/assign', [GroupUserController::class, 'assign'])->name('groups.assign');
-    Route::delete('/admin/groups/{group}/remove/{user}', [GroupUserController::class, 'remove'])->name('groups.remove');
+    Route::get('/admin/groups', [GroupUserController::class, 'index'])->name('admin.groups.index');
+    Route::get('/admin/groups/create', [GroupUserController::class, 'create'])->name('admin.groups.create');
+    Route::post('/admin/groups', [GroupUserController::class, 'store'])->name('admin.groups.store');
+    Route::get('/admin/groups/{group}', [GroupUserController::class, 'show'])->name('admin.groups.show');
+    Route::post('/admin/groups/{group}/assign', [GroupUserController::class, 'assign'])->name('admin.groups.assign');
+//добавить сюда группы там удаление и редактирование
+    Route::delete('/admin/groups/{group}/remove/{user}', [GroupUserController::class, 'remove'])->name('admin.groups.remove');
     //для юзеров
     Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');
     Route::get('/admin/users/create', [UserManagementController::class, 'create'])->name('admin.users.create');
@@ -221,6 +219,13 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::get('/admin/users/{user}/edit', [UserManagementController::class, 'edit'])->name('admin.users.edit');
     Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
+
+    //для курсов
+    Route::get('/courses', [CourseController::class, 'index'])->name('admin.courses.index');
+    Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name('admin.courses.destroy');
+
+
+
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {

@@ -37,6 +37,11 @@
                 </td>
                 <td class="p-2 border">
                     <a href="{{ route('courses.edit', $course) }}" class="text-blue-600 hover:underline">Редактировать</a>
+                    <form action="{{ route('admin.courses.destroy', $course) }}" method="POST" style="display:inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-red-600 hover:underline" onclick="return confirm('Вы уверены, что хотите удалить этот курс?')">Удалить</button>
+                    </form>
                 </td>
             </tr>
         @endforeach
