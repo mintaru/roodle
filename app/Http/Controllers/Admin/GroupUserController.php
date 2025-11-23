@@ -52,9 +52,17 @@ public function destroy(Group $group)
     return redirect()->route('admin.groups.index')->with('success', 'Группа успешно удалена!');
 }
 
-public function edit(Group $group)
+public function update(Request $request, Group $group)
 {
-    return view('admin.groups.edit', compact('group'));
+    $request->validate([
+        'name' => 'required|unique:groups,name,' . $group->id . '|max:255',
+    ]);
+
+    $group->update([
+        'name' => $request->name,
+    ]);
+
+    return back()->with('success', 'Название группы успешно обновлено.');
 }
 
 // Сохранение новой группы
@@ -69,7 +77,7 @@ public function store(Request $request)
         'name' => $request->name
     ]);
 
-    return redirect()->route('groups.index')->with('success', 'Группа успешно создана.');
+    return redirect()->route('admin.groups.index')->with('success', 'Группа успешно создана.');
 }
 
 }

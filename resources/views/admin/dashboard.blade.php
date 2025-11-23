@@ -8,7 +8,7 @@
            Список курсов
         </a>
 
-        <a href="{{ route('groups.index') }}" 
+        <a href="{{ route('admin.groups.index') }}" 
            style="padding:20px; background:#f39c12; color:white; text-decoration:none; border-radius:10px;">
            Список групп
         </a>

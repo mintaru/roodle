@@ -211,6 +211,11 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::get('/admin/groups/{group}', [GroupUserController::class, 'show'])->name('admin.groups.show');
     Route::post('/admin/groups/{group}/assign', [GroupUserController::class, 'assign'])->name('admin.groups.assign');
 //добавить сюда группы там удаление и редактирование
+    Route::delete('/groups/{group}', [GroupUserController::class, 'destroy'])->name('admin.groups.destroy');
+    Route::put('/admin/groups/{group}', [GroupUserController::class, 'update'])->name('admin.groups.update');
+
+
+
     Route::delete('/admin/groups/{group}/remove/{user}', [GroupUserController::class, 'remove'])->name('admin.groups.remove');
     //для юзеров
     Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');

@@ -10,7 +10,7 @@
     </div>
 @endif
 
-<form action="{{ route('groups.store') }}" method="POST">
+<form action="{{ route('admin.groups.store') }}" method="POST">
     @csrf
     <div>
         <label>Название группы:</label>
@@ -19,4 +19,4 @@
     <button type="submit">Создать группу</button>
 </form>
 
-<a href="{{ route('groups.index') }}">Назад к списку групп</a>
+<a href="{{ route('admin.groups.index') }}">Назад к списку групп</a>
