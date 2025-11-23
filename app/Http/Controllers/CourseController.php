@@ -111,14 +111,17 @@ class CourseController extends Controller
 
         $course->update($validated);
 
-        return redirect()->route('courses.index')->with('success', 'Курс обновлён!');
+        return redirect()->route('admin.courses.index')->with('success', 'Курс обновлён!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Course $course)
     {
-        //
+        $course->delete();
+    
+        return redirect()->route('admin.courses.index')->with('success', 'Курс успешно удалён!');
     }
+    
 }
