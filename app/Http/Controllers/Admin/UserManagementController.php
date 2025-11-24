@@ -11,11 +11,31 @@ use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('roles', 'groups')->get();
+        $query = User::with('roles', 'groups');
+        
+        // Search by column
+        $searchColumn = $request->input('search_column', 'name');
+        $searchValue = $request->input('search_value', '');
+        
+        if ($searchValue) {
+            if ($searchColumn === 'name') {
+                $query->where('name', 'like', '%' . $searchValue . '%');
+            } elseif ($searchColumn === 'username') {
+                $query->where('username', 'like', '%' . $searchValue . '%');
+            } elseif ($searchColumn === 'role') {
+                // Search by role
+                $query->whereHas('roles', function ($q) use ($searchValue) {
+                    $q->where('name', 'like', '%' . $searchValue . '%');
+                });
+            }
+        }
+        
+        $users = $query->get();
+        $roles = Role::all();
 
-        return view('admin.users.index', compact('users'));
+        return view('admin.users.index', compact('users', 'roles', 'searchColumn', 'searchValue'));
     }
 
     public function create()

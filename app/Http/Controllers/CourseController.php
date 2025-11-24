@@ -11,26 +11,43 @@ class CourseController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
+        
+        // Search parameters
+        $searchColumn = $request->input('search_column', 'title');
+        $searchValue = $request->input('search_value', '');
     
         if ($user->hasRole('admin')) {
-            $courses = Course::with('groups', 'author')->get();
+            $query = Course::with('groups', 'author');
         } elseif ($user->hasRole('teacher')) {
-            $courses = Course::with('groups', 'author')
-                ->where('user_id', $user->id)
-                ->get();
+            $query = Course::with('groups', 'author')
+                ->where('user_id', $user->id);
         } else {
             $groupIds = $user->groups->pluck('id');
-            $courses = Course::with('groups', 'author')
+            $query = Course::with('groups', 'author')
                 ->whereHas('groups', function ($q) use ($groupIds) {
                     $q->whereIn('groups.id', $groupIds);
-                })
-                ->get();
+                });
         }
+        
+        // Apply search filter
+        if ($searchValue) {
+            if ($searchColumn === 'title') {
+                $query->where('title', 'like', '%' . $searchValue . '%');
+            } elseif ($searchColumn === 'id') {
+                $query->where('id', 'like', '%' . $searchValue . '%');
+            } elseif ($searchColumn === 'author') {
+                $query->whereHas('author', function ($q) use ($searchValue) {
+                    $q->where('name', 'like', '%' . $searchValue . '%');
+                });
+            }
+        }
+        
+        $courses = $query->get();
     
-        return view('courses.index', compact('courses'));
+        return view('courses.index', compact('courses', 'searchColumn', 'searchValue'));
     }
     
     
