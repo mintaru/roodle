@@ -210,24 +210,21 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::post('/admin/groups', [GroupUserController::class, 'store'])->name('admin.groups.store');
     Route::get('/admin/groups/{group}', [GroupUserController::class, 'show'])->name('admin.groups.show');
     Route::post('/admin/groups/{group}/assign', [GroupUserController::class, 'assign'])->name('admin.groups.assign');
-//добавить сюда группы там удаление и редактирование
-    Route::delete('/groups/{group}', [GroupUserController::class, 'destroy'])->name('admin.groups.destroy');
+    Route::delete('/admin/groups/{group}', [GroupUserController::class, 'destroy'])->name('admin.groups.destroy');
     Route::put('/admin/groups/{group}', [GroupUserController::class, 'update'])->name('admin.groups.update');
-
-
-
     Route::delete('/admin/groups/{group}/remove/{user}', [GroupUserController::class, 'remove'])->name('admin.groups.remove');
+
     //для юзеров
     Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');
     Route::get('/admin/users/create', [UserManagementController::class, 'create'])->name('admin.users.create');
     Route::post('/admin/users', [UserManagementController::class, 'store'])->name('admin.users.store');
     Route::get('/admin/users/{user}/edit', [UserManagementController::class, 'edit'])->name('admin.users.edit');
     Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
-    Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
+    Route::delete('/admin/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
 
     //для курсов
-    Route::get('/courses', [CourseController::class, 'index'])->name('admin.courses.index');
-    Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name('admin.courses.destroy');
+    Route::get('/admin/courses', [CourseController::class, 'index'])->name('admin.courses.index');
+    Route::delete('/admin/courses/{course}', [CourseController::class, 'destroy'])->name('admin.courses.destroy');
 
 
 
