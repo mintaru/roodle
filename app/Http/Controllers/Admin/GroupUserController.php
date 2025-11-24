@@ -9,10 +9,27 @@ use Illuminate\Http\Request;
 
 class GroupUserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $groups = Group::withCount('users')->get();
-        return view('admin.groups.index', compact('groups'));
+        $query = Group::withCount('users');
+        
+        // Search by column
+        $searchColumn = $request->input('search_column', 'name');
+        $searchValue = $request->input('search_value', '');
+        
+        if ($searchValue) {
+            if ($searchColumn === 'name') {
+                $query->where('name', 'like', '%' . $searchValue . '%');
+            } elseif ($searchColumn === 'id') {
+                $query->where('id', 'like', '%' . $searchValue . '%');
+            } elseif ($searchColumn === 'users_count') {
+                $query->having('users_count', '=', $searchValue);
+            }
+        }
+        
+        $groups = $query->get();
+        
+        return view('admin.groups.index', compact('groups', 'searchColumn', 'searchValue'));
     }
 
     public function show(Group $group)
