@@ -36,7 +36,7 @@ class User extends Authenticatable
 
     /**
      * Get the attributes that should be cast.
-     *
+     *check
      * @return array<string, string>
      */
     protected function casts(): array
