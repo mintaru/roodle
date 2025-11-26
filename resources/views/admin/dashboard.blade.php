@@ -27,6 +27,18 @@
            <p class="text-sm opacity-90">Управляйте всеми лекциями</p>
         </a>
 
+        <a href="{{ route('admin.tests.index') }}" 
+           class="p-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
+           <h2 class="text-lg font-bold mb-2">📝 Список тестов</h2>
+           <p class="text-sm opacity-90">Управляйте всеми тестами</p>
+        </a>
+
+        <a href="{{ route('admin.question-bank.index') }}" 
+           class="p-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
+           <h2 class="text-lg font-bold mb-2">❓ Банк вопросов</h2>
+           <p class="text-sm opacity-90">Управляйте всеми вопросами</p>
+        </a>
+
         <a href="{{ route('admin.groups.index') }}" 
            class="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
            <h2 class="text-lg font-bold mb-2">👥 Список групп</h2>

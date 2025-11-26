@@ -12,6 +12,8 @@ use App\Http\Controllers\LectureController;
 use App\Http\Controllers\Admin\GroupUserController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\QuestionBankController;
+use App\Http\Controllers\Admin\TestManagementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -238,6 +240,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/lectures/{lecture}/edit', [LectureController::class, 'edit'])->name('admin.lectures.edit');
     Route::put('/lectures/{lecture}', [LectureController::class, 'update'])->name('admin.lectures.update');
     Route::delete('/lectures/{lecture}', [LectureController::class, 'destroy'])->name('admin.lectures.destroy');
+    
+    // Маршруты для банка вопросов
+    Route::get('/question-bank', [QuestionBankController::class, 'index'])->name('admin.question-bank.index');
+    Route::get('/question-bank/{question}/edit', [QuestionBankController::class, 'edit'])->name('admin.question-bank.edit');
+    Route::put('/question-bank/{question}', [QuestionBankController::class, 'update'])->name('admin.question-bank.update');
+    Route::delete('/question-bank/{question}', [QuestionBankController::class, 'destroy'])->name('admin.question-bank.destroy');
+    
+    // Маршруты для управления тестами
+    Route::get('/tests', [TestManagementController::class, 'index'])->name('admin.tests.index');
+    Route::get('/tests/{test}/edit', [TestManagementController::class, 'edit'])->name('admin.tests.edit');
+    Route::put('/tests/{test}', [TestManagementController::class, 'update'])->name('admin.tests.update');
+    Route::delete('/tests/{test}', [TestManagementController::class, 'destroy'])->name('admin.tests.destroy');
 });
 
 require __DIR__.'/auth.php';
