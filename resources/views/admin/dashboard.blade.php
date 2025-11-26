@@ -1,21 +1,45 @@
-<div style="padding:20px;">
-    <h1>Админ-панель</h1>
-    <p>Добро пожаловать, {{ auth()->user()->name }}!</p>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Админ-панель</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-8">
 
-    <div style="display:flex; gap:20px; margin-top:30px;">
+<div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+    <a href="{{ route('home') }}">
+        вернуться
+    </a>
+    <h1 class="text-3xl font-bold mb-2 text-gray-800">Админ-панель</h1>
+    <p class="text-gray-600 mb-8">Добро пожаловать, <span class="font-semibold">{{ auth()->user()->name }}</span>!</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <a href="{{ route('admin.courses.index') }}" 
-           style="padding:20px; background:#0c8d8b; color:white; text-decoration:none; border-radius:10px;">
-           Список курсов
+        class="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
+           <h2 class="text-lg font-bold mb-2">📚 Список курсов</h2>
+           <p class="text-sm opacity-90">Управляйте всеми курсами платформы</p>
+        </a>
+
+        <a href="{{ route('admin.lectures.index') }}" 
+           class="p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
+           <h2 class="text-lg font-bold mb-2">📖 Список лекций</h2>
+           <p class="text-sm opacity-90">Управляйте всеми лекциями</p>
         </a>
 
         <a href="{{ route('admin.groups.index') }}" 
-           style="padding:20px; background:#f39c12; color:white; text-decoration:none; border-radius:10px;">
-           Список групп
+           class="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
+           <h2 class="text-lg font-bold mb-2">👥 Список групп</h2>
+           <p class="text-sm opacity-90">Управляйте группами обучающихся</p>
         </a>
 
         <a href="{{ route('admin.users.index') }}" 
-           style="padding:20px; background:#e74c3c; color:white; text-decoration:none; border-radius:10px;">
-           Список пользователей
+           class="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
+           <h2 class="text-lg font-bold mb-2">👤 Список пользователей</h2>
+           <p class="text-sm opacity-90">Управляйте всеми пользователями</p>
         </a>
     </div>
 </div>
+
+</body>
+</html>

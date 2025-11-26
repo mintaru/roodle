@@ -40,7 +40,7 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/', function () {
     return view('courses');
-})->middleware('auth');
+})->middleware('auth')->name("home");
 
 Route::get('/courses/create', [CourseController::class, 'create'])->middleware('auth')->name('courses.create');
 Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
@@ -232,6 +232,12 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    
+    // Маршруты для управления лекциями
+    Route::get('/lectures', [LectureController::class, 'index'])->name('admin.lectures.index');
+    Route::get('/lectures/{lecture}/edit', [LectureController::class, 'edit'])->name('admin.lectures.edit');
+    Route::put('/lectures/{lecture}', [LectureController::class, 'update'])->name('admin.lectures.update');
+    Route::delete('/lectures/{lecture}', [LectureController::class, 'destroy'])->name('admin.lectures.destroy');
 });
 
 require __DIR__.'/auth.php';
