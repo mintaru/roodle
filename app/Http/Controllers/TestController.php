@@ -227,4 +227,19 @@ class TestController extends Controller
             ]),
         ]);
     }
+
+    /**
+     * Удаляет вопрос из теста.
+     */
+    public function removeQuestion(Test $test, Question $question)
+    {
+        // Проверяем, что вопрос действительно в этом тесте
+        if ($test->questions()->where('question_id', $question->id)->exists()) {
+            // Отсоединяем вопрос от теста
+            $test->questions()->detach($question->id);
+            return back()->with('success', 'Вопрос успешно удален из теста!');
+        }
+
+        return back()->with('error', 'Вопрос не найден в этом тесте.');
+    }
 }

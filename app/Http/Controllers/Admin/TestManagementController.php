@@ -29,6 +29,10 @@ class TestManagementController extends Controller
                 $query->whereHas('course', function ($q) use ($searchValue) {
                     $q->where('title', 'like', '%' . $searchValue . '%');
                 });
+            } elseif ($searchColumn === 'description') {
+                $query->where('description', 'like', '%' . $searchValue . '%');
+            } elseif ($searchColumn === 'max_attempts') {
+                $query->where('max_attempts', 'like', '%' . $searchValue . '%');
             }
         }
 

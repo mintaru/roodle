@@ -73,8 +73,8 @@ Route::get('/tests/{test}', [TestController::class, 'show'])->middleware('auth')
 // Перенаправлен на метод storeQuestion() в TestController
 Route::post('/tests/{test}/questions', [TestController::class, 'storeQuestion'])->name('tests.store_question');
 
-
-// --- Маршруты для прохождения теста (требуют доработки в TestController) ---
+// Удаление вопроса из теста (DELETE-запрос)
+Route::delete('/tests/{test}/questions/{question}', [TestController::class, 'removeQuestion'])->name('tests.removeQuestion');
 // Эти маршруты показывают, как можно их вынести в контроллер для единообразия.
 
 // Страница для начала прохождения теста

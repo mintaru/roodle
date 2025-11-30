@@ -25,6 +25,7 @@
                     <option value="title" {{ $searchColumn === 'title' ? 'selected' : '' }}>Название</option>
                     <option value="id" {{ $searchColumn === 'id' ? 'selected' : '' }}>ID</option>
                     <option value="course" {{ $searchColumn === 'course' ? 'selected' : '' }}>Курс</option>
+                    <option value="content" {{ $searchColumn === 'content' ? 'selected' : '' }}>Содержание</option>
                 </select>
             </div>
             <div class="flex-1 min-w-xs">

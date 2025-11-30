@@ -35,6 +35,8 @@
                     <option value="title" {{ $searchColumn === 'title' ? 'selected' : '' }}>Название</option>
                     <option value="id" {{ $searchColumn === 'id' ? 'selected' : '' }}>ID</option>
                     <option value="course" {{ $searchColumn === 'course' ? 'selected' : '' }}>Курс</option>
+                    <option value="description" {{ $searchColumn === 'description' ? 'selected' : '' }}>Описание</option>
+                    <option value="max_attempts" {{ $searchColumn === 'max_attempts' ? 'selected' : '' }}>Макс. попыток</option>
                 </select>
             </div>
             <div class="flex-1 min-w-xs">

@@ -28,7 +28,7 @@
         </a>
 
         <a href="{{ route('admin.tests.index') }}" 
-           class="p-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
+           class="p-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
            <h2 class="text-lg font-bold mb-2">📝 Список тестов</h2>
            <p class="text-sm opacity-90">Управляйте всеми тестами</p>
         </a>

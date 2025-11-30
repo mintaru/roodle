@@ -18,16 +18,17 @@
 
     <!-- Search Form -->
     <div class="mb-6 p-4 bg-gray-50 rounded border">
-        <form method="GET" action="{{ route('admin.courses.index') }}" class="flex gap-3 items-end">
-            <div class="flex-1">
+        <form method="GET" action="{{ route('admin.courses.index') }}" class="flex gap-3 items-end flex-wrap">
+            <div class="flex-1 min-w-xs">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Искать по колонке:</label>
                 <select name="search_column" id="search_column" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="title" {{ $searchColumn === 'title' ? 'selected' : '' }}>Название</option>
                     <option value="id" {{ $searchColumn === 'id' ? 'selected' : '' }}>ID</option>
                     <option value="author" {{ $searchColumn === 'author' ? 'selected' : '' }}>Автор</option>
+                    <option value="description" {{ $searchColumn === 'description' ? 'selected' : '' }}>Описание</option>
                 </select>
             </div>
-            <div class="flex-1">
+            <div class="flex-1 min-w-xs">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Поисковый запрос:</label>
                 <input type="text" name="search_value" placeholder="Введите текст для поиска..." value="{{ $searchValue }}" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>

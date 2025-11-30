@@ -68,6 +68,7 @@
 
         <div class="flex gap-3 pt-4">
             <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Сохранить изменения</button>
+            <a href="{{ route('tests.show', $test) }}" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">✏️ Редактировать вопросы</a>
             <a href="{{ route('admin.tests.index') }}" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Отмена</a>
         </div>
     </form>
