@@ -42,6 +42,8 @@ class CourseController extends Controller
                 $query->whereHas('author', function ($q) use ($searchValue) {
                     $q->where('name', 'like', '%' . $searchValue . '%');
                 });
+            } elseif ($searchColumn === 'description') {
+                $query->where('description', 'like', '%' . $searchValue . '%');
             }
         }
         

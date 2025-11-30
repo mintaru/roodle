@@ -24,17 +24,26 @@
             <div class="space-y-4">
                 @forelse($test->questions as $question)
                     <div class="question-item">
-                        <p class="font-semibold">{{ $loop->iteration }}. {{ $question->question_text }}</p>
-                        <ul class="options-list mt-2">
-                            @foreach($question->options as $option)
-                                <li class="{{ $option->is_correct ? 'correct-answer' : '' }}">
-                                    {{ $option->option_text }}
-                                    @if($option->is_correct)
-                                        <span class="correct-label">(Верный ответ)</span>
-                                    @endif
-                                </li>
-                            @endforeach
-                        </ul>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="flex: 1;">
+                                <p class="font-semibold">{{ $loop->iteration }}. {{ $question->question_text }}</p>
+                                <ul class="options-list mt-2">
+                                    @foreach($question->options as $option)
+                                        <li class="{{ $option->is_correct ? 'correct-answer' : '' }}">
+                                            {{ $option->option_text }}
+                                            @if($option->is_correct)
+                                                <span class="correct-label">(Верный ответ)</span>
+                                            @endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            <form action="{{ route('tests.removeQuestion', ['test' => $test->id, 'question' => $question->id]) }}" method="POST" style="display: inline; margin-left: 10px;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="delete-btn" onclick="return confirm('Вы уверены, что хотите удалить этот вопрос из теста?')" style="background-color: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">🗑️ Удалить</button>
+                            </form>
+                        </div>
                     </div>
                 @empty
                     <p class="no-questions">В этом тесте еще нет вопросов.</p>

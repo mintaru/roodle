@@ -27,10 +27,12 @@ class LectureController extends Controller
                 $query->whereHas('course', function ($q) use ($searchValue) {
                     $q->where('title', 'like', '%' . $searchValue . '%');
                 });
+            } elseif ($searchColumn === 'content') {
+                $query->where('content', 'like', '%' . $searchValue . '%');
             }
         }
 
-        $lectures = $query->get();
+        $lectures = $query->paginate(15);
 
         return view('lectures.index', compact('lectures', 'searchColumn', 'searchValue'));
     }
