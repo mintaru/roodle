@@ -50,6 +50,12 @@
            <h2 class="text-lg font-bold mb-2">👤 Список пользователей</h2>
            <p class="text-sm opacity-90">Управляйте всеми пользователями</p>
         </a>
+
+        <a href="{{ route('admin.reports.index') }}" 
+           class="p-6 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
+           <h2 class="text-lg font-bold mb-2">📊 Отчёты</h2>
+           <p class="text-sm opacity-90">Просмотрите различные статистические отчёты</p>
+        </a>
     </div>
 </div>
 

@@ -12,8 +12,9 @@
     
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    
         @if(auth()->check())
-    <div class="p-4 bg-gray-100 rounded mb-4">
+    {{-- <div class="p-4 bg-gray-100 rounded mb-4">
         <strong>Ваши группы:</strong>
         @forelse(auth()->user()->groups as $group)
             <span class="inline-block bg-blue-200 text-blue-800 px-2 py-1 rounded mr-2">
@@ -22,7 +23,7 @@
         @empty
             <span class="text-gray-500">Вы пока не в группе</span>
         @endforelse
-    </div>
+    </div> --}}
 @endif
 
         @forelse($courses as $course)

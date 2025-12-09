@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\Admin\TestManagementController;
+use App\Http\Controllers\Admin\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -234,6 +235,14 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    
+    // Маршруты для отчётов
+    Route::get('/reports', function () {
+        return view('admin.reports.index');
+    })->name('admin.reports.index');
+    Route::get('/reports/user-activity', [ReportController::class, 'userActivity'])->name('admin.reports.user-activity');
+    Route::get('/reports/groups', [ReportController::class, 'groupsReport'])->name('admin.reports.groups');
+    Route::get('/reports/courses', [ReportController::class, 'coursesReport'])->name('admin.reports.courses');
     
     // Маршруты для управления лекциями
     Route::get('/lectures', [LectureController::class, 'index'])->name('admin.lectures.index');
