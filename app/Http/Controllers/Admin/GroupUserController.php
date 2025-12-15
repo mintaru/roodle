@@ -13,7 +13,7 @@ class GroupUserController extends Controller
     {
         $query = Group::withCount('users');
         
-        // Search by column
+        // Ищем по колонке
         $searchColumn = $request->input('search_column', 'name');
         $searchValue = $request->input('search_value', '');
         
