@@ -15,6 +15,7 @@
             {{ session('success') }}
         </div>
     @endif
+    <a href="{{ route('courses.create') }}" class="inline-block mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Создать новый курс</a>
 
     <!-- Search Form -->
     <div class="mb-6 p-4 bg-gray-50 rounded border">
