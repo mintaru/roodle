@@ -41,7 +41,7 @@ class LectureController extends Controller
     {
         return view('lectures.create', compact('course'));
     }
-
+//
     public function store(Request $request, Course $course)
     {
         $request->validate([
