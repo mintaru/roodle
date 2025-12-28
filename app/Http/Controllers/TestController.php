@@ -36,8 +36,9 @@ class TestController extends Controller
             'description' => 'nullable|string',
             'max_attempts' => 'nullable|integer|min:1', // если не отмечен "неограниченно"
             'unlimited_attempts' => 'nullable|boolean',
+            'time_limit' => 'nullable|integer|min:0'
         ]);
-
+        $validatedData['time_limit'] = $request->input('time_limit', 0);
         // Определяем max_attempts
         if ($request->has('unlimited_attempts')) {
             $validatedData['max_attempts'] = 0; // 0 = неограниченно
@@ -81,7 +82,10 @@ class TestController extends Controller
             ? '∞'
             : max(0, $test->max_attempts - $userAttemptsCount);
 
-        return view('tests.view', compact('test', 'userAttemptsCount', 'userAttempts', 'remaining'));
+        // Проверяем, есть ли активная попытка (сессия с ответами)
+        $hasActiveAttempt = session()->has("test_{$test->id}_answers");
+
+        return view('tests.view', compact('test', 'userAttemptsCount', 'userAttempts', 'remaining', 'hasActiveAttempt'));
     }
 
     /**
@@ -210,12 +214,17 @@ class TestController extends Controller
 
         $newAttemptNumber = $lastAttemptNumber + 1;
 
-        DB::transaction(function () use ($test, $user, $score, $newAttemptNumber) {
+        // Получаем время начала из сессии
+        $startedAt = session("test_{$test->id}_started_at", now());
+
+        DB::transaction(function () use ($test, $user, $score, $newAttemptNumber, $startedAt) {
 
             $test->attempts()->create([
                 'user_id' => $user->id,
                 'score' => round($score),
                 'attempt_number' => $newAttemptNumber,
+                'started_at' => $startedAt,
+                'ended_at' => now(),
             ]);
 
             TemporaryAnswer::forTest($test->id)
@@ -225,6 +234,7 @@ class TestController extends Controller
 
         // ⬇️ ВОТ ТУТ — уже ПОСЛЕ транзакции
         session()->forget("test_{$test->id}_answers");
+        session()->forget("test_{$test->id}_started_at");
 
         return view('layout', [
             'content' => view('test_result', [
@@ -250,5 +260,32 @@ class TestController extends Controller
         }
 
         return back()->with('error', 'Вопрос не найден в этом тесте.');
+    }
+
+    /**
+     * Синхронизирует таймер между устройствами.
+     * Возвращает оставшееся время в секундах.
+     */
+    public function timerSync(Test $test)
+    {
+        $user = Auth::user();
+
+        // Получаем время начала из сессии
+        $startedAt = session("test_{$test->id}_started_at");
+
+        if (!$startedAt) {
+            return response()->json(['time_left' => $test->time_limit * 60], 400);
+        }
+
+        // Рассчитываем оставшееся время на основе серверного времени
+        $now = now();
+        $elapsedSeconds = $now->diffInSeconds($startedAt);
+        $timeLimitSeconds = $test->time_limit * 60;
+        $timeLeft = max(0, $timeLimitSeconds - $elapsedSeconds);
+
+        return response()->json([
+            'time_left' => $timeLeft,
+            'server_time' => $now->timestamp,
+        ]);
     }
 }

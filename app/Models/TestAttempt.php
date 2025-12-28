@@ -10,7 +10,14 @@ class TestAttempt extends Model
         'user_id',
         'test_id',
         'score',
-        'attempt_number'
+        'attempt_number',
+        'started_at',
+        'ended_at'
+    ];
+
+    protected $casts = [
+        'started_at' => 'datetime',
+        'ended_at' => 'datetime',
     ];
 
     public function test()
