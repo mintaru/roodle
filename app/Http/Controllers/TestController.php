@@ -74,18 +74,29 @@ class TestController extends Controller
         $user = Auth::user();
 
         // Количество попыток пользователя
-        $userAttemptsCount = $test->attempts()->where('user_id', $user->id)->count();
-        $userAttempts = $test->attempts()->where('user_id', $user->id)->get();
+        $userAttemptsCount = $test->attempts()->where('user_id', $user->id)->whereNotNull('ended_at')->count();
+        $userAttempts = $test->attempts()->where('user_id', $user->id)->whereNotNull('ended_at')->get();
 
         // Оставшиеся попытки
         $remaining = $test->max_attempts == 0
             ? '∞'
             : max(0, $test->max_attempts - $userAttemptsCount);
 
-        // Проверяем, есть ли активная попытка (сессия с ответами)
-        $hasActiveAttempt = session()->has("test_{$test->id}_answers");
+        // Проверяем, есть ли активная попытка (где ended_at == null)
+        $hasActiveAttempt = $test->attempts()
+            ->where('user_id', $user->id)
+            ->whereNull('ended_at')
+            ->exists();
+        
+        $activeAttempt = null;
+        if ($hasActiveAttempt) {
+            $activeAttempt = $test->attempts()
+                ->where('user_id', $user->id)
+                ->whereNull('ended_at')
+                ->first();
+        }
 
-        return view('tests.view', compact('test', 'userAttemptsCount', 'userAttempts', 'remaining', 'hasActiveAttempt'));
+        return view('tests.view', compact('test', 'userAttemptsCount', 'userAttempts', 'remaining', 'hasActiveAttempt', 'activeAttempt'));
     }
 
     /**
@@ -147,23 +158,23 @@ class TestController extends Controller
     {
         $user = Auth::user();
 
-        // Проверка количества попыток
-        if ($test->max_attempts > 0) {
-            $userAttempts = $test->attempts()->where('user_id', $user->id)->count();
-            if ($userAttempts >= $test->max_attempts) {
-                return redirect()->route('tests.show', $test)
-                    ->with('error', 'Вы исчерпали все попытки для этого теста.');
-            }
+        // Получаем активную попытку из БД
+        $attempt = $test->attempts()
+            ->where('user_id', $user->id)
+            ->whereNull('ended_at')
+            ->first();
+
+        // Если активной попытки нет, перенаправляем
+        if (!$attempt) {
+            return redirect()->route('tests.view', $test)
+                ->with('error', 'Активная попытка не найдена.');
         }
 
-        // Берём ответы из сессии (AJAX) и из POST (последняя страница)
-        $sessionKey = "test_{$test->id}_answers";
-        $sessionAnswers = session($sessionKey, []);
+        // Берём ответы из POST и TemporaryAnswers
         $postAnswers = $request->input('answers', []);
 
-        // Объединяем: POST имеет приоритет — но нормализуем оба (всегда массивы)
-        $merged = $sessionAnswers;
-
+        // Нормализуем POST ответы
+        $merged = [];
         foreach ($postAnswers as $qId => $val) {
             $merged[$qId] = is_array($val) ? $val : [$val];
         }
@@ -208,33 +219,18 @@ class TestController extends Controller
 
         $score = $totalQuestions > 0 ? ($correctAnswers / $totalQuestions) * 100 : 0;
 
-        $lastAttemptNumber = \App\Models\TestAttempt::where('test_id', $test->id)
-            ->where('user_id', $user->id)
-            ->max('attempt_number');
-
-        $newAttemptNumber = $lastAttemptNumber + 1;
-
-        // Получаем время начала из сессии
-        $startedAt = session("test_{$test->id}_started_at", now());
-
-        DB::transaction(function () use ($test, $user, $score, $newAttemptNumber, $startedAt) {
-
-            $test->attempts()->create([
-                'user_id' => $user->id,
+        // Обновляем активную попытку
+        DB::transaction(function () use ($attempt, $score) {
+            $attempt->update([
                 'score' => round($score),
-                'attempt_number' => $newAttemptNumber,
-                'started_at' => $startedAt,
                 'ended_at' => now(),
             ]);
 
-            TemporaryAnswer::forTest($test->id)
-                ->forUser($user->id)
+            // Удаляем временные ответы
+            TemporaryAnswer::where('user_id', $attempt->user_id)
+                ->where('test_id', $attempt->test_id)
                 ->delete();
         });
-
-        // ⬇️ ВОТ ТУТ — уже ПОСЛЕ транзакции
-        session()->forget("test_{$test->id}_answers");
-        session()->forget("test_{$test->id}_started_at");
 
         return view('layout', [
             'content' => view('test_result', [

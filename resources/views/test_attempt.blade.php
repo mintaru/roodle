@@ -3,8 +3,7 @@
 @section('head')
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="server-time" content="{{ now()->timestamp * 1000 }}">
-    <meta name="test-start-time"
-        content="{{ session("test_{$test->id}_started_at")?->timestamp * 1000 ?? now()->timestamp * 1000 }}">
+    <meta name="test-start-time" content="{{ $attempt->started_at->timestamp * 1000 }}">
 @endsection
 
 @section('content')
