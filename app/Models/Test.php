@@ -17,7 +17,8 @@ class Test extends Model
     protected $fillable = [
         'title',
         'description',
-        'max_attempts', // Добавляем max_attempts в массив fillable
+        'max_attempts',
+        'time_limit'
     ];
 
     /**

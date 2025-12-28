@@ -91,6 +91,10 @@ Route::get('/tests/{test}/attempt', function (Test $test) { // Использу�
         }
     }
 
+    // Инициализируем время начала попытки
+    if (!session()->has("test_{$test->id}_started_at")) {
+        session(["test_{$test->id}_started_at" => now()]);
+    }
 
     // если рандом
     // $test->load(['questions' => function ($query) {
@@ -185,6 +189,10 @@ Route::post('/tests/{test}/save-answer', function (Test $test) {
     return response()->json(['success' => true]);
 })->name('tests.save_answer');
 
+// Синхронизация таймера между устройствами
+Route::get('/tests/{test}/timer-sync', [TestController::class, 'timerSync'])
+    ->middleware('auth')
+    ->name('tests.timer_sync');
 
 // Обработка отправки ответов и подсчета результатов
 Route::post('/tests/{test}/result', [TestController::class, 'result'])

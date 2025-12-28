@@ -61,6 +61,7 @@ class TestManagementController extends Controller
             'description' => 'nullable|string',
             'course_id' => 'required|exists:courses,id',
             'max_attempts' => 'nullable|integer|min:0',
+            'time_limit' => 'nullable|integer|min:0'
         ]);
 
         $test->update([
