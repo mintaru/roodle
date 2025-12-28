@@ -52,4 +52,14 @@ class TemporaryAnswer extends Model
     {
         return $this->belongsTo(Option::class);
     }
+
+    public function scopeForTest($q, int $testId)
+    {
+        return $q->where('test_id', $testId);
+    }
+
+    public function scopeForUser($q, int $userId)
+    {
+        return $q->where('user_id', $userId);
+    }
 }

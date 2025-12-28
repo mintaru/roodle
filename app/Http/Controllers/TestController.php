@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Question;
+use App\Models\TemporaryAnswer;
 use App\Models\Test;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TestController extends Controller
 {
@@ -202,21 +204,27 @@ class TestController extends Controller
 
         $score = $totalQuestions > 0 ? ($correctAnswers / $totalQuestions) * 100 : 0;
 
-        // Создаём запись попытки
         $lastAttemptNumber = \App\Models\TestAttempt::where('test_id', $test->id)
             ->where('user_id', $user->id)
             ->max('attempt_number');
 
         $newAttemptNumber = $lastAttemptNumber + 1;
 
-        $test->attempts()->create([
-            'user_id' => $user->id,
-            'score' => round($score),
-            'attempt_number' => $newAttemptNumber,
-        ]);
+        DB::transaction(function () use ($test, $user, $score, $newAttemptNumber) {
 
-        // ОЧИСТИТЬ сохранённые ответы из сессии (важно)
-        session()->forget($sessionKey);
+            $test->attempts()->create([
+                'user_id' => $user->id,
+                'score' => round($score),
+                'attempt_number' => $newAttemptNumber,
+            ]);
+
+            TemporaryAnswer::forTest($test->id)
+                ->forUser($user->id)
+                ->delete();
+        });
+
+        // ⬇️ ВОТ ТУТ — уже ПОСЛЕ транзакции
+        session()->forget("test_{$test->id}_answers");
 
         return view('layout', [
             'content' => view('test_result', [
@@ -237,6 +245,7 @@ class TestController extends Controller
         if ($test->questions()->where('question_id', $question->id)->exists()) {
             // Отсоединяем вопрос от теста
             $test->questions()->detach($question->id);
+
             return back()->with('success', 'Вопрос успешно удален из теста!');
         }
 
