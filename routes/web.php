@@ -174,6 +174,7 @@ Route::get('/tests/{test}/attempt/{questionIndex?}', function (Test $test, $ques
 
 // Обработка сохранения временного ответа (AJAX)
 Route::post('/tests/{test}/save-answer', function (Test $test) {
+    
     $questionId = request('question_id');
     $optionIds = request('option_id');
 
@@ -187,6 +188,22 @@ Route::post('/tests/{test}/save-answer', function (Test $test) {
 
     if (Auth::check()) {
         $userId = Auth::id();
+
+        // Проверка лимита времени
+        $attempt = \App\Models\TestAttempt::where('test_id', $test->id)
+                    ->where('user_id', $userId)
+                    ->first();
+
+        if (!$attempt) {
+            return response()->json(['error' => 'Test not started'], 403);
+        }
+
+        $elapsed = now()->diffInSeconds($attempt->started_at);
+        $timeLimitSeconds = $test->time_limit * 60;
+
+        if ($elapsed > $timeLimitSeconds) {
+            return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
+        }
 
         // Удаляем предыдущие ответы на этот вопрос
         \App\Models\TemporaryAnswer::where('user_id', $userId)
