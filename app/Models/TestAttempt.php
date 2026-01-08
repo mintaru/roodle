@@ -29,4 +29,11 @@ class TestAttempt extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function index()
+    {
+        $users = TestAttempt::all(); // получаем все записи из таблицы
+
+        return view('users.index', compact('users'));
+    }
 }

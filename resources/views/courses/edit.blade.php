@@ -43,6 +43,22 @@
             <input type="file" name="image_path" class="w-full">
         </div>
 
+        <div>
+            <label class="block font-medium mb-2">Доступен группам:</label>
+            <div class="grid grid-cols-2 gap-2">
+                @foreach($groups as $group)
+                    <label class="flex items-center space-x-2 border rounded p-2 hover:bg-gray-50">
+                        <input type="checkbox" name="groups[]" value="{{ $group->id }}"
+                               class="text-blue-600 focus:ring-blue-500" 
+                               @if($course->groups->contains($group->id)) checked @endif
+                               >
+                        <span>{{ $group->name }}</span>
+                    </label>
+                @endforeach
+            </div>
+        </div>
+
+
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
             Обновить
         </button>

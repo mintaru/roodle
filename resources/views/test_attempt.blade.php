@@ -138,7 +138,7 @@
                     if (timeLeftSeconds <= 0) {
                         timerElement.textContent = '00:00';
                         clearInterval(timerInterval);
-                        alert('Время на тест истекло! Ответы отправляются автоматически.');
+                        //чтобы уведомление всплывало о том что автоматически ответы скинулись
                         testForm.submit();
                         return;
                     }
