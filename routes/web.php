@@ -65,6 +65,7 @@ Route::get('/courses/{course}/tests/create', [TestController::class, 'create'])-
 Route::post('/courses/{course}/tests', [TestController::class, 'store'])->name('tests.store');
 
 Route::get('/tests/{test}/view', [TestController::class, 'view'])->middleware('auth')->name('tests.view');
+
 // Страница просмотра одного теста (включая вопросы)
 // Eloquent автоматически найдет тест по ID благодаря Route Model Binding
 // Перенаправлен на метод show() в TestController
@@ -305,6 +306,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/tests/{test}/edit', [TestManagementController::class, 'edit'])->name('admin.tests.edit');
     Route::put('/tests/{test}', [TestManagementController::class, 'update'])->name('admin.tests.update');
     Route::delete('/tests/{test}', [TestManagementController::class, 'destroy'])->name('admin.tests.destroy');
+    Route::get('/tests/{id}/attempts', [TestController::class, 'attempts'])->name('admin.tests.attempts');
 });
 
 require __DIR__.'/auth.php';

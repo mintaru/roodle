@@ -109,7 +109,8 @@ class CourseController extends Controller
      */
     public function edit(Course $course)
     {
-        return view('courses.edit', compact('course'));
+        $groups = \App\Models\Group::all();
+        return view('courses.edit', compact('course', 'groups'));
     }
 
     /**
@@ -122,11 +123,16 @@ class CourseController extends Controller
             'description' => 'required|string',
             'instructor'  => 'nullable|string|max:255',
             'image_path'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'groups'      => 'array'
         ]);
 
         if ($request->hasFile('image_path')) {
             $validated['image_path'] = $request->file('image_path')->store('courses', 'public');
         }
+
+
+            $course->groups()->sync($request->groups);
+        
 
         $course->update($validated);
 

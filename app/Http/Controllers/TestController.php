@@ -53,6 +53,11 @@ class TestController extends Controller
         return redirect()->route('tests.show', $test);
     }
 
+    public function attempts($id)
+    {
+        $test = Test::with('attempts')->findOrFail($id);
+        return view('admin.tests.attempts', compact('test'));
+    }
     // Отображение теста с вопросами
     public function show(Test $test)
     {

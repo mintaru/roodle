@@ -60,7 +60,7 @@
                 </div>
             </div>
         @else
-            <p class="text-gray-500">Пока нет созданных групп. <a href="{{ route('groups.create') }}" class="text-blue-600 underline">Создать группу</a></p>
+            <p class="text-gray-500">Пока нет созданных групп. <a href="{{ route('admin.groups.create') }}" class="text-blue-600 underline">Создать группу</a></p>
         @endif
 
         <button type="submit"
