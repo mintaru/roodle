@@ -75,6 +75,7 @@ class CourseController extends Controller
             'groups' => 'array',
             'period_start' => 'nullable|date',
             'period_end' => 'nullable|date|after_or_equal:period_start',
+            'status' =>'active'
         ]);
 
         if ($request->hasFile('image_path')) {
@@ -86,20 +87,19 @@ class CourseController extends Controller
 
         $validated['period_start'] = $request->period_start
         ? Carbon::createFromFormat(
-              'Y-m-d\TH:i', 
-              $request->period_start, 
-              'Asia/Krasnoyarsk'
-          )->utc()
+            'Y-m-d\TH:i',
+            $request->period_start,
+            'Asia/Krasnoyarsk'
+        )->utc()
         : null;
-    
-    $validated['period_end'] = $request->period_end
-        ? Carbon::createFromFormat(
-              'Y-m-d\TH:i', 
-              $request->period_end, 
-              'Asia/Krasnoyarsk'
-          )->utc()
-        : null;
-    
+
+        $validated['period_end'] = $request->period_end
+            ? Carbon::createFromFormat(
+                'Y-m-d\TH:i',
+                $request->period_end,
+                'Asia/Krasnoyarsk'
+            )->utc()
+            : null;
 
         $course = Course::create($validated);
 
@@ -117,19 +117,20 @@ class CourseController extends Controller
     public function show(Course $course)
     {
         abort_if(! $course->isAvailable(), 404);
-        
+
         if (Auth::user()->hasRole('admin') || Auth::user()->hasRole('teacher')) {
             // Админ и преподаватель видят все тесты
             $course->load('tests');
+
             return view('courses.show', compact('course'));
         }
         $course->load([
-            'tests' => fn ($query) => $query->available()
+            'tests' => fn ($query) => $query->available(),
         ]);
-    
+
         return view('courses.show', compact('course'));
     }
-    
+
     /**
      * Show the form for editing the specified resource.
      */
@@ -172,5 +173,30 @@ class CourseController extends Controller
         $course->delete();
 
         return redirect()->route('admin.courses.index')->with('success', 'Курс успешно удалён!');
+    }
+
+    //*АРХИВИРОВАНИЕ И ВОССТАНОВЛЕНИЕ
+    public function archive(Course $course)
+    {
+        $course->update([
+            'status' => Course::STATUS_ARCHIVED,
+        ]);
+
+        return back()->with('success', 'Курс отправлен в архив');
+    }
+
+    public function restore(Course $course)
+    {
+        $course->update([
+            'status' => Course::STATUS_ACTIVE,
+        ]);
+
+        return back()->with('success', 'Курс восстановлен из архива');
+    }
+
+    public function archived()
+    {
+        $courses = Course::archived()->get();
+        return view('courses.archived', compact('courses'));
     }
 }

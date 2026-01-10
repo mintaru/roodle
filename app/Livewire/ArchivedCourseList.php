@@ -6,7 +6,7 @@ use Livewire\Component;
 use App\Models\Course;
 use Illuminate\Support\Facades\Auth;
 
-class CourseList extends Component
+class ArchivedCourseList extends Component
 {
     public $search = '';
 
@@ -17,20 +17,13 @@ class CourseList extends Component
         $courses = Course::with('groups', 'author');
 
         if ($user->hasRole('admin')) {
-            $courses->active();
+            $courses->archived();
 
         } elseif ($user->hasRole('teacher')) {
-            $courses->active()->where('user_id', $user->id);
+            $courses->archived()->where('user_id', $user->id);
 
         } else {
-            $groupIds = $user->groups->pluck('id');
-
-            $courses
-                ->available()
-                ->active()
-                ->whereHas('groups', function ($q) use ($groupIds) {
-                    $q->whereIn('groups.id', $groupIds);
-                });
+            //НЕЛЬЗЯ ШКОЛЬНИКАМ!!
         }
 
         // 🔍 Поиск
@@ -41,7 +34,7 @@ class CourseList extends Component
             });
         }
 
-        return view('livewire.course-list', [
+        return view('livewire.archived-course-list', [
             'courses' => $courses->latest()->get(),
         ]);
     }

@@ -1,5 +1,5 @@
 <div class="py-10 px-6">
-    <h1 class="text-3xl font-bold text-center mb-10">Наши курсы</h1>
+    <h1 class="text-3xl font-bold text-center mb-10">Архивные курсы</h1>
 
     <div class="p-6">
         <h1 class="text-xl font-bold mb-3">Поиск</h1>
@@ -46,14 +46,14 @@
                 <div x-show="open" @click.away="open = false" x-transition
                     class="absolute top-14 right-4 z-30
                        bg-white border rounded-lg shadow-lg w-44">
-                    <form action="{{ route('courses.archive', $course) }}" method="POST">
+                    <form action="{{ route('courses.restore', $course) }}" method="POST">
                         @csrf
                         @method('PATCH')
 
                         <button type="submit"
                             class="w-full px-4 py-2 text-left text-sm
                                text-gray-700 hover:bg-gray-100">
-                            Архивировать
+                            Восстановить
                         </button>
                     </form>
                 </div>
