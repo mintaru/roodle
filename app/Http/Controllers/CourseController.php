@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Course;
 
+use App\Models\Course;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,11 +15,11 @@ class CourseController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
         // Search parameters
         $searchColumn = $request->input('search_column', 'title');
         $searchValue = $request->input('search_value', '');
-    
+
         if ($user->hasRole('admin')) {
             $query = Course::with('groups', 'author');
         } elseif ($user->hasRole('teacher')) {
@@ -31,28 +32,26 @@ class CourseController extends Controller
                     $q->whereIn('groups.id', $groupIds);
                 });
         }
-        
+
         // Apply search filter
         if ($searchValue) {
             if ($searchColumn === 'title') {
-                $query->where('title', 'like', '%' . $searchValue . '%');
+                $query->where('title', 'like', '%'.$searchValue.'%');
             } elseif ($searchColumn === 'id') {
-                $query->where('id', 'like', '%' . $searchValue . '%');
+                $query->where('id', 'like', '%'.$searchValue.'%');
             } elseif ($searchColumn === 'author') {
                 $query->whereHas('author', function ($q) use ($searchValue) {
-                    $q->where('name', 'like', '%' . $searchValue . '%');
+                    $q->where('name', 'like', '%'.$searchValue.'%');
                 });
             } elseif ($searchColumn === 'description') {
-                $query->where('description', 'like', '%' . $searchValue . '%');
+                $query->where('description', 'like', '%'.$searchValue.'%');
             }
         }
-        
+
         $courses = $query->get();
-    
+
         return view('courses.index', compact('courses', 'searchColumn', 'searchValue'));
     }
-    
-    
 
     /**
      * Show the form for creating a new resource.
@@ -60,7 +59,8 @@ class CourseController extends Controller
     public function create()
     {
         $groups = \App\Models\Group::all();
-        return view('courses.create', compact('groups'));// вернем Blade форму
+
+        return view('courses.create', compact('groups')); // вернем Blade форму
     }
 
     /**
@@ -69,47 +69,74 @@ class CourseController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title'       => 'required|string|max:255',
+            'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image_path'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'groups'      => 'array',
+            'image_path' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'groups' => 'array',
+            'period_start' => 'nullable|date',
+            'period_end' => 'nullable|date|after_or_equal:period_start',
         ]);
-    
+
         if ($request->hasFile('image_path')) {
             $validated['image_path'] = $request->file('image_path')->store('courses', 'public');
         }
-    
+
         // Добавляем автора курса
         $validated['user_id'] = Auth::id();
+
+        $validated['period_start'] = $request->period_start
+        ? Carbon::createFromFormat(
+              'Y-m-d\TH:i', 
+              $request->period_start, 
+              'Asia/Krasnoyarsk'
+          )->utc()
+        : null;
     
+    $validated['period_end'] = $request->period_end
+        ? Carbon::createFromFormat(
+              'Y-m-d\TH:i', 
+              $request->period_end, 
+              'Asia/Krasnoyarsk'
+          )->utc()
+        : null;
+    
+
         $course = Course::create($validated);
-    
+
         // Привязываем выбранные группы
         if ($request->has('groups')) {
             $course->groups()->sync($request->groups);
         }
-    
+
         return redirect()->route('courses.create')->with('success', 'Курс успешно создан!');
     }
-    
 
     /**
      * Display the specified resource.
      */
     public function show(Course $course)
     {
-        // Eager loading для тестов
-        $course->load('tests');
-
+        abort_if(! $course->isAvailable(), 404);
+        
+        if (Auth::user()->hasRole('admin') || Auth::user()->hasRole('teacher')) {
+            // Админ и преподаватель видят все тесты
+            $course->load('tests');
+            return view('courses.show', compact('course'));
+        }
+        $course->load([
+            'tests' => fn ($query) => $query->available()
+        ]);
+    
         return view('courses.show', compact('course'));
     }
-
+    
     /**
      * Show the form for editing the specified resource.
      */
     public function edit(Course $course)
     {
         $groups = \App\Models\Group::all();
+
         return view('courses.edit', compact('course', 'groups'));
     }
 
@@ -119,20 +146,18 @@ class CourseController extends Controller
     public function update(Request $request, Course $course)
     {
         $validated = $request->validate([
-            'title'       => 'required|string|max:255',
+            'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'instructor'  => 'nullable|string|max:255',
-            'image_path'  => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'groups'      => 'array'
+            'instructor' => 'nullable|string|max:255',
+            'image_path' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'groups' => 'array',
         ]);
 
         if ($request->hasFile('image_path')) {
             $validated['image_path'] = $request->file('image_path')->store('courses', 'public');
         }
 
-
-            $course->groups()->sync($request->groups);
-        
+        $course->groups()->sync($request->groups);
 
         $course->update($validated);
 
@@ -145,8 +170,7 @@ class CourseController extends Controller
     public function destroy(Course $course)
     {
         $course->delete();
-    
+
         return redirect()->route('admin.courses.index')->with('success', 'Курс успешно удалён!');
     }
-    
 }

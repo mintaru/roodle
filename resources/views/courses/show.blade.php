@@ -16,12 +16,14 @@
     <p>{{ $course->description }}</p>
 
     {{-- Кнопки --}}
+    @hasanyrole('teacher|admin')
     <a href="{{ route('tests.create', $course) }}" class="btn btn-primary">
         Создать тест для курса
     </a>
     <a href="{{ route('lectures.create', $course) }}" class="btn btn-success">
         Создать лекцию для курса
     </a>
+    @endhasanyrole
 
     <hr>
 
@@ -43,6 +45,12 @@
                 
                     попытки:{{ $remaining }}
                 </a>
+                <p class="text-gray-600 flex-grow">
+                    Доступен с {{ $test->formattedPeriodStart() ?? '—' }}
+                </p>
+                <p class="text-gray-600 flex-grow">
+                    Доступен до {{ $test->formattedPeriodEnd() ?? '—' }}
+                </p>
                 {{-- <a href="{{ route('tests.attempt', $test) }}">пройти тест</a> --}}
                 <a href="{{ route('tests.attempt.page', [$test->id, 1]) }}">пройти тест</a>
             </li>
