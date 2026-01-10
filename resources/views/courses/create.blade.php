@@ -46,6 +46,18 @@
             <input type="file" name="image_path" class="w-full">
         </div>
 
+        <div>
+            <label class="block font-medium">Доступен с:</label>
+            <input type="datetime-local" name="period_start"
+                   class="w-full border rounded p-2">
+        </div>
+
+        <div>
+            <label class="block font-medium">Доступен до:</label>
+            <input type="datetime-local" name="period_end"
+                   class="w-full border rounded p-2">
+        </div>
+
         @if(isset($groups) && $groups->count() > 0)
             <div>
                 <label class="block font-medium mb-2">Доступен группам:</label>

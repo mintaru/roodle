@@ -39,7 +39,19 @@
             <div class="form-group">
                 <label for="time_limit">Ограничение по времени (минуты, 0 = без ограничения)</label>
                 <input type="number" name="time_limit" id="time_limit" value="{{ old('time_limit', $test->time_limit ?? 0) }}" min="0" class="form-control">
-            </div>            
+            </div>   
+            
+            <div>
+                <label class="block font-medium">Доступен с:</label>
+                <input type="datetime-local" name="period_start"
+                       class="w-full border rounded p-2">
+            </div>
+    
+            <div>
+                <label class="block font-medium">Доступен до:</label>
+                <input type="datetime-local" name="period_end"
+                       class="w-full border rounded p-2">
+            </div>
             <script>
                 const checkbox = document.getElementById('unlimited_attempts');
                 const numberInput = document.getElementById('max_attempts');

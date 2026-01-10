@@ -17,19 +17,24 @@ class CourseList extends Component
         $courses = Course::with('groups', 'author');
 
         if ($user->hasRole('admin')) {
-            // ничего не фильтруем
+            // admin видит всё
+
         } elseif ($user->hasRole('teacher')) {
             $courses->where('user_id', $user->id);
+
         } else {
             $groupIds = $user->groups->pluck('id');
-            $courses->whereHas('groups', function ($q) use ($groupIds) {
-                $q->whereIn('groups.id', $groupIds);
-            });
+
+            $courses
+                ->available() // 👈 ВАЖНО
+                ->whereHas('groups', function ($q) use ($groupIds) {
+                    $q->whereIn('groups.id', $groupIds);
+                });
         }
 
-        // Поиск по названию или описанию
+        // 🔍 Поиск
         if ($this->search) {
-            $courses->where(function($query) {
+            $courses->where(function ($query) {
                 $query->where('title', 'like', '%' . $this->search . '%')
                       ->orWhere('description', 'like', '%' . $this->search . '%');
             });

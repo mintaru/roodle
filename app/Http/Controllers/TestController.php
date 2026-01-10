@@ -9,7 +9,7 @@ use App\Models\Test;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
+use Carbon\Carbon;
 class TestController extends Controller
 {
     // Список тестов
@@ -36,9 +36,28 @@ class TestController extends Controller
             'description' => 'nullable|string',
             'max_attempts' => 'nullable|integer|min:1', // если не отмечен "неограниченно"
             'unlimited_attempts' => 'nullable|boolean',
-            'time_limit' => 'nullable|integer|min:0'
+            'time_limit' => 'nullable|integer|min:0',
+            'period_start' => 'nullable|date',
+            'period_end' => 'nullable|date|after:period_start'
         ]);
         $validatedData['time_limit'] = $request->input('time_limit', 0);
+
+        $validatedData['period_start'] = $request->period_start
+        ? Carbon::createFromFormat(
+              'Y-m-d\TH:i', 
+              $request->period_start, 
+              'Asia/Krasnoyarsk'
+          )->utc()
+        : null;
+    
+    $validatedData['period_end'] = $request->period_end
+        ? Carbon::createFromFormat(
+              'Y-m-d\TH:i', 
+              $request->period_end, 
+              'Asia/Krasnoyarsk'
+          )->utc()
+        : null;
+    
         // Определяем max_attempts
         if ($request->has('unlimited_attempts')) {
             $validatedData['max_attempts'] = 0; // 0 = неограниченно
@@ -61,6 +80,8 @@ class TestController extends Controller
     // Отображение теста с вопросами
     public function show(Test $test)
     {
+        abort_if(! $test->isAvailable(), 404);
+
         $test->load('questions.options');
 
         // Выбираем все вопросы из банка

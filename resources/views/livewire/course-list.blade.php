@@ -38,6 +38,15 @@
                 <p class="text-gray-600 flex-grow">
                     {{ Str::limit($course->description, 120) }}
                 </p>
+                <p class="text-gray-600 flex-grow">
+                    Доступен с {{ $course->formattedPeriodStart() ?? '—' }}
+                </p>
+                <p class="text-gray-600 flex-grow">
+                    Доступен до {{ $course->formattedPeriodEnd() ?? '—' }}
+                </p>
+                
+                    
+                
                 <a href="{{ route('courses.show', $course) }}"
                    class="mt-4 inline-block text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition">
                     Перейти на курс
