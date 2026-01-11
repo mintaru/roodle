@@ -14,9 +14,8 @@
 
 {{-- Подключаем меню --}}
 @include('components.menu')
-
 <div class="container mx-auto py-8">
-    @livewire('course-list')
+    @livewire('archived-course-list')
 </div>
 
 @livewireScripts

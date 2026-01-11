@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\Admin\TestManagementController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\QuestionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +45,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/', function () {
     return view('courses');
 })->middleware('auth')->name("home");
+Route::get('/courses/archived', [CourseController::class, 'archived'])->name('courses.archived');
 
 Route::get('/courses/create', [CourseController::class, 'create'])->middleware('auth')->name('courses.create');
 Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
@@ -274,21 +276,11 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::get('/admin/courses', [CourseController::class, 'index'])->name('admin.courses.index');
     Route::delete('/admin/courses/{course}', [CourseController::class, 'destroy'])->name('admin.courses.destroy');
 
+    //АРХИВИРОВАНИЕ
+    Route::patch('/courses/{course}/archive', [CourseController::class, 'archive'])->name('courses.archive');
+    Route::patch('/courses/{course}/restore', [CourseController::class, 'restore'])->name('courses.restore');
 
 
-});
-
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
-    Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
-    
-    // Маршруты для отчётов
-    Route::get('/reports', function () {
-        return view('admin.reports.index');
-    })->name('admin.reports.index');
-    Route::get('/reports/user-activity', [ReportController::class, 'userActivity'])->name('admin.reports.user-activity');
-    Route::get('/reports/groups', [ReportController::class, 'groupsReport'])->name('admin.reports.groups');
-    Route::get('/reports/courses', [ReportController::class, 'coursesReport'])->name('admin.reports.courses');
-    
     // Маршруты для управления лекциями
     Route::get('/lectures', [LectureController::class, 'index'])->name('admin.lectures.index');
     Route::get('/lectures/{lecture}/edit', [LectureController::class, 'edit'])->name('admin.lectures.edit');
@@ -307,6 +299,28 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::put('/tests/{test}', [TestManagementController::class, 'update'])->name('admin.tests.update');
     Route::delete('/tests/{test}', [TestManagementController::class, 'destroy'])->name('admin.tests.destroy');
     Route::get('/tests/{id}/attempts', [TestController::class, 'attempts'])->name('admin.tests.attempts');
+
+    Route::post('/questions/upload', [QuestionController::class, 'upload'])->name('questions.upload');
+
 });
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    
+    // Маршруты для отчётов
+    Route::get('/reports', function () {
+        return view('admin.reports.index');
+    })->name('admin.reports.index');
+    Route::get('/reports/user-activity', [ReportController::class, 'userActivity'])->name('admin.reports.user-activity');
+    Route::get('/reports/groups', [ReportController::class, 'groupsReport'])->name('admin.reports.groups');
+    Route::get('/reports/courses', [ReportController::class, 'coursesReport'])->name('admin.reports.courses');
+    
+
+
+
+});
+
+
+
 
 require __DIR__.'/auth.php';

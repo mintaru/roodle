@@ -7,13 +7,15 @@ use Illuminate\Support\Facades\Auth;
 
 class Course extends Model
 {
-    protected $fillable = ['title', 'description', 'image_path', 'user_id', 'period_start', 'period_end'];
+    protected $fillable = ['title', 'description', 'image_path', 'user_id', 'period_start', 'period_end','status'];
+
+    const STATUS_ACTIVE = 'active';
+    const STATUS_ARCHIVED = 'archived';
 
     protected $casts = [
         'period_start' => 'datetime',
         'period_end' => 'datetime',
     ];
-    
 
     public function tests()
     {
@@ -40,7 +42,6 @@ class Course extends Model
         if (Auth::check() && Auth::user()->hasRole('admin')) {
             return true;
         }
-    
 
         $now = now();
 
@@ -71,17 +72,26 @@ class Course extends Model
     }
 
     public function formattedPeriodStart(): ?string
-{
-    return $this->period_start
-        ? $this->period_start->setTimezone('Asia/Krasnoyarsk')->format('d.m.Y H:i')
-        : null;
-}
+    {
+        return $this->period_start
+            ? $this->period_start->setTimezone('Asia/Krasnoyarsk')->format('d.m.Y H:i')
+            : null;
+    }
 
-public function formattedPeriodEnd(): ?string
-{
-    return $this->period_end
-        ? $this->period_end->setTimezone('Asia/Krasnoyarsk')->format('d.m.Y H:i')
-        : null;
-}
+    public function formattedPeriodEnd(): ?string
+    {
+        return $this->period_end
+            ? $this->period_end->setTimezone('Asia/Krasnoyarsk')->format('d.m.Y H:i')
+            : null;
+    }
 
+    public function scopeActive($query)
+    {
+        return $query->where('status', self::STATUS_ACTIVE);
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->where('status', self::STATUS_ARCHIVED);
+    }
 }

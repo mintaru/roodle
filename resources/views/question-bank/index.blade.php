@@ -63,7 +63,7 @@
                 <tr>
                     <td class="p-2 border">{{ $question->id }}</td>
                     <td class="p-2 border">
-                        <div class="max-w-xs truncate" title="{{ $question->question_text }}">
+                        <div class="max-w-xs truncate" title="{!! $question->question_text !!}">
                             {{ substr($question->question_text, 0, 50) }}{{ strlen($question->question_text) > 50 ? '...' : '' }}
                         </div>
                     </td>
