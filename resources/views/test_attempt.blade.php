@@ -27,7 +27,7 @@
                 <div class="space-y-8">
                     @foreach ($test->questions as $question)
                         <div class="border-t pt-6">
-                            <p class="font-semibold text-lg mb-4">{{ $loop->iteration }}. {{ $question->question_text }}</p>
+                            <p class="font-semibold text-lg mb-4">{{ $loop->iteration }}. {!! $question->question_text !!}</p>
                             <div class="space-y-3 pl-4">
                                 @foreach ($question->options as $option)
                                     @php

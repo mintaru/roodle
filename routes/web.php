@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\Admin\TestManagementController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\QuestionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -299,7 +300,7 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::delete('/tests/{test}', [TestManagementController::class, 'destroy'])->name('admin.tests.destroy');
     Route::get('/tests/{id}/attempts', [TestController::class, 'attempts'])->name('admin.tests.attempts');
 
-
+    Route::post('/questions/upload', [QuestionController::class, 'upload'])->name('questions.upload');
 
 });
 

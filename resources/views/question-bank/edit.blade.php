@@ -30,7 +30,7 @@
         <!-- Question Text -->
         <div class="bg-white p-6 rounded-lg shadow">
             <label for="question_text" class="block text-lg font-semibold text-gray-800 mb-3">Текст вопроса</label>
-            <textarea id="question_text" name="question_text" required rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Введите текст вопроса">{{ old('question_text', $question->question_text) }}</textarea>
+            <textarea id="question_text" name="question_text" required rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Введите текст вопроса">{{ old('question_text', $question->question_text)}}</textarea>
         </div>
 
         <!-- Question Type -->
