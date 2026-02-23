@@ -77,6 +77,18 @@
                 <form action="/tests/{{ $test->id }}/questions" method="POST" id="question-form">
                     @csrf
 
+                    <!-- Вывод ошибок валидации -->
+                    @if ($errors->any())
+                        <div style="background-color: #fee; border: 1px solid #f00; color: #c00; padding: 15px; margin-bottom: 15px; border-radius: 4px;">
+                            <strong>Ошибки валидации:</strong>
+                            <ul style="margin: 10px 0 0 20px;">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <!-- Текст вопроса -->
                     <div class="form-group">
                         <label for="question_text">Текст вопроса</label>
@@ -91,11 +103,12 @@
                         <select name="question_type" id="question_type" required>
                             <option value="single_choice">Один правильный ответ (радиокнопки)</option>
                             <option value="multiple_choice">Несколько правильных ответов (чекбоксы)</option>
+                            <option value="short_answer">Текстовый ответ</option>
                         </select>
                     </div>
 
-                    <!-- Варианты ответов -->
-                    <div class="form-group">
+                    <!-- Варианты ответов (для выбора) -->
+                    <div class="form-group" id="options-group">
                         <label>Варианты ответов</label>
                         <div id="options-container" class="options-container">
                             <div class="option-item">
@@ -108,6 +121,25 @@
                             </div>
                         </div>
                         <button type="button" id="add-option" class="add-option-btn">+ Добавить вариант</button>
+                    </div>
+
+                    <!-- Правильные текстовые ответы (для текстовых вопросов) -->
+                    <div class="form-group" id="text-answers-group" style="display: none;">
+                        <label>Правильные ответы</label>
+                        <div id="text-answers-container" class="text-answers-container">
+                            <div class="text-answer-item">
+                                <input type="text" name="correct_answers[0]" placeholder="Правильный ответ 1" required>
+                            </div>
+                        </div>
+                        <button type="button" id="add-text-answer" class="add-option-btn">+ Добавить ответ</button>
+                        <div style="margin-top: 10px;">
+                            <label>
+                                <input type="checkbox" name="case_insensitive" value="1" checked>
+                                Игнорировать регистр и пробелы при проверке
+                            </label>
+                        </div>
+                        <!-- Hidden input для отправки значения 0, если checkbox не отмечен -->
+                        <input type="hidden" name="case_insensitive" value="0">
                     </div>
 
                     <button type="submit" class="submit-btn">Создать вопрос</button>
@@ -149,7 +181,49 @@
         // Работа с вариантами
         const questionTypeSelect = document.getElementById('question_type');
         const optionsContainer = document.getElementById('options-container');
+        const optionsGroup = document.getElementById('options-group');
+        const textAnswersGroup = document.getElementById('text-answers-group');
+        const textAnswersContainer = document.getElementById('text-answers-container');
         const addBtn = document.getElementById("add-option");
+        const addTextAnswerBtn = document.getElementById("add-text-answer");
+
+        function updateQuestionTypeUI() {
+            const type = questionTypeSelect.value;
+            const optionInputs = optionsContainer.querySelectorAll('input[type="text"], input[type="radio"], input[type="checkbox"]');
+            const textAnswerInputs = textAnswersContainer.querySelectorAll('input[type="text"]');
+            
+            if (type === 'short_answer') {
+                optionsGroup.style.display = 'none';
+                textAnswersGroup.style.display = 'block';
+                
+                // Убираем required у скрытых полей опций
+                optionInputs.forEach(input => {
+                    input.required = false;
+                });
+                
+                // Добавляем required к полям текстовых ответов
+                textAnswerInputs.forEach(input => {
+                    input.required = true;
+                });
+            } else {
+                optionsGroup.style.display = 'block';
+                textAnswersGroup.style.display = 'none';
+                
+                // Добавляем required к полям опций
+                optionInputs.forEach(input => {
+                    if (input.type === 'text') {
+                        input.required = true;
+                    }
+                });
+                
+                // Убираем required у скрытых полей текстовых ответов
+                textAnswerInputs.forEach(input => {
+                    input.required = false;
+                });
+                
+                updateOptionInputs();
+            }
+        }
 
         function updateOptionInputs() {
             const type = questionTypeSelect.value;
@@ -167,8 +241,8 @@
             });
         }
 
-        questionTypeSelect.addEventListener('change', updateOptionInputs);
-        updateOptionInputs();
+        questionTypeSelect.addEventListener('change', updateQuestionTypeUI);
+        updateQuestionTypeUI();
 
         addBtn.addEventListener("click", function() {
             const index = optionsContainer.children.length;
@@ -183,6 +257,30 @@
             <input type="text" name="options[${index}]" placeholder="Вариант ${index + 1}" required>
         `;
             optionsContainer.appendChild(newOption);
+            
+            // Убедимся, что новые поля имеют правильный required статус
+            if (optionsGroup.style.display === 'none') {
+                const inputs = newOption.querySelectorAll('input');
+                inputs.forEach(input => {
+                    input.required = false;
+                });
+            }
+        });
+
+        addTextAnswerBtn.addEventListener("click", function() {
+            const index = textAnswersContainer.children.length;
+            const newAnswer = document.createElement("div");
+            newAnswer.className = "text-answer-item";
+            newAnswer.innerHTML = `
+            <input type="text" name="correct_answers[${index}]" placeholder="Правильный ответ ${index + 1}" required>
+        `;
+            textAnswersContainer.appendChild(newAnswer);
+            
+            // Убедимся, что новые поля имеют правильный required статус
+            if (textAnswersGroup.style.display === 'none') {
+                const input = newAnswer.querySelector('input');
+                input.required = false;
+            }
         });
 
         document.addEventListener("trix-attachment-add", function(event) {
@@ -218,6 +316,34 @@
                 })
                 .catch(() => alert("Ошибка загрузки изображения"));
         }
+
+        // Обработка отправки формы
+        const questionForm = document.getElementById('question-form');
+        questionForm.addEventListener('submit', function(e) {
+            const type = questionTypeSelect.value;
+            
+            // Удаляем атрибут name у скрытых полей (браузер будет их игнорировать)
+            if (type === 'short_answer') {
+                // Удаляем name у полей опций
+                optionsContainer.querySelectorAll('input').forEach(input => {
+                    input.removeAttribute('name');
+                });
+            } else {
+                // Удаляем name у полей текстовых ответов
+                textAnswersContainer.querySelectorAll('input[type="text"]').forEach(input => {
+                    input.removeAttribute('name');
+                });
+            }
+            
+            const submitBtn = questionForm.querySelector('.submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Создание вопроса...';
+            
+            // Небольшая задержка перед перезагрузкой, чтобы данные успели сохраниться
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        });
     </script>
 </body>
 

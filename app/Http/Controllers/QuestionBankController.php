@@ -50,11 +50,12 @@ class QuestionBankController extends Controller
     {
         $request->validate([
             'question_text' => 'required|string|max:1000',
-            'question_type' => 'required|in:multiple_choice,true_false,short_answer',
+            'question_type' => 'required|in:single_choice,multiple_choice,short_answer',
             'options' => 'array',
             'options.*.id' => 'nullable|integer',
             'options.*.option_text' => 'required_with:options|string|max:500',
             'options.*.is_correct' => 'nullable|boolean',
+            'options.*.case_insensitive' => 'nullable|boolean',
         ]);
 
         // Обновляем вопрос
@@ -74,6 +75,7 @@ class QuestionBankController extends Controller
                         $option->update([
                             'option_text' => $optionData['option_text'],
                             'is_correct' => $optionData['is_correct'] ?? false,
+                            'case_insensitive' => $optionData['case_insensitive'] ?? false,
                         ]);
                         $optionIds[] = $option->id;
                     }
@@ -82,6 +84,7 @@ class QuestionBankController extends Controller
                     $option = $question->options()->create([
                         'option_text' => $optionData['option_text'],
                         'is_correct' => $optionData['is_correct'] ?? false,
+                        'case_insensitive' => $optionData['case_insensitive'] ?? false,
                     ]);
                     $optionIds[] = $option->id;
                 }

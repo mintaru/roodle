@@ -19,6 +19,7 @@ class TemporaryAnswer extends Model
         'test_id',
         'question_id',
         'option_id',
+        'answer_text',
     ];
 
     /**

@@ -115,6 +115,9 @@ Route::get('/tests/{test}/attempt', function (Test $test) { // Использу�
             'attempt_number' => $lastAttemptNumber + 1,
             'started_at' => now(),
         ]);
+    } else if (!$activeAttempt->started_at) {
+        // Ensure started_at is set if it was null
+        $activeAttempt->update(['started_at' => now()]);
     }
 
     // Загружаем вопросы
@@ -123,14 +126,23 @@ Route::get('/tests/{test}/attempt', function (Test $test) { // Использу�
     }]);
 
     // Загружаем сохраненные ответы для этой попытки
-    $savedAnswers = \App\Models\TemporaryAnswer::where('user_id', $user->id)
+    $tempAnswers = \App\Models\TemporaryAnswer::where('user_id', $user->id)
         ->where('test_id', $test->id)
-        ->get()
-        ->groupBy('question_id')
-        ->map(function ($answers) {
-            return $answers->pluck('option_id')->toArray();
-        })
-        ->toArray();
+        ->get();
+
+    $savedAnswers = [];
+    foreach ($tempAnswers as $answer) {
+        if ($answer->answer_text !== null) {
+            // Текстовый ответ
+            $savedAnswers[$answer->question_id] = $answer->answer_text;
+        } else {
+            // Множественный выбор
+            if (!isset($savedAnswers[$answer->question_id])) {
+                $savedAnswers[$answer->question_id] = [];
+            }
+            $savedAnswers[$answer->question_id][] = $answer->option_id;
+        }
+    }
 
     return view('layout', [
         'content' => view('test_attempt', [
@@ -161,7 +173,25 @@ Route::get('/tests/{test}/attempt/{questionIndex?}', function (Test $test, $ques
     if ($questionIndex > $questions->count()) $questionIndex = $questions->count();
 
     $question = $questions[$questionIndex - 1]; // текущий вопрос
-    $savedAnswers = session("test_{$test->id}_answers", []);
+    
+    // Загружаем сохраненные ответы
+    $tempAnswers = \App\Models\TemporaryAnswer::where('user_id', $user->id)
+        ->where('test_id', $test->id)
+        ->get();
+
+    $savedAnswers = [];
+    foreach ($tempAnswers as $answer) {
+        if ($answer->answer_text !== null) {
+            // Текстовый ответ
+            $savedAnswers[$answer->question_id] = $answer->answer_text;
+        } else {
+            // Множественный выбор
+            if (!isset($savedAnswers[$answer->question_id])) {
+                $savedAnswers[$answer->question_id] = [];
+            }
+            $savedAnswers[$answer->question_id][] = $answer->option_id;
+        }
+    }
 
     return view('layout', [
         'content' => view('test_attempt_page', [
@@ -180,48 +210,103 @@ Route::post('/tests/{test}/save-answer', function (Test $test) {
     
     $questionId = request('question_id');
     $optionIds = request('option_id');
+    $answerText = request('answer_text');
 
-    // Убедимся, что $optionIds всегда массив
-    $optionIds = (array) $optionIds;
+    // Для текстовых ответов
+    if (request()->has('answer_text')) {
+        // Сохраняем в сессии
+        $answers = session("test_{$test->id}_answers", []);
+        $answers[$questionId] = $answerText;
+        session(["test_{$test->id}_answers" => $answers]);
 
-    // Сохраняем в сессии
-    $answers = session("test_{$test->id}_answers", []);
-    $answers[$questionId] = $optionIds;
-    session(["test_{$test->id}_answers" => $answers]);
+        if (Auth::check()) {
+            $userId = Auth::id();
 
-    if (Auth::check()) {
-        $userId = Auth::id();
+            // Проверка лимита времени
+            $attempt = \App\Models\TestAttempt::where('test_id', $test->id)
+                        ->where('user_id', $userId)
+                        ->first();
 
-        // Проверка лимита времени
-        $attempt = \App\Models\TestAttempt::where('test_id', $test->id)
-                    ->where('user_id', $userId)
-                    ->first();
+            if (!$attempt) {
+                return response()->json(['error' => 'Test not started'], 403);
+            }
 
-        if (!$attempt) {
-            return response()->json(['error' => 'Test not started'], 403);
-        }
+            // Проверка лимита времени (только если time_limit установлен)
+            if ($test->time_limit && $attempt->started_at) {
+                $elapsed = now()->diffInSeconds($attempt->started_at);
+                $timeLimitSeconds = $test->time_limit * 60;
 
-        $elapsed = now()->diffInSeconds($attempt->started_at);
-        $timeLimitSeconds = $test->time_limit * 60;
+                if ($elapsed > $timeLimitSeconds) {
+                    return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
+                }
+            }
 
-        if ($elapsed > $timeLimitSeconds) {
-            return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
-        }
+            // Удаляем предыдущие ответы на этот вопрос
+            \App\Models\TemporaryAnswer::where('user_id', $userId)
+                ->where('test_id', $test->id)
+                ->where('question_id', $questionId)
+                ->delete();
 
-        // Удаляем предыдущие ответы на этот вопрос
-        \App\Models\TemporaryAnswer::where('user_id', $userId)
-            ->where('test_id', $test->id)
-            ->where('question_id', $questionId)
-            ->delete();
-
-        // Вставляем новый(е) ответ(ы)
-        foreach ($optionIds as $optionId) {
+            // Вставляем новый текстовый ответ
             \App\Models\TemporaryAnswer::create([
                 'user_id' => $userId,
                 'test_id' => $test->id,
                 'question_id' => $questionId,
-                'option_id' => $optionId,
+                'option_id' => null,
+                'answer_text' => $answerText,
             ]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    // Для множественного выбора
+    // Убедимся, что $optionIds всегда массив
+    if (!request()->has('answer_text') && $optionIds) {
+        $optionIds = (array) $optionIds;
+
+        // Сохраняем в сессии
+        $answers = session("test_{$test->id}_answers", []);
+        $answers[$questionId] = $optionIds;
+        session(["test_{$test->id}_answers" => $answers]);
+
+        if (Auth::check()) {
+            $userId = Auth::id();
+
+            // Проверка лимита времени
+            $attempt = \App\Models\TestAttempt::where('test_id', $test->id)
+                        ->where('user_id', $userId)
+                        ->first();
+
+            if (!$attempt) {
+                return response()->json(['error' => 'Test not started'], 403);
+            }
+
+            // Проверка лимита времени (только если time_limit установлен)
+            if ($test->time_limit && $attempt->started_at) {
+                $elapsed = now()->diffInSeconds($attempt->started_at);
+                $timeLimitSeconds = $test->time_limit * 60;
+
+                if ($elapsed > $timeLimitSeconds) {
+                    return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
+                }
+            }
+
+            // Удаляем предыдущие ответы на этот вопрос
+            \App\Models\TemporaryAnswer::where('user_id', $userId)
+                ->where('test_id', $test->id)
+                ->where('question_id', $questionId)
+                ->delete();
+
+            // Вставляем новый(е) ответ(ы)
+            foreach ($optionIds as $optionId) {
+                \App\Models\TemporaryAnswer::create([
+                    'user_id' => $userId,
+                    'test_id' => $test->id,
+                    'question_id' => $questionId,
+                    'option_id' => $optionId,
+                ]);
+            }
         }
     }
 

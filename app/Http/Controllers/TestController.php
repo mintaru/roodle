@@ -133,12 +133,15 @@ class TestController extends Controller
         // Валидация
         $validatedData = $request->validate([
             'question_text' => 'required|string',
-            'question_type' => 'required|in:single_choice,multiple_choice',
-            'options' => 'required|array|min:2',
-            'options.*' => 'required|string',
+            'question_type' => 'required|in:single_choice,multiple_choice,short_answer',
+            'options' => 'required_if:question_type,single_choice,multiple_choice|array|min:2',
+            'options.*' => 'required_if:question_type,single_choice,multiple_choice|string',
             'correct_option' => 'required_if:question_type,single_choice|integer',
             'correct_options' => 'required_if:question_type,multiple_choice|array',
             'correct_options.*' => 'integer',
+            'correct_answers' => 'required_if:question_type,short_answer|array|min:1',
+            'correct_answers.*' => 'required_if:question_type,short_answer|string|min:1',
+            'case_insensitive' => 'nullable|in:0,1',
         ]);
 
         // Создаём вопрос
@@ -147,20 +150,36 @@ class TestController extends Controller
             'question_type' => $validatedData['question_type'],
         ]);
 
-        // Сохраняем варианты и отмечаем правильные
-        foreach ($validatedData['options'] as $key => $optionText) {
-            $isCorrect = false;
-
-            if ($validatedData['question_type'] === 'single_choice') {
-                $isCorrect = ($key == $validatedData['correct_option']);
-            } else {
-                $isCorrect = in_array($key, $validatedData['correct_options']);
+        if ($validatedData['question_type'] === 'short_answer') {
+            // Для текстовых ответов создаём опции с правильными ответами
+            $caseInsensitive = ($validatedData['case_insensitive'] ?? 0) == 1;
+            
+            foreach ($validatedData['correct_answers'] as $answer) {
+                if (trim($answer) !== '') { // Пропускаем пустые ответы
+                    $question->options()->create([
+                        'option_text' => trim($answer),
+                        'is_correct' => true,
+                        'case_insensitive' => $caseInsensitive,
+                    ]);
+                }
             }
+        } else {
+            // Сохраняем варианты и отмечаем правильные
+            foreach ($validatedData['options'] as $key => $optionText) {
+                $isCorrect = false;
 
-            $question->options()->create([
-                'option_text' => $optionText,
-                'is_correct' => $isCorrect,
-            ]);
+                if ($validatedData['question_type'] === 'single_choice') {
+                    $isCorrect = ($key == $validatedData['correct_option']);
+                } else {
+                    $isCorrect = in_array($key, $validatedData['correct_options']);
+                }
+
+                $question->options()->create([
+                    'option_text' => $optionText,
+                    'is_correct' => $isCorrect,
+                    'case_insensitive' => false, // для множественных выборов это не используется
+                ]);
+            }
         }
 
         // Привязываем вопрос к тесту
@@ -198,6 +217,7 @@ class TestController extends Controller
 
         // Берём ответы из POST и TemporaryAnswers
         $postAnswers = $request->input('answers', []);
+        $textAnswers = $request->input('text_answers', []);
 
         // Нормализуем POST ответы
         $merged = [];
@@ -211,35 +231,75 @@ class TestController extends Controller
         $correctAnswers = 0;
 
         foreach ($test->questions as $question) {
-            $raw = $merged[$question->id] ?? [];
-            // Нормализация: массив целых
-            $userOptionIds = collect($raw)
-                ->filter() // убираем null/пустые
-                ->map(fn ($id) => (int) $id)
-                ->sort()
-                ->values()
-                ->toArray();
+            $isCorrect = false;
 
-            $correctOptionIds = $question->options
-                ->where('is_correct', true)
-                ->pluck('id')
-                ->map(fn ($id) => (int) $id)
-                ->sort()
-                ->values()
-                ->toArray();
+            if ($question->question_type === 'short_answer') {
+                // Проверяем текстовый ответ
+                $userAnswer = trim($textAnswers[$question->id] ?? '');
+                
+                if ($userAnswer === '') {
+                    $isCorrect = false;
+                } else {
+                    // Получаем все правильные ответы для этого вопроса
+                    $correctOptions = $question->options->where('is_correct', true);
+                    
+                    foreach ($correctOptions as $option) {
+                        $correctText = trim($option->option_text);
+                        
+                        if ($option->case_insensitive) {
+                            // Игнорируем регистр и пробелы
+                            if (
+                                strtolower(preg_replace('/\s+/', '', $userAnswer)) === 
+                                strtolower(preg_replace('/\s+/', '', $correctText))
+                            ) {
+                                $isCorrect = true;
+                                break;
+                            }
+                        } else {
+                            // Точное сравнение
+                            if ($userAnswer === $correctText) {
+                                $isCorrect = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Проверяем выбор вариантов (single_choice или multiple_choice)
+                $raw = $merged[$question->id] ?? [];
+                // Нормализация: массив целых
+                $userOptionIds = collect($raw)
+                    ->filter() // убираем null/пустые
+                    ->map(fn ($id) => (int) $id)
+                    ->sort()
+                    ->values()
+                    ->toArray();
 
-            if ($question->question_type === 'single_choice') {
-                if (
-                    count($userOptionIds) === 1 &&
-                    count($correctOptionIds) === 1 &&
-                    $userOptionIds[0] === $correctOptionIds[0]
-                ) {
-                    $correctAnswers++;
+                $correctOptionIds = $question->options
+                    ->where('is_correct', true)
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->sort()
+                    ->values()
+                    ->toArray();
+
+                if ($question->question_type === 'single_choice') {
+                    if (
+                        count($userOptionIds) === 1 &&
+                        count($correctOptionIds) === 1 &&
+                        $userOptionIds[0] === $correctOptionIds[0]
+                    ) {
+                        $isCorrect = true;
+                    }
+                } elseif ($question->question_type === 'multiple_choice') {
+                    if ($userOptionIds === $correctOptionIds) {
+                        $isCorrect = true;
+                    }
                 }
-            } elseif ($question->question_type === 'multiple_choice') {
-                if ($userOptionIds === $correctOptionIds) {
-                    $correctAnswers++;
-                }
+            }
+
+            if ($isCorrect) {
+                $correctAnswers++;
             }
         }
 
