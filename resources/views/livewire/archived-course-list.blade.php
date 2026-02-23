@@ -43,8 +43,8 @@
                 </button>
 
 
-                <div x-show="open" @click.away="open = false" x-transition
-                    class="absolute top-14 right-4 z-30
+                <div x-show="open" @click.away="open = false" x-transition x-cloak
+                    class="absolute left-14 top-10 z-30
                        bg-white border rounded-lg shadow-lg w-44">
                     <form action="{{ route('courses.restore', $course) }}" method="POST">
                         @csrf

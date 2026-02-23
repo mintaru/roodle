@@ -152,11 +152,29 @@ class CourseController extends Controller
             'instructor' => 'nullable|string|max:255',
             'image_path' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'groups' => 'array',
+            'period_start' => 'nullable|date',
+            'period_end' => 'nullable|date|after_or_equal:period_start',
         ]);
 
         if ($request->hasFile('image_path')) {
             $validated['image_path'] = $request->file('image_path')->store('courses', 'public');
         }
+
+        $validated['period_start'] = $request->period_start
+            ? Carbon::createFromFormat(
+                'Y-m-d\TH:i',
+                $request->period_start,
+                'Asia/Krasnoyarsk'
+            )->utc()
+            : null;
+
+        $validated['period_end'] = $request->period_end
+            ? Carbon::createFromFormat(
+                'Y-m-d\TH:i',
+                $request->period_end,
+                'Asia/Krasnoyarsk'
+            )->utc()
+            : null;
 
         $course->groups()->sync($request->groups);
 

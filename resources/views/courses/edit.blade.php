@@ -44,6 +44,18 @@
         </div>
 
         <div>
+            <label class="block font-medium">Доступен с:</label>
+            <input type="datetime-local" name="period_start" value="{{ $course->period_start ? $course->period_start->setTimezone('Asia/Krasnoyarsk')->format('Y-m-d\TH:i') : '' }}"
+                   class="w-full border rounded p-2">
+        </div>
+
+        <div>
+            <label class="block font-medium">Доступен до:</label>
+            <input type="datetime-local" name="period_end" value="{{ $course->period_end ? $course->period_end->setTimezone('Asia/Krasnoyarsk')->format('Y-m-d\TH:i') : '' }}"
+                   class="w-full border rounded p-2">
+        </div>
+
+        <div>
             <label class="block font-medium mb-2">Доступен группам:</label>
             <div class="grid grid-cols-2 gap-2">
                 @foreach($groups as $group)
