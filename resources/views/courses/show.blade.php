@@ -34,6 +34,7 @@
                 <a href="{{ route('tests.view', $test) }}">{{ $test->title }}</a><br>
                 @can('edit courses')
                 <a href="{{ route('tests.show', $test) }}">Редактировать тест</a><br>
+                <a href="{{ route('tests.results', $test) }}" class="btn btn-info">Обзор теста</a><br>
                 @endcan
                 <a>
                     @php

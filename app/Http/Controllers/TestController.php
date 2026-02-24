@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\Question;
 use App\Models\TemporaryAnswer;
+use App\Models\TestAttempt;
 use App\Models\Test;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -305,17 +307,18 @@ class TestController extends Controller
 
         $score = $totalQuestions > 0 ? ($correctAnswers / $totalQuestions) * 100 : 0;
 
-        // Обновляем активную попытку
+        // Обновляем активную попытку и сохраняем ответы
         DB::transaction(function () use ($attempt, $score) {
             $attempt->update([
                 'score' => round($score),
                 'ended_at' => now(),
             ]);
 
-            // Удаляем временные ответы
+            // Обновляем все ответы этой попытки, добавляя attempt_id если его нет
             TemporaryAnswer::where('user_id', $attempt->user_id)
                 ->where('test_id', $attempt->test_id)
-                ->delete();
+                ->whereNull('test_attempt_id')
+                ->update(['test_attempt_id' => $attempt->id]);
         });
 
         return view('layout', [
@@ -369,5 +372,171 @@ class TestController extends Controller
             'time_left' => $timeLeft,
             'server_time' => $now->timestamp,
         ]);
+    }
+
+    /**
+     * Отображает результаты теста - кто из учеников сейчас проходит, их статусы и результаты
+     */
+    public function results(Test $test)
+    {
+        // Проверяем, что пользователь с правом редактирования курсов (учитель/админ)
+        if (!Auth::user()->can('edit courses')) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Получаем все группы, связанные с курсом теста
+        $course = $test->course;
+        
+        // Получаем всех уникальных пользователей из групп курса
+        $usersInCourse = $course->groups()
+            ->with('users')
+            ->get()
+            ->pluck('users')
+            ->flatten()
+            ->unique('id')
+            ->values();
+
+        // Подготавливаем данные для каждого пользователя
+        $studentsData = [];
+        
+        foreach ($usersInCourse as $user) {
+            // Все попытки пользователя (завершённые и текущие)
+            $attempts = $test->attempts()
+                ->where('user_id', $user->id)
+                ->orderBy('attempt_number', 'asc')
+                ->get();
+
+            // Определяем, есть ли активная попытка
+            $activeAttempt = $attempts->where('ended_at', null)->first();
+            $completedAttempts = $attempts->where('ended_at', '!=', null);
+            
+            // Какой номер попытки сейчас/будет
+            $currentAttemptNumber = $attempts->count() + 1;
+            
+            // Статус
+            $status = 'не начинали';
+            $minutesSpent = null;
+            
+            if ($activeAttempt) {
+                $status = 'в процессе';
+                // Считаем минуты, прошедшие с начала попытки
+                if ($activeAttempt->started_at) {
+                    $minutesSpent = $activeAttempt->started_at->diffInMinutes(now());
+                }
+            } elseif ($completedAttempts->count() > 0) {
+                $status = 'завершили';
+            }
+
+            $studentsData[] = [
+                'user' => $user,
+                'status' => $status,
+                'current_attempt_number' => $currentAttemptNumber,
+                'minutes_spent' => $minutesSpent,
+                'active_attempt' => $activeAttempt,
+                'completed_attempts' => $completedAttempts,
+            ];
+        }
+
+        // Сортируем по статусу и имени
+        usort($studentsData, function ($a, $b) {
+            $statusOrder = ['в процессе' => 0, 'завершили' => 1, 'не начинали' => 2];
+            if ($statusOrder[$a['status']] !== $statusOrder[$b['status']]) {
+                return $statusOrder[$a['status']] <=> $statusOrder[$b['status']];
+            }
+            return $a['user']->name <=> $b['user']->name;
+        });
+
+        return view('tests.results', compact('test', 'studentsData', 'course'));
+    }
+
+    /**
+     * Просмотр деталей попытки ученика - его ответы
+     */
+    public function viewAttemptDetails(TestAttempt $attempt)
+    {
+        // Проверяем, что пользователь имеет право просматривать (учитель/админ)
+        if (!Auth::user()->can('edit courses')) {
+            abort(403, 'Unauthorized');
+        }
+
+        $test = $attempt->test;
+        $user = $attempt->user;
+        $course = $test->course;
+
+        // Загружаем все вопросы теста с опциями
+        $test->load(['questions' => function ($q) {
+            $q->with('options');
+        }]);
+
+        // Получаем все ответы студента для этой попытки
+        $studentAnswers = TemporaryAnswer::where('test_attempt_id', $attempt->id)
+            ->get()
+            ->groupBy('question_id');
+
+        // Подготавливаем данные для каждого вопроса
+        $questionDetails = [];
+        
+        foreach ($test->questions as $question) {
+            $answers = $studentAnswers->get($question->id, collect());
+            
+            // Определяем, правильный ли ответ
+            $isCorrect = false;
+            $userAnswerText = '';
+            $userSelectedOptions = [];
+            
+            if ($question->question_type === 'short_answer') {
+                // Для текстовых ответов
+                $answer = $answers->first();
+                if ($answer && $answer->answer_text) {
+                    $userAnswerText = $answer->answer_text;
+                    
+                    // Проверяем правильность
+                    $correctOptions = $question->options->where('is_correct', true);
+                    foreach ($correctOptions as $option) {
+                        $correctText = trim($option->option_text);
+                        
+                        if ($option->case_insensitive) {
+                            if (strtolower(preg_replace('/\s+/', '', $userAnswerText)) === 
+                                strtolower(preg_replace('/\s+/', '', $correctText))) {
+                                $isCorrect = true;
+                                break;
+                            }
+                        } else {
+                            if ($userAnswerText === $correctText) {
+                                $isCorrect = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Для множественного выбора
+                $userSelectedOptions = $answers->pluck('option_id')->filter()->toArray();
+                $correctOptionIds = $question->options
+                    ->where('is_correct', true)
+                    ->pluck('id')
+                    ->toArray();
+                
+                if ($question->question_type === 'single_choice') {
+                    $isCorrect = (count($userSelectedOptions) === 1 && 
+                                 in_array($userSelectedOptions[0], $correctOptionIds));
+                } else {
+                    // multiple_choice
+                    sort($userSelectedOptions);
+                    sort($correctOptionIds);
+                    $isCorrect = ($userSelectedOptions === $correctOptionIds);
+                }
+            }
+
+            $questionDetails[] = [
+                'question' => $question,
+                'user_answer_text' => $userAnswerText,
+                'user_selected_option_ids' => $userSelectedOptions,
+                'is_correct' => $isCorrect,
+                'answers' => $answers,
+            ];
+        }
+
+        return view('tests.attempt-details', compact('attempt', 'test', 'user', 'course', 'questionDetails'));
     }
 }

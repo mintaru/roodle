@@ -17,6 +17,7 @@ class TemporaryAnswer extends Model
     protected $fillable = [
         'user_id',
         'test_id',
+        'test_attempt_id',
         'question_id',
         'option_id',
         'answer_text',
@@ -52,6 +53,14 @@ class TemporaryAnswer extends Model
     public function option()
     {
         return $this->belongsTo(Option::class);
+    }
+
+    /**
+     * Отношение "принадлежит одному" с моделью TestAttempt.
+     */
+    public function attempt()
+    {
+        return $this->belongsTo(TestAttempt::class, 'test_attempt_id');
     }
 
     public function scopeForTest($q, int $testId)

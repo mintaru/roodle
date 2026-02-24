@@ -63,6 +63,15 @@ a.btn-success:hover {
     transform: translateY(-2px);
 }
 
+a.btn-info {
+    background: #0891b2;
+    color: #fff;
+}
+a.btn-info:hover {
+    background: #0e7490;
+    transform: translateY(-2px);
+}
+
 ul {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

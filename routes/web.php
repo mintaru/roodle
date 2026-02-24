@@ -79,6 +79,13 @@ Route::post('/tests/{test}/questions', [TestController::class, 'storeQuestion'])
 
 // Удаление вопроса из теста (DELETE-запрос)
 Route::delete('/tests/{test}/questions/{question}', [TestController::class, 'removeQuestion'])->name('tests.removeQuestion');
+
+// Просмотр результатов теста (обзор тестирования)
+Route::get('/tests/{test}/results', [TestController::class, 'results'])->middleware('auth')->name('tests.results');
+
+// Просмотр деталей попытки ученика
+Route::get('/test-attempts/{attempt}/details', [TestController::class, 'viewAttemptDetails'])->middleware('auth')->name('test-attempts.details');
+
 // Эти маршруты показывают, как можно их вынести в контроллер для единообразия.
 
 // Страница для начала прохождения теста
@@ -222,9 +229,10 @@ Route::post('/tests/{test}/save-answer', function (Test $test) {
         if (Auth::check()) {
             $userId = Auth::id();
 
-            // Проверка лимита времени
+            // Получаем текущую попытку
             $attempt = \App\Models\TestAttempt::where('test_id', $test->id)
                         ->where('user_id', $userId)
+                        ->whereNull('ended_at')
                         ->first();
 
             if (!$attempt) {
@@ -251,6 +259,7 @@ Route::post('/tests/{test}/save-answer', function (Test $test) {
             \App\Models\TemporaryAnswer::create([
                 'user_id' => $userId,
                 'test_id' => $test->id,
+                'test_attempt_id' => $attempt->id,
                 'question_id' => $questionId,
                 'option_id' => null,
                 'answer_text' => $answerText,
@@ -273,9 +282,10 @@ Route::post('/tests/{test}/save-answer', function (Test $test) {
         if (Auth::check()) {
             $userId = Auth::id();
 
-            // Проверка лимита времени
+            // Получаем текущую попытку
             $attempt = \App\Models\TestAttempt::where('test_id', $test->id)
                         ->where('user_id', $userId)
+                        ->whereNull('ended_at')
                         ->first();
 
             if (!$attempt) {
@@ -303,6 +313,7 @@ Route::post('/tests/{test}/save-answer', function (Test $test) {
                 \App\Models\TemporaryAnswer::create([
                     'user_id' => $userId,
                     'test_id' => $test->id,
+                    'test_attempt_id' => $attempt->id,
                     'question_id' => $questionId,
                     'option_id' => $optionId,
                 ]);
