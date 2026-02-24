@@ -104,6 +104,7 @@
                             <option value="single_choice">Один правильный ответ (радиокнопки)</option>
                             <option value="multiple_choice">Несколько правильных ответов (чекбоксы)</option>
                             <option value="short_answer">Текстовый ответ</option>
+                            <option value="rich_text_answer">Развёрнутый ответ (форматирование)</option>
                         </select>
                     </div>
 
@@ -140,6 +141,18 @@
                         </div>
                         <!-- Hidden input для отправки значения 0, если checkbox не отмечен -->
                         <input type="hidden" name="case_insensitive" value="0">
+                    </div>
+
+                    <!-- Правильные развёрнутые ответы (для форматированных вопросов) -->
+                    <div class="form-group" id="rich-text-answers-group" style="display: none;">
+                        <label>Правильные ответы (с форматированием)</label>
+                        <div id="rich-text-answers-container" class="rich-text-answers-container">
+                            <div class="rich-text-answer-item" style="margin-bottom: 20px;">
+                                <input id="correct_rich_text_answers_0" type="hidden" name="correct_rich_text_answers[0]">
+                                <trix-editor input="correct_rich_text_answers_0"></trix-editor>
+                            </div>
+                        </div>
+                        <button type="button" id="add-rich-text-answer" class="add-option-btn">+ Добавить ещё ответ</button>
                     </div>
 
                     <button type="submit" class="submit-btn">Создать вопрос</button>
@@ -184,8 +197,11 @@
         const optionsGroup = document.getElementById('options-group');
         const textAnswersGroup = document.getElementById('text-answers-group');
         const textAnswersContainer = document.getElementById('text-answers-container');
+        const richTextAnswersGroup = document.getElementById('rich-text-answers-group');
+        const richTextAnswersContainer = document.getElementById('rich-text-answers-container');
         const addBtn = document.getElementById("add-option");
         const addTextAnswerBtn = document.getElementById("add-text-answer");
+        const addRichTextAnswerBtn = document.getElementById("add-rich-text-answer");
 
         function updateQuestionTypeUI() {
             const type = questionTypeSelect.value;
@@ -195,6 +211,7 @@
             if (type === 'short_answer') {
                 optionsGroup.style.display = 'none';
                 textAnswersGroup.style.display = 'block';
+                richTextAnswersGroup.style.display = 'none';
                 
                 // Убираем required у скрытых полей опций
                 optionInputs.forEach(input => {
@@ -205,9 +222,22 @@
                 textAnswerInputs.forEach(input => {
                     input.required = true;
                 });
+            } else if (type === 'rich_text_answer') {
+                optionsGroup.style.display = 'none';
+                textAnswersGroup.style.display = 'none';
+                richTextAnswersGroup.style.display = 'block';
+                
+                // Убираем required у всех остальных полей
+                optionInputs.forEach(input => {
+                    input.required = false;
+                });
+                textAnswerInputs.forEach(input => {
+                    input.required = false;
+                });
             } else {
                 optionsGroup.style.display = 'block';
                 textAnswersGroup.style.display = 'none';
+                richTextAnswersGroup.style.display = 'none';
                 
                 // Добавляем required к полям опций
                 optionInputs.forEach(input => {
@@ -283,6 +313,21 @@
             }
         });
 
+        addRichTextAnswerBtn.addEventListener("click", function() {
+            const index = richTextAnswersContainer.children.length;
+            const newAnswer = document.createElement("div");
+            newAnswer.className = "rich-text-answer-item";
+            newAnswer.style.marginBottom = "20px";
+            
+            // Генерируем уникальный id для input поля
+            const inputId = `correct_rich_text_answers_${index}`;
+            newAnswer.innerHTML = `
+                <input id="${inputId}" type="hidden" name="correct_rich_text_answers[${index}]">
+                <trix-editor input="${inputId}"></trix-editor>
+            `;
+            richTextAnswersContainer.appendChild(newAnswer);
+        });
+
         document.addEventListener("trix-attachment-add", function(event) {
             const attachment = event.attachment;
 
@@ -328,9 +373,26 @@
                 optionsContainer.querySelectorAll('input').forEach(input => {
                     input.removeAttribute('name');
                 });
+                // Удаляем name у полей богатого текста
+                richTextAnswersContainer.querySelectorAll('input').forEach(input => {
+                    input.removeAttribute('name');
+                });
+            } else if (type === 'rich_text_answer') {
+                // Удаляем name у полей опций
+                optionsContainer.querySelectorAll('input').forEach(input => {
+                    input.removeAttribute('name');
+                });
+                // Удаляем name у полей простого текста
+                textAnswersContainer.querySelectorAll('input[type="text"]').forEach(input => {
+                    input.removeAttribute('name');
+                });
             } else {
                 // Удаляем name у полей текстовых ответов
                 textAnswersContainer.querySelectorAll('input[type="text"]').forEach(input => {
+                    input.removeAttribute('name');
+                });
+                // Удаляем name у полей богатого текста
+                richTextAnswersContainer.querySelectorAll('input').forEach(input => {
                     input.removeAttribute('name');
                 });
             }

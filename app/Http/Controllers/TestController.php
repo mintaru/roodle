@@ -135,7 +135,7 @@ class TestController extends Controller
         // Валидация
         $validatedData = $request->validate([
             'question_text' => 'required|string',
-            'question_type' => 'required|in:single_choice,multiple_choice,short_answer',
+            'question_type' => 'required|in:single_choice,multiple_choice,short_answer,rich_text_answer',
             'options' => 'required_if:question_type,single_choice,multiple_choice|array|min:2',
             'options.*' => 'required_if:question_type,single_choice,multiple_choice|string',
             'correct_option' => 'required_if:question_type,single_choice|integer',
@@ -143,6 +143,8 @@ class TestController extends Controller
             'correct_options.*' => 'integer',
             'correct_answers' => 'required_if:question_type,short_answer|array|min:1',
             'correct_answers.*' => 'required_if:question_type,short_answer|string|min:1',
+            'correct_rich_text_answers' => 'required_if:question_type,rich_text_answer|array|min:1',
+            'correct_rich_text_answers.*' => 'required_if:question_type,rich_text_answer|string|min:1',
             'case_insensitive' => 'nullable|in:0,1',
         ]);
 
@@ -162,6 +164,17 @@ class TestController extends Controller
                         'option_text' => trim($answer),
                         'is_correct' => true,
                         'case_insensitive' => $caseInsensitive,
+                    ]);
+                }
+            }
+        } elseif ($validatedData['question_type'] === 'rich_text_answer') {
+            // Для богатых текстовых ответов создаём опции с правильными ответами
+            foreach ($validatedData['correct_rich_text_answers'] as $answer) {
+                if (trim($answer) !== '') { // Пропускаем пустые ответы
+                    $question->options()->create([
+                        'option_text' => $answer, // Сохраняем с форматированием
+                        'is_correct' => true,
+                        'case_insensitive' => false,
                     ]);
                 }
             }
@@ -217,14 +230,39 @@ class TestController extends Controller
                 ->with('error', 'Активная попытка не найдена.');
         }
 
-        // Берём ответы из POST и TemporaryAnswers
-        $postAnswers = $request->input('answers', []);
-        $textAnswers = $request->input('text_answers', []);
+        // Загружаем ответы из таблицы temporary_answers (сохранённые через AJAX)
+        $tempAnswers = \App\Models\TemporaryAnswer::where('test_attempt_id', $attempt->id)
+            ->where('is_active', true)
+            ->get();
 
-        // Нормализуем POST ответы
-        $merged = [];
-        foreach ($postAnswers as $qId => $val) {
-            $merged[$qId] = is_array($val) ? $val : [$val];
+        // Строим структуры для проверки
+        $textAnswers = [];
+        $richTextAnswers = [];
+        $choiceAnswers = [];
+
+        // Загружаем список типов вопросов
+        $questionTypes = [];
+        foreach ($test->questions as $q) {
+            $questionTypes[$q->id] = $q->question_type;
+        }
+
+        // Заполняем структуры в зависимости от типа вопроса
+        foreach ($tempAnswers as $answer) {
+            $questionType = $questionTypes[$answer->question_id] ?? null;
+            
+            if ($questionType === 'short_answer') {
+                $textAnswers[$answer->question_id] = $answer->answer_text ?? '';
+            } elseif ($questionType === 'rich_text_answer') {
+                $richTextAnswers[$answer->question_id] = $answer->answer_text ?? '';
+            } else {
+                // choice_answer
+                if (!isset($choiceAnswers[$answer->question_id])) {
+                    $choiceAnswers[$answer->question_id] = [];
+                }
+                if ($answer->option_id) {
+                    $choiceAnswers[$answer->question_id][] = (int) $answer->option_id;
+                }
+            }
         }
 
         // Подсчёт
@@ -266,9 +304,30 @@ class TestController extends Controller
                         }
                     }
                 }
+            } elseif ($question->question_type === 'rich_text_answer') {
+                // Для развёрнутых ответов проверяем точное совпадение (без обработки HTML)
+                $userAnswer = trim(strip_tags($richTextAnswers[$question->id] ?? ''));
+                
+                if ($userAnswer === '') {
+                    $isCorrect = false;
+                } else {
+                    // Получаем все правильные ответы для этого вопроса
+                    $correctOptions = $question->options->where('is_correct', true);
+                    
+                    foreach ($correctOptions as $option) {
+                        // Удаляем теги для сравнения текста
+                        $correctText = trim(strip_tags($option->option_text));
+                        
+                        // Проверяем дословное совпадение текстового содержимого
+                        if ($userAnswer === $correctText) {
+                            $isCorrect = true;
+                            break;
+                        }
+                    }
+                }
             } else {
                 // Проверяем выбор вариантов (single_choice или multiple_choice)
-                $raw = $merged[$question->id] ?? [];
+                $raw = $choiceAnswers[$question->id] ?? [];
                 // Нормализация: массив целых
                 $userOptionIds = collect($raw)
                     ->filter() // убираем null/пустые
@@ -313,12 +372,6 @@ class TestController extends Controller
                 'score' => round($score),
                 'ended_at' => now(),
             ]);
-
-            // Обновляем все ответы этой попытки, добавляя attempt_id если его нет
-            TemporaryAnswer::where('user_id', $attempt->user_id)
-                ->where('test_id', $attempt->test_id)
-                ->whereNull('test_attempt_id')
-                ->update(['test_attempt_id' => $attempt->id]);
 
             // Помечаем все ответы текущей попытки как неактивные
             TemporaryAnswer::where('test_attempt_id', $attempt->id)
@@ -510,6 +563,24 @@ class TestController extends Controller
                                 $isCorrect = true;
                                 break;
                             }
+                        }
+                    }
+                }
+            } elseif ($question->question_type === 'rich_text_answer') {
+                // Для развёрнутых ответов
+                $answer = $answers->first();
+                if ($answer && $answer->answer_text) {
+                    $userAnswerText = $answer->answer_text;
+                    
+                    // Проверяем правильность
+                    $userAnswerStripped = trim(strip_tags($userAnswerText));
+                    $correctOptions = $question->options->where('is_correct', true);
+                    foreach ($correctOptions as $option) {
+                        $correctText = trim(strip_tags($option->option_text));
+                        
+                        if ($userAnswerStripped === $correctText) {
+                            $isCorrect = true;
+                            break;
                         }
                     }
                 }
