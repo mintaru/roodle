@@ -4,6 +4,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="server-time" content="{{ now()->timestamp * 1000 }}">
     <meta name="test-start-time" content="{{ $attempt->started_at ? $attempt->started_at->timestamp * 1000 : now()->timestamp * 1000 }}">
+    <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.umd.min.js"></script>
 @endsection
 
 @section('content')
@@ -44,12 +46,22 @@
                                         placeholder="Введите ответ..."
                                         value="{{ $savedText }}"
                                         data-question-id="{{ $question->id }}">
+                                @elseif ($question->question_type === 'rich_text_answer')
+                                    {{-- Развёрнутый ответ --}}
+                                    @php
+                                        $savedRichText = '';
+                                        if (isset($savedAnswers[$question->id]) && is_string($savedAnswers[$question->id])) {
+                                            $savedRichText = $savedAnswers[$question->id];
+                                        }
+                                    @endphp
+                                    <input type="hidden" id="rich_text_answer_{{ $question->id }}" name="rich_text_answers[{{ $question->id }}]" value="{{ $savedRichText }}">
+                                    <trix-editor input="rich_text_answer_{{ $question->id }}" data-question-id="{{ $question->id }}" class="rich-text-answer-input"></trix-editor>
                                 @else
                                     {{-- Варианты выбора --}}
                                     @foreach ($question->options as $option)
                                         @php
                                             $isChecked = false;
-                                            if (isset($savedAnswers[$question->id])) {
+                                            if (isset($savedAnswers[$question->id]) && is_array($savedAnswers[$question->id])) {
                                                 if ($question->question_type === 'single_choice') {
                                                     // Для single_choice сравниваем с первым элементом массива
                                                     $isChecked = $savedAnswers[$question->id][0] == $option->id;
@@ -85,6 +97,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const inputs = document.querySelectorAll('.answer-input');
             const textInputs = document.querySelectorAll('.text-answer-input');
+            const richTextEditors = document.querySelectorAll('.rich-text-answer-input');
 
             inputs.forEach(input => {
                 input.addEventListener('change', async function() {
@@ -151,6 +164,38 @@
                         }
                     } catch (error) {
                         console.error('Error saving text answer:', error);
+                    }
+                });
+            });
+
+            // Сохранение развёрнутых ответов (Trix editors)
+            richTextEditors.forEach(editor => {
+                editor.addEventListener('trix-change', async function() {
+                    try {
+                        const questionId = this.dataset.questionId;
+                        const inputId = this.getAttribute('input');
+                        const answerText = document.getElementById(inputId).value;
+
+                        const response = await fetch(
+                            `/tests/{{ $test->id }}/save-answer`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document
+                                        .querySelector('meta[name="csrf-token"]')
+                                        .getAttribute('content')
+                                },
+                                body: JSON.stringify({
+                                    question_id: questionId,
+                                    rich_text_answer: answerText
+                                })
+                            });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                    } catch (error) {
+                        console.error('Error saving rich text answer:', error);
                     }
                 });
             });

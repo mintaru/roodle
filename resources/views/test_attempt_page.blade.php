@@ -2,6 +2,7 @@
 
 @section('head')
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
 @endsection
 
 @section('content')
@@ -22,7 +23,7 @@
                         {{-- Текстовый ответ --}}
                         @php
                             $savedText = '';
-                            if (isset($savedAnswers[$question->id])) {
+                            if (isset($savedAnswers[$question->id]) && is_string($savedAnswers[$question->id])) {
                                 $savedText = $savedAnswers[$question->id];
                             }
                         @endphp
@@ -33,12 +34,22 @@
                             placeholder="Введите ответ..."
                             value="{{ $savedText }}"
                             data-question-id="{{ $question->id }}">
+                    @elseif ($question->question_type === 'rich_text_answer')
+                        {{-- Развёрнутый ответ --}}
+                        @php
+                            $savedRichText = '';
+                            if (isset($savedAnswers[$question->id]) && is_string($savedAnswers[$question->id])) {
+                                $savedRichText = $savedAnswers[$question->id];
+                            }
+                        @endphp
+                        <input type="hidden" id="rich_text_answer_{{ $question->id }}" name="rich_text_answers[{{ $question->id }}]" value="{{ $savedRichText }}">
+                        <trix-editor input="rich_text_answer_{{ $question->id }}" data-question-id="{{ $question->id }}" class="rich-text-answer-input"></trix-editor>
                     @else
                         {{-- Варианты выбора --}}
                         @foreach($question->options as $option)
                             @php
                                 $isChecked = false;
-                                if (isset($savedAnswers[$question->id])) {
+                                if (isset($savedAnswers[$question->id]) && is_array($savedAnswers[$question->id])) {
                                     if ($question->question_type === 'single_choice') {
                                         $isChecked = $savedAnswers[$question->id][0] == $option->id;
                                     } else {
@@ -75,9 +86,7 @@
                         Следующий →
                     </a>
                 @else
-                    <button type="submit" class="btn btn-success">
-                        Завершить тест
-                    </button>
+                    <span></span>
                 @endif
             </div>
         </form>
@@ -88,6 +97,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const inputs = document.querySelectorAll('.answer-input');
         const textInputs = document.querySelectorAll('.text-answer-input');
+        const richTextEditors = document.querySelectorAll('.rich-text-answer-input');
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
         inputs.forEach(input => {
@@ -141,6 +151,46 @@
                             'Accept': 'application/json'
                         },
                         body: JSON.stringify({
+                            question_id: questionId,
+                            answer_text: answerText
+                        })
+                    });
+
+                    if (!response.ok) {
+                        console.error('Save text answer failed', response.status);
+                    }
+                } catch (error) {
+                    console.error('Error saving text answer:', error);
+                }
+            });
+        });
+
+        // Сохранение развёрнутых ответов (Trix editors)
+        richTextEditors.forEach(editor => {
+            editor.addEventListener('trix-change', async function() {
+                try {
+                    const questionId = this.dataset.questionId;
+                    const inputId = this.getAttribute('input');
+                    const answerText = document.getElementById(inputId).value;
+
+                    const response = await fetch(`/tests/{{ $test->id }}/save-answer`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            question_id: questionId,
+                            rich_text_answer: answerText
+                        })
+                    });
+
+                    if (!response.ok) {
+                        console.error('Save rich text answer failed', response.status);
+                    }
+                } catch (error) {
+                    console.error('Error saving rich
                             question_id: questionId,
                             answer_text: answerText
                         })

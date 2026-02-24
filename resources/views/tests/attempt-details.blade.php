@@ -335,7 +335,8 @@
                     <div class="question-text">{{ strip_tags($question->question_text) }}</div>
                     <span class="question-type">{{ 
                         $question->question_type === 'single_choice' ? 'Один ответ' : 
-                        ($question->question_type === 'multiple_choice' ? 'Несколько ответов' : 'Текстовый ответ')
+                        ($question->question_type === 'multiple_choice' ? 'Несколько ответов' : 
+                        ($question->question_type === 'rich_text_answer' ? 'Развёрнутый ответ' : 'Текстовый ответ'))
                     }}</span>
                 </div>
                 <span class="correctness-badge {{ $badgeClass }}">{{ $badgeText }}</span>
@@ -363,44 +364,26 @@
                         </div>
                     @endif
 
-                @elseif($question->question_type === 'single_choice')
+                @elseif($question->question_type === 'rich_text_answer')
                     <div style="margin-bottom: 15px;">
-                        <strong style="display: block; margin-bottom: 8px; color: #666; font-size: 13px; text-transform: uppercase;">Варианты ответа:</strong>
-                        @foreach($question->options as $option)
-                            @php
-                                $isUserSelected = in_array($option->id, $detail['user_selected_option_ids']);
-                                $isCorrectOption = $option->is_correct;
-                                $optionClass = '';
-                                
-                                if ($isUserSelected && $isCorrectOption) {
-                                    $optionClass = 'selected correct';
-                                } elseif ($isUserSelected && !$isCorrectOption) {
-                                    $optionClass = 'selected incorrect';
-                                } elseif ($isCorrectOption) {
-                                    $optionClass = 'correct';
-                                } elseif ($isUserSelected) {
-                                    $optionClass = 'selected';
-                                }
-                            @endphp
-
-                            <div class="option {{ $optionClass }}">
-                                <div class="option-label">
-                                    <span class="option-radio">
-                                        <input type="radio" disabled {{ $isUserSelected ? 'checked' : '' }}>
-                                    </span>
-                                    <span class="option-text">
-                                        {{ $option->option_text }}
-                                        @if($isUserSelected)
-                                            <span class="option-badge user-answer">Ответ студента</span>
-                                        @endif
-                                        @if($isCorrectOption && !$isUserSelected)
-                                            <span class="option-badge correct-answer">Правильный ответ</span>
-                                        @endif
-                                    </span>
-                                </div>
+                        <strong style="display: block; margin-bottom: 8px; color: #666; font-size: 13px; text-transform: uppercase;">Ответ студента:</strong>
+                        @if($detail['user_answer_text'])
+                            <div class="text-answer-box {{ $isCorrect ? 'correct' : 'incorrect' }}">
+                                {!! $detail['user_answer_text'] !!}
                             </div>
-                        @endforeach
+                        @else
+                            <div class="no-answer">Студент не дал ответ</div>
+                        @endif
                     </div>
+
+                    @if(!$isCorrect)
+                        <div class="correct-answers">
+                            <div class="correct-answers-title">Правильные ответы:</div>
+                            @foreach($question->options->where('is_correct', true) as $option)
+                                <div>{!! $option->option_text !!}</div>
+                            @endforeach
+                        </div>
+                    @endif
 
                 @else
                     {{-- multiple_choice --}}
