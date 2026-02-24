@@ -3,7 +3,7 @@
 @section('head')
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="server-time" content="{{ now()->timestamp * 1000 }}">
-    <meta name="test-start-time" content="{{ $attempt->started_at->timestamp * 1000 }}">
+    <meta name="test-start-time" content="{{ $attempt->started_at ? $attempt->started_at->timestamp * 1000 : now()->timestamp * 1000 }}">
 @endsection
 
 @section('content')
@@ -29,29 +29,47 @@
                         <div class="border-t pt-6">
                             <p class="font-semibold text-lg mb-4">{{ $loop->iteration }}. {!! $question->question_text !!}</p>
                             <div class="space-y-3 pl-4">
-                                @foreach ($question->options as $option)
+                                @if ($question->question_type === 'short_answer')
+                                    {{-- Текстовый ответ --}}
                                     @php
-                                        $isChecked = false;
+                                        $savedText = '';
                                         if (isset($savedAnswers[$question->id])) {
-                                            if ($question->question_type === 'single_choice') {
-                                                // Для single_choice сравниваем с первым элементом массива
-                                                $isChecked = $savedAnswers[$question->id][0] == $option->id;
-                                            } else {
-                                                // Для multiple_choice проверяем наличие значения в массиве
-                                                $isChecked = in_array($option->id, $savedAnswers[$question->id]);
-                                            }
+                                            $savedText = $savedAnswers[$question->id];
                                         }
                                     @endphp
-                                    <label
-                                        class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors">
-                                        <input
-                                            type="{{ $question->question_type === 'single_choice' ? 'radio' : 'checkbox' }}"
-                                            name="answers[{{ $question->id }}]{{ $question->question_type === 'multiple_choice' ? '[]' : '' }}"
-                                            value="{{ $option->id }}" class="answer-input"
-                                            data-question-id="{{ $question->id }}" {{ $isChecked ? 'checked' : '' }}>
-                                        <span>{{ $option->option_text }}</span>
-                                    </label>
-                                @endforeach
+                                    <input
+                                        type="text"
+                                        name="text_answers[{{ $question->id }}]"
+                                        class="text-answer-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        placeholder="Введите ответ..."
+                                        value="{{ $savedText }}"
+                                        data-question-id="{{ $question->id }}">
+                                @else
+                                    {{-- Варианты выбора --}}
+                                    @foreach ($question->options as $option)
+                                        @php
+                                            $isChecked = false;
+                                            if (isset($savedAnswers[$question->id])) {
+                                                if ($question->question_type === 'single_choice') {
+                                                    // Для single_choice сравниваем с первым элементом массива
+                                                    $isChecked = $savedAnswers[$question->id][0] == $option->id;
+                                                } else {
+                                                    // Для multiple_choice проверяем наличие значения в массиве
+                                                    $isChecked = in_array($option->id, $savedAnswers[$question->id]);
+                                                }
+                                            }
+                                        @endphp
+                                        <label
+                                            class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition-colors">
+                                            <input
+                                                type="{{ $question->question_type === 'single_choice' ? 'radio' : 'checkbox' }}"
+                                                name="answers[{{ $question->id }}]{{ $question->question_type === 'multiple_choice' ? '[]' : '' }}"
+                                                value="{{ $option->id }}" class="answer-input"
+                                                data-question-id="{{ $question->id }}" {{ $isChecked ? 'checked' : '' }}>
+                                            <span>{{ $option->option_text }}</span>
+                                        </label>
+                                    @endforeach
+                                @endif
                             </div>
                         </div>
                     @endforeach
@@ -66,6 +84,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const inputs = document.querySelectorAll('.answer-input');
+            const textInputs = document.querySelectorAll('.text-answer-input');
 
             inputs.forEach(input => {
                 input.addEventListener('change', async function() {
@@ -101,6 +120,37 @@
                         }
                     } catch (error) {
                         console.error('Error saving answer:', error);
+                    }
+                });
+            });
+
+            // Сохранение текстовых ответов
+            textInputs.forEach(input => {
+                input.addEventListener('change', async function() {
+                    try {
+                        const questionId = this.dataset.questionId;
+                        const answerText = this.value;
+
+                        const response = await fetch(
+                            `/tests/{{ $test->id }}/save-answer`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document
+                                        .querySelector('meta[name="csrf-token"]')
+                                        .getAttribute('content')
+                                },
+                                body: JSON.stringify({
+                                    question_id: questionId,
+                                    answer_text: answerText
+                                })
+                            });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                    } catch (error) {
+                        console.error('Error saving text answer:', error);
                     }
                 });
             });

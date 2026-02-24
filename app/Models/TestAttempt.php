@@ -30,6 +30,11 @@ class TestAttempt extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function answers()
+    {
+        return $this->hasMany(TemporaryAnswer::class, 'test_attempt_id');
+    }
+
     public function index()
     {
         $users = TestAttempt::all(); // получаем все записи из таблицы
