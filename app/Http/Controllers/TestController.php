@@ -319,6 +319,10 @@ class TestController extends Controller
                 ->where('test_id', $attempt->test_id)
                 ->whereNull('test_attempt_id')
                 ->update(['test_attempt_id' => $attempt->id]);
+
+            // Помечаем все ответы текущей попытки как неактивные
+            TemporaryAnswer::where('test_attempt_id', $attempt->id)
+                ->update(['is_active' => false]);
         });
 
         return view('layout', [

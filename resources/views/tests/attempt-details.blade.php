@@ -292,7 +292,6 @@
             <div class="info-box">
                 <div class="info-label">Студент</div>
                 <div class="info-value">{{ $user->name }}</div>
-                <small style="color: #999;">@{{ $user->username }}</small>
             </div>
             <div class="info-box">
                 <div class="info-label">Попытка</div>
@@ -310,7 +309,7 @@
             </div>
             <div class="info-box">
                 <div class="info-label">Время затрачено</div>
-                <div class="info-value">{{ $attempt->started_at->diffInMinutes($attempt->ended_at) }} мин</div>
+                <div class="info-value">{{ \App\Helpers\TimeFormatter::formatMinutes($attempt->started_at->diffInMinutes($attempt->ended_at)) }}</div>
             </div>
             <div class="info-box">
                 <div class="info-label">Курс</div>
@@ -333,7 +332,7 @@
             <div class="question-header">
                 <div>
                     <div class="question-number">Вопрос {{ $index + 1 }}</div>
-                    <div class="question-text">{{ $question->question_text }}</div>
+                    <div class="question-text">{{ strip_tags($question->question_text) }}</div>
                     <span class="question-type">{{ 
                         $question->question_type === 'single_choice' ? 'Один ответ' : 
                         ($question->question_type === 'multiple_choice' ? 'Несколько ответов' : 'Текстовый ответ')

@@ -274,7 +274,7 @@
                         </td>
                         <td style="text-align: center;">
                             @if($data['minutes_spent'] !== null)
-                                {{ $data['minutes_spent'] }} мин.
+                                {{ \App\Helpers\TimeFormatter::formatMinutes($data['minutes_spent']) }}
                             @else
                                 —
                             @endif
