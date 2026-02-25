@@ -11,7 +11,7 @@
             </a>
             @endhasanyrole
             <div class="text-center mb-6">
-                <p class="font-semibold">Всего попыток: {{ $test->max_attempts == 0 ? '∞' : $test->max_attempts }}</p>
+                <p class="font-semibold">Всего попыток: {{ $isUnlimited ? '∞' : $maxAttemptsForUser }}</p>
                 <p>Использовано: {{ $userAttemptsCount }}</p>
                 <p>Осталось: {{ $remaining }}</p>
 
@@ -42,7 +42,7 @@
             </div>
 
             <div class="text-center space-y-3">
-                @if ($test->max_attempts == 0 || $userAttemptsCount < $test->max_attempts)
+                @if ($isUnlimited || $userAttemptsCount < $maxAttemptsForUser)
                     @if ($hasActiveAttempt)
                         <a href="{{ route('tests.attempt', $test) }}" class="btn btn-primary">
                             Продолжить попытку

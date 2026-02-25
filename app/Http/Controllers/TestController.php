@@ -8,6 +8,7 @@ use App\Models\TemporaryAnswer;
 use App\Models\TestAttempt;
 use App\Models\Test;
 use App\Models\User;
+use App\Models\UserTestExtraAttempt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -102,13 +103,20 @@ class TestController extends Controller
         $user = Auth::user();
 
         // Количество попыток пользователя
-        $userAttemptsCount = $test->attempts()->where('user_id', $user->id)->whereNotNull('ended_at')->count();
+        $userAttemptsCount = $test->attempts()
+            ->where('user_id', $user->id)
+            ->whereNotNull('ended_at')
+            ->count();
         $userAttempts = $test->attempts()->where('user_id', $user->id)->whereNotNull('ended_at')->get();
 
+        // Максимальное количество попыток для пользователя (с учётом дополнительных)
+        $maxAttemptsForUser = $test->getMaxAttemptsForUser($user->id);
+        $isUnlimited = ($maxAttemptsForUser === 0);
+
         // Оставшиеся попытки
-        $remaining = $test->max_attempts == 0
+        $remaining = $isUnlimited
             ? '∞'
-            : max(0, $test->max_attempts - $userAttemptsCount);
+            : max(0, $maxAttemptsForUser - $userAttemptsCount);
 
         // Проверяем, есть ли активная попытка (где ended_at == null)
         $hasActiveAttempt = $test->attempts()
@@ -124,7 +132,16 @@ class TestController extends Controller
                 ->first();
         }
 
-        return view('tests.view', compact('test', 'userAttemptsCount', 'userAttempts', 'remaining', 'hasActiveAttempt', 'activeAttempt'));
+        return view('tests.view', compact(
+            'test',
+            'userAttemptsCount',
+            'userAttempts',
+            'remaining',
+            'hasActiveAttempt',
+            'activeAttempt',
+            'maxAttemptsForUser',
+            'isUnlimited'
+        ));
     }
 
     /**
@@ -613,5 +630,39 @@ class TestController extends Controller
         }
 
         return view('tests.attempt-details', compact('attempt', 'test', 'user', 'course', 'questionDetails'));
+    }
+
+    public function grantExtraAttempts(Request $request, Test $test, User $user)
+    {
+        // Проверяем, что пользователь имеет право (учитель/админ)
+        if (!Auth::user()->can('edit courses')) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Валидируем данные
+        $validated = $request->validate([
+            'extra_attempts' => 'required|integer|min:1|max:100'
+        ]);
+
+        // Ищем существующую запись
+        $extraAttempts = UserTestExtraAttempt::where('user_id', $user->id)
+            ->where('test_id', $test->id)
+            ->first();
+
+        if ($extraAttempts) {
+            // Увеличиваем количество дополнительных попыток
+            $extraAttempts->extra_attempts += $validated['extra_attempts'];
+            $extraAttempts->save();
+        } else {
+            // Создаём новую запись
+            UserTestExtraAttempt::create([
+                'user_id' => $user->id,
+                'test_id' => $test->id,
+                'extra_attempts' => $validated['extra_attempts'],
+                'created_by' => Auth::id()
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Студенту {$user->name} добавлено {$validated['extra_attempts']} попыток на прохождение теста.");
     }
 }
