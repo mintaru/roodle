@@ -61,6 +61,11 @@ class Test extends Model
         return $this->hasMany(TestAttempt::class);
     }
 
+    public function extraAttempts()
+    {
+        return $this->hasMany(UserTestExtraAttempt::class);
+    }
+
     public function isAvailable(): bool
     {
         if (Auth::check() && Auth::user()->hasRole('admin')) {
@@ -110,4 +115,20 @@ public function formattedPeriodEnd(): ?string
         : null;
 }
 
+/**
+ * Получает максимально допустимое количество попыток для пользователя (базовые + дополнительные)
+ */
+public function getMaxAttemptsForUser($userId): int
+{
+    if ($this->max_attempts <= 0) {
+        return 0; // Неограниченное количество
+    }
+
+    $extraAttempts = UserTestExtraAttempt::where('user_id', $userId)
+        ->where('test_id', $this->id)
+        ->first();
+
+    return $this->max_attempts + ($extraAttempts ? $extraAttempts->extra_attempts : 0);
 }
+}
+

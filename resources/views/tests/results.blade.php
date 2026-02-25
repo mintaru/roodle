@@ -210,7 +210,33 @@
                 font-size: 11px;
             }
         }
+
+        [x-cloak] {
+            display: none !important;
+        }
+
+        /* Позволяем выпадающему меню выходить за пределы таблицы */
+        table {
+            overflow: visible !important;
+        }
+
+        tbody {
+            overflow: visible !important;
+        }
+
+        tr {
+            overflow: visible !important;
+        }
+
+        td[x-data] {
+            overflow: visible !important;
+        }
+
+        div[x-show] {
+            overflow: visible !important;
+        }
     </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body>
 @include('components.menu')
@@ -311,14 +337,44 @@
                                 <em style="color: #999;">Нет завершённых попыток</em>
                             @endif
                         </td>
-                        <td style="text-align: center;">
-                            @if($data['active_attempt'] && $data['active_attempt']->ended_at)
-                                <a href="{{ route('test-attempts.details', $data['active_attempt']) }}" style="color: #0891b2; text-decoration: none; font-weight: 600; font-size: 13px;">
-                                    Просмотр ↗
-                                </a>
-                            @else
-                                —
-                            @endif
+                        <td style="text-align: center; position: relative;" x-data="{ open: false }">
+                            <button @click="open = !open" style="background: none; border: none; cursor: pointer; padding: 5px; margin-left: 10px; z-index: 31; position: relative;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="color: #666;">
+                                    <circle cx="12" cy="5" r="2" />
+                                    <circle cx="12" cy="12" r="2" />
+                                    <circle cx="12" cy="19" r="2" />
+                                </svg>
+                            </button>
+
+                            <div x-show="open" @click.away="open = false" x-transition x-cloak
+                                style="position: absolute; right: 0; z-index: 50; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); min-width: 300px; white-space: nowrap;">
+                                <div style="padding: 20px;">
+                                    <h3 style="margin-bottom: 15px; color: #2c3e50; font-size: 14px; font-weight: 600;">Выдать дополнительные попытки</h3>
+                                    
+                                    @if(session('success'))
+                                        <div style="padding: 10px; margin-bottom: 15px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724; font-size: 12px;">
+                                            {{ session('success') }}
+                                        </div>
+                                    @endif
+                            
+                                    <form action="{{ route('test-attempts.grant-attempts', ['test' => $test, 'user' => $data['user']]) }}" method="POST">
+                                        @csrf
+                                        <div style="margin-bottom: 15px;">
+                                            <label for="extra_attempts_{{ $loop->index }}" style="display: block; margin-bottom: 5px; font-size: 13px; color: #333; font-weight: 500;">
+                                                Количество попыток
+                                            </label>
+                                            <input type="number" id="extra_attempts_{{ $loop->index }}" name="extra_attempts" value="1" min="1" max="100" 
+                                                   style="width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 4px; font-size: 13px;">
+                                            @error('extra_attempts')
+                                                <div style="color: #e74c3c; font-size: 11px; margin-top: 4px;">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <button type="submit" style="width: 100%; padding: 10px; background: #27ae60; color: white; border: none; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.3s;">
+                                            Выдать попытки
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 @endforeach
@@ -355,9 +411,22 @@
     document.getElementById('filter-not-started').addEventListener('change', updateTableFilter);
 
     // Обновляем таблицу каждые 10 секунд для отображения текущего времени
-    setInterval(() => {
-        location.reload();
-    }, 10000);
+    // setInterval(() => {
+    //     location.reload();
+    // }, 10000);
+
+    // Проверяем загрузку Alpine.js
+    document.addEventListener('alpine:init', () => {
+        console.log('✓ Alpine.js initialized successfully');
+    });
+
+    setTimeout(() => {
+        if (typeof Alpine !== 'undefined') {
+            console.log('✓ Alpine.js loaded successfully');
+        } else {
+            console.error('✗ Alpine.js not found');
+        }
+    }, 100);
 </script>
 </body>
 </html>
