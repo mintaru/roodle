@@ -143,18 +143,6 @@
                         <input type="hidden" name="case_insensitive" value="0">
                     </div>
 
-                    <!-- Правильные развёрнутые ответы (для форматированных вопросов) -->
-                    <div class="form-group" id="rich-text-answers-group" style="display: none;">
-                        <label>Правильные ответы (с форматированием)</label>
-                        <div id="rich-text-answers-container" class="rich-text-answers-container">
-                            <div class="rich-text-answer-item" style="margin-bottom: 20px;">
-                                <input id="correct_rich_text_answers_0" type="hidden" name="correct_rich_text_answers[0]">
-                                <trix-editor input="correct_rich_text_answers_0"></trix-editor>
-                            </div>
-                        </div>
-                        <button type="button" id="add-rich-text-answer" class="add-option-btn">+ Добавить ещё ответ</button>
-                    </div>
-
                     <button type="submit" class="submit-btn">Создать вопрос</button>
                 </form>
 
@@ -197,11 +185,8 @@
         const optionsGroup = document.getElementById('options-group');
         const textAnswersGroup = document.getElementById('text-answers-group');
         const textAnswersContainer = document.getElementById('text-answers-container');
-        const richTextAnswersGroup = document.getElementById('rich-text-answers-group');
-        const richTextAnswersContainer = document.getElementById('rich-text-answers-container');
         const addBtn = document.getElementById("add-option");
         const addTextAnswerBtn = document.getElementById("add-text-answer");
-        const addRichTextAnswerBtn = document.getElementById("add-rich-text-answer");
 
         function updateQuestionTypeUI() {
             const type = questionTypeSelect.value;
@@ -211,7 +196,6 @@
             if (type === 'short_answer') {
                 optionsGroup.style.display = 'none';
                 textAnswersGroup.style.display = 'block';
-                richTextAnswersGroup.style.display = 'none';
                 
                 // Убираем required у скрытых полей опций
                 optionInputs.forEach(input => {
@@ -223,11 +207,11 @@
                     input.required = true;
                 });
             } else if (type === 'rich_text_answer') {
+                // Для развёрнутых ответов не требуется задавать правильные варианты
                 optionsGroup.style.display = 'none';
                 textAnswersGroup.style.display = 'none';
-                richTextAnswersGroup.style.display = 'block';
-                
-                // Убираем required у всех остальных полей
+
+                // Убираем required у всех полей вариантов и текстовых ответов
                 optionInputs.forEach(input => {
                     input.required = false;
                 });
@@ -313,21 +297,6 @@
             }
         });
 
-        addRichTextAnswerBtn.addEventListener("click", function() {
-            const index = richTextAnswersContainer.children.length;
-            const newAnswer = document.createElement("div");
-            newAnswer.className = "rich-text-answer-item";
-            newAnswer.style.marginBottom = "20px";
-            
-            // Генерируем уникальный id для input поля
-            const inputId = `correct_rich_text_answers_${index}`;
-            newAnswer.innerHTML = `
-                <input id="${inputId}" type="hidden" name="correct_rich_text_answers[${index}]">
-                <trix-editor input="${inputId}"></trix-editor>
-            `;
-            richTextAnswersContainer.appendChild(newAnswer);
-        });
-
         document.addEventListener("trix-attachment-add", function(event) {
             const attachment = event.attachment;
 
@@ -373,10 +342,6 @@
                 optionsContainer.querySelectorAll('input').forEach(input => {
                     input.removeAttribute('name');
                 });
-                // Удаляем name у полей богатого текста
-                richTextAnswersContainer.querySelectorAll('input').forEach(input => {
-                    input.removeAttribute('name');
-                });
             } else if (type === 'rich_text_answer') {
                 // Удаляем name у полей опций
                 optionsContainer.querySelectorAll('input').forEach(input => {
@@ -389,10 +354,6 @@
             } else {
                 // Удаляем name у полей текстовых ответов
                 textAnswersContainer.querySelectorAll('input[type="text"]').forEach(input => {
-                    input.removeAttribute('name');
-                });
-                // Удаляем name у полей богатого текста
-                richTextAnswersContainer.querySelectorAll('input').forEach(input => {
                     input.removeAttribute('name');
                 });
             }

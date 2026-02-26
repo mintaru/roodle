@@ -17,11 +17,13 @@ class TemporaryAnswer extends Model
     protected $fillable = [
         'user_id',
         'test_id',
-        'test_attempt_id',
         'question_id',
         'option_id',
         'answer_text',
         'is_active',
+        'test_attempt_id',
+        'is_manually_graded',
+        'is_correct_manual',
     ];
 
     /**

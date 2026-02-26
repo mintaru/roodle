@@ -118,17 +118,38 @@ class CourseController extends Controller
     {
         abort_if(! $course->isAvailable(), 404);
 
-        if (Auth::user()->hasRole('admin') || Auth::user()->hasRole('teacher')) {
+        $user = Auth::user();
+
+        if ($user->hasRole('admin') || $user->hasRole('teacher')) {
             // Админ и преподаватель видят все тесты
             $course->load('tests');
-
-            return view('courses.show', compact('course'));
+        } else {
+            // Студент видит только доступные тесты
+            $course->load([
+                'tests' => fn ($query) => $query->available(),
+            ]);
         }
-        $course->load([
-            'tests' => fn ($query) => $query->available(),
-        ]);
 
-        return view('courses.show', compact('course'));
+        // Считаем оставшиеся попытки для каждого теста так же, как в TestController::view
+        $remainingByTest = [];
+
+        foreach ($course->tests as $test) {
+            // Количество завершённых попыток пользователя по этому тесту
+            $userAttemptsCount = $test->attempts()
+                ->where('user_id', $user->id)
+                ->whereNotNull('ended_at')
+                ->count();
+
+            // Максимальное количество попыток с учётом дополнительных
+            $maxAttemptsForUser = $test->getMaxAttemptsForUser($user->id);
+            $isUnlimited = ($maxAttemptsForUser === 0);
+
+            $remainingByTest[$test->id] = $isUnlimited
+                ? '∞'
+                : max(0, $maxAttemptsForUser - $userAttemptsCount);
+        }
+
+        return view('courses.show', compact('course', 'remainingByTest'));
     }
 
     /**

@@ -22,12 +22,15 @@ class Test extends Model
         'max_attempts',
         'time_limit',
         'period_start',
-        'period_end'
+        'period_end',
+        'randomize_questions',
+        'display_mode',
     ];
 
     protected $casts = [
         'period_start' => 'datetime',
         'period_end' => 'datetime',
+        'randomize_questions' => 'boolean',
     ];
     
 

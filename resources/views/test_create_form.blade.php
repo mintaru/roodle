@@ -36,6 +36,22 @@
                     </label>
                 </div>
             </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">Порядок вопросов</label>
+                <label class="inline-flex items-center">
+                    <input type="checkbox" name="randomize_questions" value="1" class="mr-2">
+                    Случайно перемешивать вопросы для студента
+                </label>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">Режим отображения вопросов</label>
+                <select name="display_mode" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="single_page">Все вопросы на одной странице</option>
+                    <option value="per_question">Каждый вопрос на отдельной странице (с навигацией)</option>
+                </select>
+            </div>
             <div class="form-group">
                 <label for="time_limit">Ограничение по времени (минуты, 0 = без ограничения)</label>
                 <input type="number" name="time_limit" id="time_limit" value="{{ old('time_limit', $test->time_limit ?? 0) }}" min="0" class="form-control">

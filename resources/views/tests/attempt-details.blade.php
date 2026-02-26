@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Детали попытки: {{ $user->name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -225,7 +226,6 @@
             border: 2px solid #eee;
             border-radius: 6px;
             margin-top: 10px;
-            font-family: 'Courier New', monospace;
             color: #333;
         }
 
@@ -235,6 +235,25 @@
         }
 
         .text-answer-box.incorrect {
+            background: #ffebee;
+            border-color: #d32f2f;
+        }
+
+        .rich-text-answer-box {
+            background: #ffffff;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 6px;
+            margin-top: 10px;
+            color: #333;
+        }
+
+        .rich-text-answer-box.correct {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        .rich-text-answer-box.incorrect {
             background: #ffebee;
             border-color: #d32f2f;
         }
@@ -320,29 +339,42 @@
 
     <h2 style="margin-bottom: 20px; color: #2c3e50;">Ответы студента</h2>
 
-    @foreach($questionDetails as $index => $detail)
-        @php
-            $question = $detail['question'];
-            $isCorrect = $detail['is_correct'];
-            $badgeClass = $isCorrect ? 'correct' : ($detail['user_answer_text'] || count($detail['user_selected_option_ids']) > 0 ? 'incorrect' : 'empty');
-            $badgeText = $isCorrect ? '✓ Правильно' : (($detail['user_answer_text'] || count($detail['user_selected_option_ids']) > 0) ? '✗ Неправильно' : 'Не ответил');
-        @endphp
+    <form method="POST" action="{{ route('test-attempts.grade-rich-text', $attempt) }}">
+        @csrf
 
-        <div class="question-card">
-            <div class="question-header">
-                <div>
-                    <div class="question-number">Вопрос {{ $index + 1 }}</div>
-                    <div class="question-text">{{ strip_tags($question->question_text) }}</div>
-                    <span class="question-type">{{ 
-                        $question->question_type === 'single_choice' ? 'Один ответ' : 
-                        ($question->question_type === 'multiple_choice' ? 'Несколько ответов' : 
-                        ($question->question_type === 'rich_text_answer' ? 'Развёрнутый ответ' : 'Текстовый ответ'))
-                    }}</span>
+        @foreach($questionDetails as $index => $detail)
+            @php
+                $question = $detail['question'];
+                $isCorrect = $detail['is_correct'];
+                $hasAnswer = $detail['user_answer_text'] || count($detail['user_selected_option_ids']) > 0;
+                $isManuallyGraded = $detail['is_manually_graded'] ?? false;
+
+                // По умолчанию – как раньше
+                $badgeClass = $isCorrect ? 'correct' : ($hasAnswer ? 'incorrect' : 'empty');
+                $badgeText = $isCorrect ? '✓ Правильно' : ($hasAnswer ? '✗ Неправильно' : 'Не ответил');
+
+                // Для развёрнутых ответов, которые ещё не проверены учителем, показываем "Ожидает проверки"
+                if ($question->question_type === 'rich_text_answer' && $hasAnswer && !$isManuallyGraded) {
+                    $badgeClass = 'empty';
+                    $badgeText = 'Ожидает проверки';
+                }
+            @endphp
+
+            <div class="question-card">
+                <div class="question-header">
+                    <div>
+                        <div class="question-number">Вопрос {{ $index + 1 }}</div>
+                        <div class="question-text">{{ strip_tags($question->question_text) }}</div>
+                        <span class="question-type">{{ 
+                            $question->question_type === 'single_choice' ? 'Один ответ' : 
+                            ($question->question_type === 'multiple_choice' ? 'Несколько ответов' : 
+                            ($question->question_type === 'rich_text_answer' ? 'Развёрнутый ответ' : 'Текстовый ответ'))
+                        }}</span>
+                    </div>
+                    <span class="correctness-badge {{ $badgeClass }}">{{ $badgeText }}</span>
                 </div>
-                <span class="correctness-badge {{ $badgeClass }}">{{ $badgeText }}</span>
-            </div>
 
-            <div class="question-body">
+                <div class="question-body">
                 @if($question->question_type === 'short_answer')
                     <div style="margin-bottom: 15px;">
                         <strong style="display: block; margin-bottom: 8px; color: #666; font-size: 13px; text-transform: uppercase;">Ответ студента:</strong>
@@ -368,7 +400,7 @@
                     <div style="margin-bottom: 15px;">
                         <strong style="display: block; margin-bottom: 8px; color: #666; font-size: 13px; text-transform: uppercase;">Ответ студента:</strong>
                         @if($detail['user_answer_text'])
-                            <div class="text-answer-box {{ $isCorrect ? 'correct' : 'incorrect' }}">
+                            <div class="rich-text-answer-box {{ $isCorrect ? 'correct' : 'incorrect' }}">
                                 {!! $detail['user_answer_text'] !!}
                             </div>
                         @else
@@ -376,12 +408,17 @@
                         @endif
                     </div>
 
-                    @if(!$isCorrect)
-                        <div class="correct-answers">
-                            <div class="correct-answers-title">Правильные ответы:</div>
-                            @foreach($question->options->where('is_correct', true) as $option)
-                                <div>{!! $option->option_text !!}</div>
-                            @endforeach
+                    @if($detail['user_answer_text'])
+                        <div style="margin-bottom: 15px;">
+                            <strong style="display: block; margin-bottom: 8px; color: #666; font-size: 13px; text-transform: uppercase;">Оценка учителя для развёрнутого ответа:</strong>
+                            <label style="margin-right: 10px;">
+                                <input type="radio" name="grades[{{ $question->id }}]" value="correct" {{ $isManuallyGraded && $isCorrect ? 'checked' : '' }}>
+                                Засчитать как правильный
+                            </label>
+                            <label>
+                                <input type="radio" name="grades[{{ $question->id }}]" value="incorrect" {{ $isManuallyGraded && !$isCorrect ? 'checked' : '' }}>
+                                Отметить как неправильный
+                            </label>
                         </div>
                     @endif
 
@@ -425,9 +462,14 @@
                         @endforeach
                     </div>
                 @endif
+                </div>
             </div>
-        </div>
-    @endforeach
+        @endforeach
+
+        <button type="submit" style="margin-top: 20px; padding: 10px 20px; background: #2c3e50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Сохранить оценки развёрнутых ответов
+        </button>
+    </form>
 
 
 </div>

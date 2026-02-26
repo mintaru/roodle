@@ -3,6 +3,23 @@
 @section('head')
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.umd.min.js"></script>
+    <style>
+        trix-editor.rich-text-answer-input {
+            min-height: 160px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        trix-editor ul,
+        trix-editor ol,
+        .trix-content ul,
+        .trix-content ol {
+            list-style-type: disc;
+            list-style-position: outside;
+            margin-left: 1.5rem;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -72,7 +89,7 @@
                 </div>
             </div>
 
-            <div class="mt-8 flex justify-between">
+            <div class="mt-8 flex justify-between items-center">
                 @if($questionIndex > 1)
                     <a href="{{ route('tests.attempt.page', [$test->id, $questionIndex - 1]) }}" class="btn btn-secondary">
                         ← Предыдущий
@@ -86,7 +103,10 @@
                         Следующий →
                     </a>
                 @else
-                    <span></span>
+                    <button type="submit" class="btn btn-primary"
+                            onclick="return confirm('Завершить тест и отправить ответы?');">
+                        Завершить тест
+                    </button>
                 @endif
             </div>
         </form>
@@ -99,6 +119,17 @@
         const textInputs = document.querySelectorAll('.text-answer-input');
         const richTextEditors = document.querySelectorAll('.rich-text-answer-input');
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+        // Запрещаем прикрепление файлов в Trix-редакторе для ответов
+        document.addEventListener('trix-file-accept', function (event) {
+            event.preventDefault();
+        });
+
+        document.addEventListener('trix-attachment-add', function (event) {
+            if (event.attachment) {
+                event.attachment.remove();
+            }
+        });
 
         inputs.forEach(input => {
             input.addEventListener('change', async function() {
@@ -190,17 +221,7 @@
                         console.error('Save rich text answer failed', response.status);
                     }
                 } catch (error) {
-                    console.error('Error saving rich
-                            question_id: questionId,
-                            answer_text: answerText
-                        })
-                    });
-
-                    if (!response.ok) {
-                        console.error('Save text answer failed', response.status);
-                    }
-                } catch (error) {
-                    console.error('Error saving text answer:', error);
+                    console.error('Error saving rich text answer:', error);
                 }
             });
         });
