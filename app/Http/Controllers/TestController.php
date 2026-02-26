@@ -41,7 +41,9 @@ class TestController extends Controller
             'unlimited_attempts' => 'nullable|boolean',
             'time_limit' => 'nullable|integer|min:0',
             'period_start' => 'nullable|date',
-            'period_end' => 'nullable|date|after:period_start'
+            'period_end' => 'nullable|date|after:period_start',
+            'randomize_questions' => 'nullable|boolean',
+            'display_mode' => 'required|in:single_page,per_question',
         ]);
         $validatedData['time_limit'] = $request->input('time_limit', 0);
 
@@ -68,6 +70,10 @@ class TestController extends Controller
             // берем введённое число или 1 по умолчанию
             $validatedData['max_attempts'] = $request->input('max_attempts', 1);
         }
+
+        // Настройки отображения теста
+        $validatedData['randomize_questions'] = $request->has('randomize_questions');
+        $validatedData['display_mode'] = $request->input('display_mode', 'single_page');
 
         // Создаём тест
         $test = $course->tests()->create($validatedData);
@@ -160,8 +166,6 @@ class TestController extends Controller
             'correct_options.*' => 'integer',
             'correct_answers' => 'required_if:question_type,short_answer|array|min:1',
             'correct_answers.*' => 'required_if:question_type,short_answer|string|min:1',
-            'correct_rich_text_answers' => 'required_if:question_type,rich_text_answer|array|min:1',
-            'correct_rich_text_answers.*' => 'required_if:question_type,rich_text_answer|string|min:1',
             'case_insensitive' => 'nullable|in:0,1',
         ]);
 
@@ -184,19 +188,8 @@ class TestController extends Controller
                     ]);
                 }
             }
-        } elseif ($validatedData['question_type'] === 'rich_text_answer') {
-            // Для богатых текстовых ответов создаём опции с правильными ответами
-            foreach ($validatedData['correct_rich_text_answers'] as $answer) {
-                if (trim($answer) !== '') { // Пропускаем пустые ответы
-                    $question->options()->create([
-                        'option_text' => $answer, // Сохраняем с форматированием
-                        'is_correct' => true,
-                        'case_insensitive' => false,
-                    ]);
-                }
-            }
-        } else {
-            // Сохраняем варианты и отмечаем правильные
+        } elseif (in_array($validatedData['question_type'], ['single_choice', 'multiple_choice'], true)) {
+            // Сохраняем варианты и отмечаем правильные для вопросов с выбором ответа
             foreach ($validatedData['options'] as $key => $optionText) {
                 $isCorrect = false;
 
@@ -247,141 +240,9 @@ class TestController extends Controller
                 ->with('error', 'Активная попытка не найдена.');
         }
 
-        // Загружаем ответы из таблицы temporary_answers (сохранённые через AJAX)
-        $tempAnswers = \App\Models\TemporaryAnswer::where('test_attempt_id', $attempt->id)
-            ->where('is_active', true)
-            ->get();
-
-        // Строим структуры для проверки
-        $textAnswers = [];
-        $richTextAnswers = [];
-        $choiceAnswers = [];
-
-        // Загружаем список типов вопросов
-        $questionTypes = [];
-        foreach ($test->questions as $q) {
-            $questionTypes[$q->id] = $q->question_type;
-        }
-
-        // Заполняем структуры в зависимости от типа вопроса
-        foreach ($tempAnswers as $answer) {
-            $questionType = $questionTypes[$answer->question_id] ?? null;
-            
-            if ($questionType === 'short_answer') {
-                $textAnswers[$answer->question_id] = $answer->answer_text ?? '';
-            } elseif ($questionType === 'rich_text_answer') {
-                $richTextAnswers[$answer->question_id] = $answer->answer_text ?? '';
-            } else {
-                // choice_answer
-                if (!isset($choiceAnswers[$answer->question_id])) {
-                    $choiceAnswers[$answer->question_id] = [];
-                }
-                if ($answer->option_id) {
-                    $choiceAnswers[$answer->question_id][] = (int) $answer->option_id;
-                }
-            }
-        }
-
-        // Подсчёт
-        $test->load('questions.options');
-        $totalQuestions = $test->questions()->count();
-        $correctAnswers = 0;
-
-        foreach ($test->questions as $question) {
-            $isCorrect = false;
-
-            if ($question->question_type === 'short_answer') {
-                // Проверяем текстовый ответ
-                $userAnswer = trim($textAnswers[$question->id] ?? '');
-                
-                if ($userAnswer === '') {
-                    $isCorrect = false;
-                } else {
-                    // Получаем все правильные ответы для этого вопроса
-                    $correctOptions = $question->options->where('is_correct', true);
-                    
-                    foreach ($correctOptions as $option) {
-                        $correctText = trim($option->option_text);
-                        
-                        if ($option->case_insensitive) {
-                            // Игнорируем регистр и пробелы
-                            if (
-                                strtolower(preg_replace('/\s+/', '', $userAnswer)) === 
-                                strtolower(preg_replace('/\s+/', '', $correctText))
-                            ) {
-                                $isCorrect = true;
-                                break;
-                            }
-                        } else {
-                            // Точное сравнение
-                            if ($userAnswer === $correctText) {
-                                $isCorrect = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            } elseif ($question->question_type === 'rich_text_answer') {
-                // Для развёрнутых ответов проверяем точное совпадение (без обработки HTML)
-                $userAnswer = trim(strip_tags($richTextAnswers[$question->id] ?? ''));
-                
-                if ($userAnswer === '') {
-                    $isCorrect = false;
-                } else {
-                    // Получаем все правильные ответы для этого вопроса
-                    $correctOptions = $question->options->where('is_correct', true);
-                    
-                    foreach ($correctOptions as $option) {
-                        // Удаляем теги для сравнения текста
-                        $correctText = trim(strip_tags($option->option_text));
-                        
-                        // Проверяем дословное совпадение текстового содержимого
-                        if ($userAnswer === $correctText) {
-                            $isCorrect = true;
-                            break;
-                        }
-                    }
-                }
-            } else {
-                // Проверяем выбор вариантов (single_choice или multiple_choice)
-                $raw = $choiceAnswers[$question->id] ?? [];
-                // Нормализация: массив целых
-                $userOptionIds = collect($raw)
-                    ->filter() // убираем null/пустые
-                    ->map(fn ($id) => (int) $id)
-                    ->sort()
-                    ->values()
-                    ->toArray();
-
-                $correctOptionIds = $question->options
-                    ->where('is_correct', true)
-                    ->pluck('id')
-                    ->map(fn ($id) => (int) $id)
-                    ->sort()
-                    ->values()
-                    ->toArray();
-
-                if ($question->question_type === 'single_choice') {
-                    if (
-                        count($userOptionIds) === 1 &&
-                        count($correctOptionIds) === 1 &&
-                        $userOptionIds[0] === $correctOptionIds[0]
-                    ) {
-                        $isCorrect = true;
-                    }
-                } elseif ($question->question_type === 'multiple_choice') {
-                    if ($userOptionIds === $correctOptionIds) {
-                        $isCorrect = true;
-                    }
-                }
-            }
-
-            if ($isCorrect) {
-                $correctAnswers++;
-            }
-        }
-
-        $score = $totalQuestions > 0 ? ($correctAnswers / $totalQuestions) * 100 : 0;
+        // Подсчитываем результат попытки (rich_text ответы пока не засчитываются автоматически)
+        $scoreData = $this->calculateScoreForAttempt($test, $attempt);
+        $score = $scoreData['score'];
 
         // Обновляем активную попытку и сохраняем ответы
         DB::transaction(function () use ($attempt, $score) {
@@ -399,8 +260,8 @@ class TestController extends Controller
             'content' => view('test_result', [
                 'test' => $test,
                 'score' => round($score),
-                'correctAnswers' => $correctAnswers,
-                'totalQuestions' => $totalQuestions,
+                'correctAnswers' => $scoreData['correctAnswers'],
+                'totalQuestions' => $scoreData['totalQuestions'],
             ]),
         ]);
     }
@@ -557,6 +418,7 @@ class TestController extends Controller
             $isCorrect = false;
             $userAnswerText = '';
             $userSelectedOptions = [];
+            $isManuallyGraded = false;
             
             if ($question->question_type === 'short_answer') {
                 // Для текстовых ответов
@@ -588,17 +450,11 @@ class TestController extends Controller
                 $answer = $answers->first();
                 if ($answer && $answer->answer_text) {
                     $userAnswerText = $answer->answer_text;
-                    
-                    // Проверяем правильность
-                    $userAnswerStripped = trim(strip_tags($userAnswerText));
-                    $correctOptions = $question->options->where('is_correct', true);
-                    foreach ($correctOptions as $option) {
-                        $correctText = trim(strip_tags($option->option_text));
-                        
-                        if ($userAnswerStripped === $correctText) {
-                            $isCorrect = true;
-                            break;
-                        }
+                    $isManuallyGraded = (bool) $answer->is_manually_graded;
+
+                    // Для развёрнутых ответов учитываем только ручную проверку учителя
+                    if ($answer->is_manually_graded && !is_null($answer->is_correct_manual)) {
+                        $isCorrect = (bool) $answer->is_correct_manual;
                     }
                 }
             } else {
@@ -625,11 +481,156 @@ class TestController extends Controller
                 'user_answer_text' => $userAnswerText,
                 'user_selected_option_ids' => $userSelectedOptions,
                 'is_correct' => $isCorrect,
+                'is_manually_graded' => $isManuallyGraded,
                 'answers' => $answers,
             ];
         }
 
         return view('tests.attempt-details', compact('attempt', 'test', 'user', 'course', 'questionDetails'));
+    }
+
+    /**
+     * Ручная проверка развёрнутых ответов учителем и пересчёт итогового балла.
+     */
+    public function gradeRichTextAnswers(Request $request, TestAttempt $attempt)
+    {
+        // Проверяем права (учитель/админ)
+        if (!Auth::user()->can('edit courses')) {
+            abort(403, 'Unauthorized');
+        }
+
+        $test = $attempt->test;
+
+        $grades = $request->input('grades', []);
+
+        // Обновляем только rich_text-вопросы
+        foreach ($grades as $questionId => $value) {
+            /** @var \App\Models\TemporaryAnswer|null $answer */
+            $answer = TemporaryAnswer::where('test_attempt_id', $attempt->id)
+                ->where('question_id', (int) $questionId)
+                ->first();
+
+            if (!$answer) {
+                continue;
+            }
+
+            $isCorrect = $value === 'correct';
+
+            $answer->update([
+                'is_manually_graded' => true,
+                'is_correct_manual' => $isCorrect,
+            ]);
+        }
+
+        // Пересчитываем общий балл попытки с учётом ручной проверки
+        $scoreData = $this->calculateScoreForAttempt($test, $attempt);
+        $attempt->update([
+            'score' => round($scoreData['score']),
+        ]);
+
+        return redirect()
+            ->route('test-attempts.details', $attempt)
+            ->with('success', 'Оценки за развёрнутые ответы сохранены.');
+    }
+
+    /**
+     * Подсчёт результата попытки по всем вопросам.
+     * Для rich_text учитываются только ручные оценки учителя.
+     */
+    protected function calculateScoreForAttempt(Test $test, TestAttempt $attempt): array
+    {
+        // Загружаем вопросы с вариантами ответов
+        $test->load('questions.options');
+
+        // Все ответы по данной попытке (независимо от is_active)
+        $tempAnswers = TemporaryAnswer::where('test_attempt_id', $attempt->id)
+            ->get()
+            ->groupBy('question_id');
+
+        $totalQuestions = $test->questions()->count();
+        $correctAnswers = 0;
+
+        foreach ($test->questions as $question) {
+            $answers = $tempAnswers->get($question->id, collect());
+            $isCorrect = false;
+
+            if ($question->question_type === 'short_answer') {
+                $answer = $answers->first();
+                $userAnswer = $answer && $answer->answer_text ? trim($answer->answer_text) : '';
+
+                if ($userAnswer !== '') {
+                    $correctOptions = $question->options->where('is_correct', true);
+
+                    foreach ($correctOptions as $option) {
+                        $correctText = trim($option->option_text);
+
+                        if ($option->case_insensitive) {
+                            if (
+                                strtolower(preg_replace('/\s+/', '', $userAnswer)) ===
+                                strtolower(preg_replace('/\s+/', '', $correctText))
+                            ) {
+                                $isCorrect = true;
+                                break;
+                            }
+                        } else {
+                            if ($userAnswer === $correctText) {
+                                $isCorrect = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            } elseif ($question->question_type === 'rich_text_answer') {
+                // Только ручная оценка учителя
+                $answer = $answers->first();
+                if ($answer && $answer->is_manually_graded && !is_null($answer->is_correct_manual)) {
+                    $isCorrect = (bool) $answer->is_correct_manual;
+                }
+            } else {
+                // single_choice / multiple_choice
+                $userOptionIds = $answers
+                    ->pluck('option_id')
+                    ->filter()
+                    ->map(fn ($id) => (int) $id)
+                    ->sort()
+                    ->values()
+                    ->toArray();
+
+                $correctOptionIds = $question->options
+                    ->where('is_correct', true)
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->sort()
+                    ->values()
+                    ->toArray();
+
+                if ($question->question_type === 'single_choice') {
+                    if (
+                        count($userOptionIds) === 1 &&
+                        count($correctOptionIds) === 1 &&
+                        $userOptionIds[0] === $correctOptionIds[0]
+                    ) {
+                        $isCorrect = true;
+                    }
+                } elseif ($question->question_type === 'multiple_choice') {
+                    if ($userOptionIds === $correctOptionIds) {
+                        $isCorrect = true;
+                    }
+                }
+            }
+
+            if ($isCorrect) {
+                $correctAnswers++;
+            }
+        }
+
+        $score = $totalQuestions > 0 ? ($correctAnswers / $totalQuestions) * 100 : 0;
+
+        return [
+            'score' => $score,
+            'correctAnswers' => $correctAnswers,
+            'totalQuestions' => $totalQuestions,
+        ];
     }
 
     public function grantExtraAttempts(Request $request, Test $test, User $user)

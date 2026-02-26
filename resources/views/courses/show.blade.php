@@ -36,24 +36,30 @@
                 <a href="{{ route('tests.show', $test) }}">Редактировать тест</a><br>
                 <a href="{{ route('tests.results', $test) }}" class="btn btn-info">Обзор теста</a><br>
                 @endcan
-                <a>
+                @auth
                     @php
-                        $userAttempts = $test->attempts()->where('user_id', auth()->id())->count();
-                        $remaining = $test->max_attempts == 0
-                            ? '∞'
-                            : max(0, $test->max_attempts - $userAttempts);
+                        $remainingForThisTest = $remainingByTest[$test->id] ?? null;
                     @endphp
-                
-                    попытки:{{ $remaining }}
-                </a>
+                    @if($remainingForThisTest !== null)
+                        <span>
+                            попытки: {{ $remainingForThisTest }}
+                        </span>
+                    @endif
+                @endauth
                 <p class="text-gray-600 flex-grow">
                     Доступен с {{ $test->formattedPeriodStart() ?? '—' }}
                 </p>
                 <p class="text-gray-600 flex-grow">
                     Доступен до {{ $test->formattedPeriodEnd() ?? '—' }}
                 </p>
-                {{-- <a href="{{ route('tests.attempt', $test) }}">пройти тест</a> --}}
-                <a href="{{ route('tests.attempt.page', [$test->id, 1]) }}">пройти тест</a>
+                @php
+                    $displayMode = $test->display_mode ?? 'per_question';
+                @endphp
+                @if($displayMode === 'single_page')
+                    <a href="{{ route('tests.attempt', $test) }}">пройти тест</a>
+                @else
+                    <a href="{{ route('tests.attempt.page', [$test->id, 1]) }}">пройти тест</a>
+                @endif
             </li>
         @empty
             <li>Тестов пока нет</li>

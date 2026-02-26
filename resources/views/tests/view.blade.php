@@ -10,6 +10,10 @@
                 Показать попытки
             </a>
             @endhasanyrole
+            @php
+                $displayMode = $test->display_mode ?? 'per_question';
+            @endphp
+
             <div class="text-center mb-6">
                 <p class="font-semibold">Всего попыток: {{ $isUnlimited ? '∞' : $maxAttemptsForUser }}</p>
                 <p>Использовано: {{ $userAttemptsCount }}</p>
@@ -44,11 +48,18 @@
             <div class="text-center space-y-3">
                 @if ($isUnlimited || $userAttemptsCount < $maxAttemptsForUser)
                     @if ($hasActiveAttempt)
-                        <a href="{{ route('tests.attempt', $test) }}" class="btn btn-primary">
-                            Продолжить попытку
-                        </a>
+                        @if ($displayMode === 'single_page')
+                            <a href="{{ route('tests.attempt', $test) }}" class="btn btn-primary">
+                                Продолжить попытку
+                            </a>
+                        @else
+                            <a href="{{ route('tests.attempt.page', [$test->id, 1]) }}" class="btn btn-primary">
+                                Продолжить попытку
+                            </a>
+                        @endif
                     @endif
-                    <a href="{{ route('tests.attempt', $test) }}" class="btn btn-secondary"
+                    <a href="{{ $displayMode === 'single_page' ? route('tests.attempt', $test) : route('tests.attempt.page', [$test->id, 1]) }}"
+                       class="btn btn-secondary"
                         onclick="if(confirm('Это начнет новую попытку. Продолжить?')) { return true; } return false;">
                         {{ $hasActiveAttempt ? 'Начать новую попытку' : 'Пройти тест' }}
                     </a>

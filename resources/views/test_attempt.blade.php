@@ -6,6 +6,22 @@
     <meta name="test-start-time" content="{{ $attempt->started_at ? $attempt->started_at->timestamp * 1000 : now()->timestamp * 1000 }}">
     <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.umd.min.js"></script>
+    <style>
+        trix-editor.rich-text-answer-input {
+            min-height: 160px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        trix-editor ul,
+        trix-editor ol,
+        .trix-content ul,
+        .trix-content ol {
+            list-style-type: disc;
+            list-style-position: outside;
+            margin-left: 1.5rem;
+        }
+    </style>
 @endsection
 
 @section('content')
@@ -98,6 +114,17 @@
             const inputs = document.querySelectorAll('.answer-input');
             const textInputs = document.querySelectorAll('.text-answer-input');
             const richTextEditors = document.querySelectorAll('.rich-text-answer-input');
+
+            // Запрещаем прикрепление файлов в Trix-редакторе для ответов
+            document.addEventListener('trix-file-accept', function (event) {
+                event.preventDefault();
+            });
+
+            document.addEventListener('trix-attachment-add', function (event) {
+                if (event.attachment) {
+                    event.attachment.remove();
+                }
+            });
 
             inputs.forEach(input => {
                 input.addEventListener('change', async function() {
