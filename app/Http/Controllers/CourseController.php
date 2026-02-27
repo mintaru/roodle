@@ -122,11 +122,13 @@ class CourseController extends Controller
 
         if ($user->hasRole('admin') || $user->hasRole('teacher')) {
             // Админ и преподаватель видят все тесты
-            $course->load('tests');
+            $course->load('tests', 'lectures', 'sections.items.item');
         } else {
             // Студент видит только доступные тесты
             $course->load([
                 'tests' => fn ($query) => $query->available(),
+                'lectures',
+                'sections.items.item',
             ]);
         }
 

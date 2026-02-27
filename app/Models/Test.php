@@ -41,7 +41,7 @@ class Test extends Model
     public function questions()
     {
         return $this->belongsToMany(Question::class, 'test_question')
-            ->withPivot('question_order')
+            ->withPivot('question_order', 'page_number')
             ->withTimestamps();
     }
 

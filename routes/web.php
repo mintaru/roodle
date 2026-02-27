@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\CourseController;
 use App\Models\Lecture;
 use App\Http\Controllers\LectureController;
+use App\Http\Controllers\CourseSectionController;
 use App\Http\Controllers\Admin\GroupUserController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\AdminController;
@@ -77,6 +78,11 @@ Route::get('/tests/{test}', [TestController::class, 'show'])->middleware('auth')
 // Перенаправлен на метод storeQuestion() в TestController
 Route::post('/tests/{test}/questions', [TestController::class, 'storeQuestion'])->name('tests.store_question');
 
+// Обновление разбиения вопросов по страницам внутри теста
+Route::put('/tests/{test}/layout', [TestController::class, 'updateLayout'])
+    ->middleware('auth')
+    ->name('tests.update_layout');
+
 // Удаление вопроса из теста (DELETE-запрос)
 Route::delete('/tests/{test}/questions/{question}', [TestController::class, 'removeQuestion'])->name('tests.removeQuestion');
 
@@ -99,410 +105,16 @@ Route::post('/tests/{test}/users/{user}/grant-attempts', [TestController::class,
 // Эти маршруты показывают, как можно их вынести в контроллер для единообразия.
 
 // Страница для начала прохождения теста
-Route::get('/tests/{test}/attempt', function (Test $test) { // Используем Route Model Binding
-    $user = Auth::user();
+Route::get('/tests/{test}/attempt', [TestController::class, 'attempt'])
+    ->name('tests.attempt');
 
-    // Проверка количества попыток
-    if ($test->max_attempts > 0) {
-        $completedAttempts = $test->attempts()
-            ->where('user_id', $user->id)
-            ->whereNotNull('ended_at')
-            ->count();
-
-        // Получаем дополнительные попытки для пользователя
-        $extraAttempts = \App\Models\UserTestExtraAttempt::where('user_id', $user->id)
-            ->where('test_id', $test->id)
-            ->first();
-        
-        $maxAllowed = $test->max_attempts + ($extraAttempts ? $extraAttempts->extra_attempts : 0);
-
-        if ($completedAttempts >= $maxAllowed) {
-            return redirect()->back()->with('error', 'Вы исчерпали все попытки для этого теста.');
-        }
-    }
-
-    // Проверяем, есть ли активная попытка (не завершённая)
-    $activeAttempt = $test->attempts()
-        ->where('user_id', $user->id)
-        ->whereNull('ended_at')
-        ->first();
-
-    // Если нет активной попытки, создаём новую
-    if (!$activeAttempt) {
-        $lastAttemptNumber = \App\Models\TestAttempt::where('test_id', $test->id)
-            ->where('user_id', $user->id)
-            ->max('attempt_number') ?? 0;
-
-        $activeAttempt = $test->attempts()->create([
-            'user_id' => $user->id,
-            'score' => 0,
-            'attempt_number' => $lastAttemptNumber + 1,
-            'started_at' => now(),
-        ]);
-    } else if (!$activeAttempt->started_at) {
-        // Ensure started_at is set if it was null
-        $activeAttempt->update(['started_at' => now()]);
-    }
-
-    // Загружаем вопросы с вариантами
-    $test->load(['questions' => function ($query) {
-        $query->with('options');
-    }]);
-
-    // Формируем и фиксируем порядок вопросов в сессии (с учётом опции рандомизации),
-    // привязывая его к конкретной попытке
-    $sessionKey = "test_{$test->id}_attempt_{$activeAttempt->id}_question_order";
-    $questionOrder = session($sessionKey);
-
-    $questions = $test->questions;
-
-    if (!$questionOrder) {
-        $questionOrder = $questions->pluck('id')->toArray();
-
-        if ($test->randomize_questions) {
-            shuffle($questionOrder);
-        }
-
-        session([$sessionKey => $questionOrder]);
-    }
-
-    // Применяем порядок к коллекции вопросов
-    $questionsById = $questions->keyBy('id');
-    $orderedQuestions = collect();
-    foreach ($questionOrder as $qid) {
-        if (isset($questionsById[$qid])) {
-            $orderedQuestions->push($questionsById[$qid]);
-        }
-    }
-    $test->setRelation('questions', $orderedQuestions);
-
-    // Загружаем сохраненные ответы только для текущей активной попытки и только активные
-    $tempAnswers = \App\Models\TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
-        ->where('is_active', true)
-        ->get();
-
-    // Загружаем список типов вопросов для быстрого доступа
-    $questionTypes = [];
-    foreach ($test->questions as $q) {
-        $questionTypes[$q->id] = $q->question_type;
-    }
-
-    $savedAnswers = [];
-    foreach ($tempAnswers as $answer) {
-        $questionType = $questionTypes[$answer->question_id] ?? null;
-        
-        // Для текстовых и развёрнутых ответов сохраняем как строка
-        if (in_array($questionType, ['short_answer', 'rich_text_answer'])) {
-            $savedAnswers[$answer->question_id] = $answer->answer_text;
-        } else {
-            // Для множественного выбора сохраняем как массив option_id
-            if (!isset($savedAnswers[$answer->question_id])) {
-                $savedAnswers[$answer->question_id] = [];
-            }
-            if ($answer->option_id) {
-                $savedAnswers[$answer->question_id][] = $answer->option_id;
-            }
-        }
-    }
-
-    return view('layout', [
-        'content' => view('test_attempt', [
-            'test' => $test,
-            'savedAnswers' => $savedAnswers,
-            'attempt' => $activeAttempt
-        ])
-    ]);
-})->name('tests.attempt');
-
-Route::get('/tests/{test}/attempt/{questionIndex?}', function (Test $test, $questionIndex = 1) {
-    $user = Auth::user();
-
-    // Проверка количества попыток
-    if ($test->max_attempts > 0) {
-        $completedAttempts = $test->attempts()
-            ->where('user_id', $user->id)
-            ->whereNotNull('ended_at')
-            ->count();
-
-        // Получаем дополнительные попытки для пользователя
-        $extraAttempts = \App\Models\UserTestExtraAttempt::where('user_id', $user->id)
-            ->where('test_id', $test->id)
-            ->first();
-        
-        $maxAllowed = $test->max_attempts + ($extraAttempts ? $extraAttempts->extra_attempts : 0);
-
-        if ($completedAttempts >= $maxAllowed) {
-            return redirect()->back()->with('error', 'Вы исчерпали все попытки для этого теста.');
-        }
-    }
-
-    // Получаем текущую активную попытку
-    $activeAttempt = $test->attempts()
-        ->where('user_id', $user->id)
-        ->whereNull('ended_at')
-        ->first();
-
-    // Если активной попытки нет, создаём новую (как в одностраничном режиме)
-    if (!$activeAttempt) {
-        $lastAttemptNumber = \App\Models\TestAttempt::where('test_id', $test->id)
-            ->where('user_id', $user->id)
-            ->max('attempt_number') ?? 0;
-
-        $activeAttempt = $test->attempts()->create([
-            'user_id' => $user->id,
-            'score' => 0,
-            'attempt_number' => $lastAttemptNumber + 1,
-            'started_at' => now(),
-        ]);
-    } elseif (!$activeAttempt->started_at) {
-        // Если попытка была создана без started_at — установим его
-        $activeAttempt->update(['started_at' => now()]);
-    }
-
-    // Загружаем вопросы с опциями
-    $test->load(['questions.options']);
-
-    // Формируем и фиксируем порядок вопросов в сессии (с учётом опции рандомизации),
-    // привязывая его к конкретной попытке
-    $sessionKey = "test_{$test->id}_attempt_{$activeAttempt->id}_question_order";
-    $questionOrder = session($sessionKey);
-
-    $questions = $test->questions;
-
-    if (!$questionOrder) {
-        $questionOrder = $questions->pluck('id')->toArray();
-
-        if ($test->randomize_questions) {
-            shuffle($questionOrder);
-        }
-
-        session([$sessionKey => $questionOrder]);
-    }
-
-    // Применяем порядок к коллекции вопросов
-    $questionsById = $questions->keyBy('id');
-    $orderedQuestions = collect();
-    foreach ($questionOrder as $qid) {
-        if (isset($questionsById[$qid])) {
-            $orderedQuestions->push($questionsById[$qid]);
-        }
-    }
-    $questions = $orderedQuestions;
-
-    // Проверка выхода за пределы
-    if ($questionIndex < 1) $questionIndex = 1;
-    if ($questionIndex > $questions->count()) $questionIndex = $questions->count();
-
-    $question = $questions[$questionIndex - 1]; // текущий вопрос
-    
-    // Загружаем сохраненные ответы только для текущей активной попытки и только активные
-    $tempAnswers = \App\Models\TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
-        ->where('is_active', true)
-        ->get();
-
-    // Загружаем сохраненные ответы только для текущей активной попытки и только активные
-    $tempAnswers = \App\Models\TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
-        ->where('is_active', true)
-        ->get();
-
-    // Загружаем список типов вопросов для быстрого доступа
-    $questionTypes = [];
-    foreach ($test->questions as $q) {
-        $questionTypes[$q->id] = $q->question_type;
-    }
-
-    $savedAnswers = [];
-    foreach ($tempAnswers as $answer) {
-        $questionType = $questionTypes[$answer->question_id] ?? null;
-        
-        // Для текстовых и развёрнутых ответов сохраняем как строка
-        if (in_array($questionType, ['short_answer', 'rich_text_answer'])) {
-            $savedAnswers[$answer->question_id] = $answer->answer_text;
-        } else {
-            // Для множественного выбора сохраняем как массив option_id
-            if (!isset($savedAnswers[$answer->question_id])) {
-                $savedAnswers[$answer->question_id] = [];
-            }
-            if ($answer->option_id) {
-                $savedAnswers[$answer->question_id][] = $answer->option_id;
-            }
-        }
-    }
-
-    return view('layout', [
-        'content' => view('test_attempt_page', [
-            'test' => $test,
-            'question' => $question,
-            'questionIndex' => $questionIndex,
-            'totalQuestions' => $questions->count(),
-            'savedAnswers' => $savedAnswers,
-        ])
-    ]);
-})->middleware('auth')->name('tests.attempt.page');
-
+Route::get('/tests/{test}/attempt/{questionIndex?}', [TestController::class, 'attemptPage'])
+    ->middleware('auth')
+    ->name('tests.attempt.page');
 
 // Обработка сохранения временного ответа (AJAX)
-Route::post('/tests/{test}/save-answer', function (Test $test) {
-    
-    $questionId = request('question_id');
-    $optionIds = request('option_id');
-    $answerText = request('answer_text');
-    $richTextAnswer = request('rich_text_answer');
-
-    // Для текстовых ответов
-    if (request()->has('answer_text')) {
-        // Сохраняем в сессии
-        $answers = session("test_{$test->id}_answers", []);
-        $answers[$questionId] = $answerText;
-        session(["test_{$test->id}_answers" => $answers]);
-
-        if (Auth::check()) {
-            $userId = Auth::id();
-
-            // Получаем текущую попытку
-            $attempt = \App\Models\TestAttempt::where('test_id', $test->id)
-                        ->where('user_id', $userId)
-                        ->whereNull('ended_at')
-                        ->first();
-
-            if (!$attempt) {
-                return response()->json(['error' => 'Test not started'], 403);
-            }
-
-            // Проверка лимита времени (только если time_limit установлен)
-            if ($test->time_limit && $attempt->started_at) {
-                $elapsed = now()->diffInSeconds($attempt->started_at);
-                $timeLimitSeconds = $test->time_limit * 60;
-
-                if ($elapsed > $timeLimitSeconds) {
-                    return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
-                }
-            }
-
-            // Удаляем предыдущие ответы на этот вопрос
-            \App\Models\TemporaryAnswer::where('user_id', $userId)
-                ->where('test_id', $test->id)
-                ->where('question_id', $questionId)
-                ->delete();
-
-            // Вставляем новый текстовый ответ
-            \App\Models\TemporaryAnswer::create([
-                'user_id' => $userId,
-                'test_id' => $test->id,
-                'test_attempt_id' => $attempt->id,
-                'question_id' => $questionId,
-                'option_id' => null,
-                'answer_text' => $answerText,
-            ]);
-        }
-
-        return response()->json(['success' => true]);
-    }
-
-    // Для развёрнутых ответов
-    if (request()->has('rich_text_answer')) {
-        // Сохраняем в сессии
-        $answers = session("test_{$test->id}_answers", []);
-        $answers[$questionId] = $richTextAnswer;
-        session(["test_{$test->id}_answers" => $answers]);
-
-        if (Auth::check()) {
-            $userId = Auth::id();
-
-            // Получаем текущую попытку
-            $attempt = \App\Models\TestAttempt::where('test_id', $test->id)
-                        ->where('user_id', $userId)
-                        ->whereNull('ended_at')
-                        ->first();
-
-            if (!$attempt) {
-                return response()->json(['error' => 'Test not started'], 403);
-            }
-
-            // Проверка лимита времени (только если time_limit установлен)
-            if ($test->time_limit && $attempt->started_at) {
-                $elapsed = now()->diffInSeconds($attempt->started_at);
-                $timeLimitSeconds = $test->time_limit * 60;
-
-                if ($elapsed > $timeLimitSeconds) {
-                    return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
-                }
-            }
-
-            // Удаляем предыдущие ответы на этот вопрос
-            \App\Models\TemporaryAnswer::where('user_id', $userId)
-                ->where('test_id', $test->id)
-                ->where('question_id', $questionId)
-                ->delete();
-
-            // Вставляем новый развёрнутый ответ
-            \App\Models\TemporaryAnswer::create([
-                'user_id' => $userId,
-                'test_id' => $test->id,
-                'test_attempt_id' => $attempt->id,
-                'question_id' => $questionId,
-                'option_id' => null,
-                'answer_text' => $richTextAnswer,
-            ]);
-        }
-
-        return response()->json(['success' => true]);
-    }
-
-    // Для множественного выбора
-    // Убедимся, что $optionIds всегда массив
-    if (!request()->has('answer_text') && $optionIds) {
-        $optionIds = (array) $optionIds;
-
-        // Сохраняем в сессии
-        $answers = session("test_{$test->id}_answers", []);
-        $answers[$questionId] = $optionIds;
-        session(["test_{$test->id}_answers" => $answers]);
-
-        if (Auth::check()) {
-            $userId = Auth::id();
-
-            // Получаем текущую попытку
-            $attempt = \App\Models\TestAttempt::where('test_id', $test->id)
-                        ->where('user_id', $userId)
-                        ->whereNull('ended_at')
-                        ->first();
-
-            if (!$attempt) {
-                return response()->json(['error' => 'Test not started'], 403);
-            }
-
-            // Проверка лимита времени (только если time_limit установлен)
-            if ($test->time_limit && $attempt->started_at) {
-                $elapsed = now()->diffInSeconds($attempt->started_at);
-                $timeLimitSeconds = $test->time_limit * 60;
-
-                if ($elapsed > $timeLimitSeconds) {
-                    return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
-                }
-            }
-
-            // Удаляем предыдущие ответы на этот вопрос
-            \App\Models\TemporaryAnswer::where('user_id', $userId)
-                ->where('test_id', $test->id)
-                ->where('question_id', $questionId)
-                ->delete();
-
-            // Вставляем новый(е) ответ(ы)
-            foreach ($optionIds as $optionId) {
-                \App\Models\TemporaryAnswer::create([
-                    'user_id' => $userId,
-                    'test_id' => $test->id,
-                    'test_attempt_id' => $attempt->id,
-                    'question_id' => $questionId,
-                    'option_id' => $optionId,
-                ]);
-            }
-        }
-    }
-
-    return response()->json(['success' => true]);
-})->name('tests.save_answer');
+Route::post('/tests/{test}/save-answer', [TestController::class, 'saveAnswer'])
+    ->name('tests.save_answer');
 
 // Синхронизация таймера между устройствами
 Route::get('/tests/{test}/timer-sync', [TestController::class, 'timerSync'])
@@ -562,6 +174,15 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::get('/lectures/{lecture}/edit', [LectureController::class, 'edit'])->name('admin.lectures.edit');
     Route::put('/lectures/{lecture}', [LectureController::class, 'update'])->name('admin.lectures.update');
     Route::delete('/lectures/{lecture}', [LectureController::class, 'destroy'])->name('admin.lectures.destroy');
+
+    // Секции курсов и элементы секций
+    Route::post('/courses/{course}/sections', [CourseSectionController::class, 'store'])->name('courses.sections.store');
+    Route::put('/courses/{course}/sections/{section}', [CourseSectionController::class, 'update'])->name('courses.sections.update');
+    Route::delete('/courses/{course}/sections/{section}', [CourseSectionController::class, 'destroy'])->name('courses.sections.destroy');
+    Route::post('/courses/{course}/sections/{section}/move', [CourseSectionController::class, 'move'])->name('courses.sections.move');
+    Route::post('/courses/{course}/sections/{section}/items', [CourseSectionController::class, 'attachItem'])->name('courses.sections.items.attach');
+    Route::post('/courses/{course}/sections/{section}/items/{item}/move', [CourseSectionController::class, 'moveItem'])->name('courses.sections.items.move');
+    Route::delete('/courses/{course}/sections/{section}/items/{item}', [CourseSectionController::class, 'detachItem'])->name('courses.sections.items.detach');
     
     // Маршруты для банка вопросов
     Route::get('/question-bank', [QuestionBankController::class, 'index'])->name('admin.question-bank.index');

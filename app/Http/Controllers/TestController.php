@@ -43,7 +43,7 @@ class TestController extends Controller
             'period_start' => 'nullable|date',
             'period_end' => 'nullable|date|after:period_start',
             'randomize_questions' => 'nullable|boolean',
-            'display_mode' => 'required|in:single_page,per_question',
+            'display_mode' => 'required|in:single_page,per_question,paged',
         ]);
         $validatedData['time_limit'] = $request->input('time_limit', 0);
 
@@ -222,6 +222,33 @@ class TestController extends Controller
         $test->questions()->attach($validatedData['question_id']);
 
         return back()->with('success', 'Вопрос добавлен из банка!');
+    }
+
+    /**
+     * Обновление разбиения вопросов теста по страницам (для режима display_mode = paged).
+     */
+    public function updateLayout(Request $request, Test $test)
+    {
+        // Только преподаватели/админы могут менять структуру теста
+        if (!Auth::user()->can('edit courses')) {
+            abort(403, 'Unauthorized');
+        }
+
+        $data = $request->validate([
+            'pages' => 'required|array',
+            'pages.*' => 'nullable|integer|min:1',
+        ]);
+
+        $pages = $data['pages'] ?? [];
+
+        foreach ($pages as $questionId => $pageNumber) {
+            $page = max(1, (int) $pageNumber);
+            $test->questions()->updateExistingPivot($questionId, [
+                'page_number' => $page,
+            ]);
+        }
+
+        return back()->with('success', 'Разбиение по страницам сохранено.');
     }
 
     public function result(Test $test, Request $request)
@@ -665,5 +692,466 @@ class TestController extends Controller
         }
 
         return redirect()->back()->with('success', "Студенту {$user->name} добавлено {$validated['extra_attempts']} попыток на прохождение теста.");
+    }
+
+    /**
+     * Страница для начала прохождения теста (одностраничный режим).
+     */
+    public function attempt(Test $test)
+    {
+        $user = Auth::user();
+
+        // Проверка количества попыток
+        if ($test->max_attempts > 0) {
+            $completedAttempts = $test->attempts()
+                ->where('user_id', $user->id)
+                ->whereNotNull('ended_at')
+                ->count();
+
+            // Получаем дополнительные попытки для пользователя
+            $extraAttempts = UserTestExtraAttempt::where('user_id', $user->id)
+                ->where('test_id', $test->id)
+                ->first();
+
+            $maxAllowed = $test->max_attempts + ($extraAttempts ? $extraAttempts->extra_attempts : 0);
+
+            if ($completedAttempts >= $maxAllowed) {
+                return redirect()->back()->with('error', 'Вы исчерпали все попытки для этого теста.');
+            }
+        }
+
+        // Проверяем, есть ли активная попытка (не завершённая)
+        $activeAttempt = $test->attempts()
+            ->where('user_id', $user->id)
+            ->whereNull('ended_at')
+            ->first();
+
+        // Если нет активной попытки, создаём новую
+        if (!$activeAttempt) {
+            $lastAttemptNumber = TestAttempt::where('test_id', $test->id)
+                ->where('user_id', $user->id)
+                ->max('attempt_number') ?? 0;
+
+            $activeAttempt = $test->attempts()->create([
+                'user_id' => $user->id,
+                'score' => 0,
+                'attempt_number' => $lastAttemptNumber + 1,
+                'started_at' => now(),
+            ]);
+        } elseif (!$activeAttempt->started_at) {
+            // Ensure started_at is set if it was null
+            $activeAttempt->update(['started_at' => now()]);
+        }
+
+        // Загружаем вопросы с вариантами
+        $test->load(['questions' => function ($query) {
+            $query->with('options');
+        }]);
+
+        // Формируем и фиксируем порядок вопросов в сессии (с учётом опции рандомизации),
+        // привязывая его к конкретной попытке
+        $sessionKey = "test_{$test->id}_attempt_{$activeAttempt->id}_question_order";
+        $questionOrder = session($sessionKey);
+
+        $questions = $test->questions;
+
+        if (!$questionOrder) {
+            $questionOrder = $questions->pluck('id')->toArray();
+
+            // В режиме разбиения по страницам порядок задаётся вручную, не перемешиваем
+            if ($test->randomize_questions && $test->display_mode !== 'paged') {
+                shuffle($questionOrder);
+            }
+
+            session([$sessionKey => $questionOrder]);
+        }
+
+        // Применяем порядок к коллекции вопросов
+        $questionsById = $questions->keyBy('id');
+        $orderedQuestions = collect();
+        foreach ($questionOrder as $qid) {
+            if (isset($questionsById[$qid])) {
+                $orderedQuestions->push($questionsById[$qid]);
+            }
+        }
+        $test->setRelation('questions', $orderedQuestions);
+
+        // Загружаем сохраненные ответы только для текущей активной попытки и только активные
+        $tempAnswers = TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
+            ->where('is_active', true)
+            ->get();
+
+        // Загружаем список типов вопросов для быстрого доступа
+        $questionTypes = [];
+        foreach ($test->questions as $q) {
+            $questionTypes[$q->id] = $q->question_type;
+        }
+
+        $savedAnswers = [];
+        foreach ($tempAnswers as $answer) {
+            $questionType = $questionTypes[$answer->question_id] ?? null;
+
+            // Для текстовых и развёрнутых ответов сохраняем как строка
+            if (in_array($questionType, ['short_answer', 'rich_text_answer'])) {
+                $savedAnswers[$answer->question_id] = $answer->answer_text;
+            } else {
+                // Для множественного выбора сохраняем как массив option_id
+                if (!isset($savedAnswers[$answer->question_id])) {
+                    $savedAnswers[$answer->question_id] = [];
+                }
+                if ($answer->option_id) {
+                    $savedAnswers[$answer->question_id][] = $answer->option_id;
+                }
+            }
+        }
+
+        return view('layout', [
+            'content' => view('test_attempt', [
+                'test' => $test,
+                'savedAnswers' => $savedAnswers,
+                'attempt' => $activeAttempt,
+            ]),
+        ]);
+    }
+
+    /**
+     * Прохождение теста по страницам/вопросам.
+     */
+    public function attemptPage(Test $test, $questionIndex = 1)
+    {
+        $user = Auth::user();
+
+        // Проверка количества попыток
+        if ($test->max_attempts > 0) {
+            $completedAttempts = $test->attempts()
+                ->where('user_id', $user->id)
+                ->whereNotNull('ended_at')
+                ->count();
+
+            // Получаем дополнительные попытки для пользователя
+            $extraAttempts = UserTestExtraAttempt::where('user_id', $user->id)
+                ->where('test_id', $test->id)
+                ->first();
+
+            $maxAllowed = $test->max_attempts + ($extraAttempts ? $extraAttempts->extra_attempts : 0);
+
+            if ($completedAttempts >= $maxAllowed) {
+                return redirect()->back()->with('error', 'Вы исчерпали все попытки для этого теста.');
+            }
+        }
+
+        // Получаем текущую активную попытку
+        $activeAttempt = $test->attempts()
+            ->where('user_id', $user->id)
+            ->whereNull('ended_at')
+            ->first();
+
+        // Если активной попытки нет, создаём новую (как в одностраничном режиме)
+        if (!$activeAttempt) {
+            $lastAttemptNumber = TestAttempt::where('test_id', $test->id)
+                ->where('user_id', $user->id)
+                ->max('attempt_number') ?? 0;
+
+            $activeAttempt = $test->attempts()->create([
+                'user_id' => $user->id,
+                'score' => 0,
+                'attempt_number' => $lastAttemptNumber + 1,
+                'started_at' => now(),
+            ]);
+        } elseif (!$activeAttempt->started_at) {
+            // Если попытка была создана без started_at — установим его
+            $activeAttempt->update(['started_at' => now()]);
+        }
+
+        // Загружаем вопросы с опциями
+        $test->load(['questions.options']);
+
+        // Формируем и фиксируем порядок вопросов в сессии (с учётом опции рандомизации),
+        // привязывая его к конкретной попытке
+        $sessionKey = "test_{$test->id}_attempt_{$activeAttempt->id}_question_order";
+        $questionOrder = session($sessionKey);
+
+        $questions = $test->questions;
+
+        if (!$questionOrder) {
+            $questionOrder = $questions->pluck('id')->toArray();
+
+            // В режиме разбиения по страницам порядок задаётся вручную, не перемешиваем
+            if ($test->randomize_questions && $test->display_mode !== 'paged') {
+                shuffle($questionOrder);
+            }
+
+            session([$sessionKey => $questionOrder]);
+        }
+
+        // Применяем порядок к коллекции вопросов
+        $questionsById = $questions->keyBy('id');
+        $orderedQuestions = collect();
+        foreach ($questionOrder as $qid) {
+            if (isset($questionsById[$qid])) {
+                $orderedQuestions->push($questionsById[$qid]);
+            }
+        }
+        $questions = $orderedQuestions;
+
+        // Загружаем сохраненные ответы только для текущей активной попытки и только активные
+        $tempAnswers = TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
+            ->where('is_active', true)
+            ->get();
+
+        // Загружаем список типов вопросов для быстрого доступа
+        $questionTypes = [];
+        foreach ($test->questions as $q) {
+            $questionTypes[$q->id] = $q->question_type;
+        }
+
+        $savedAnswers = [];
+        foreach ($tempAnswers as $answer) {
+            $questionType = $questionTypes[$answer->question_id] ?? null;
+
+            // Для текстовых и развёрнутых ответов сохраняем как строка
+            if (in_array($questionType, ['short_answer', 'rich_text_answer'])) {
+                $savedAnswers[$answer->question_id] = $answer->answer_text;
+            } else {
+                // Для множественного выбора сохраняем как массив option_id
+                if (!isset($savedAnswers[$answer->question_id])) {
+                    $savedAnswers[$answer->question_id] = [];
+                }
+                if ($answer->option_id) {
+                    $savedAnswers[$answer->question_id][] = $answer->option_id;
+                }
+            }
+        }
+
+        // Режим вывода: по одному вопросу или по страницам
+        if ($test->display_mode === 'paged') {
+            // Группируем вопросы по номеру страницы (из pivot)
+            $pages = $questions->groupBy(function ($q) {
+                return (int) ($q->pivot->page_number ?? 1);
+            });
+
+            // Список реальных номеров страниц в отсортированном виде
+            $pageNumbers = $pages->keys()->sort()->values();
+            $totalPages = $pageNumbers->count();
+
+            if ($totalPages === 0) {
+                return redirect()->route('tests.view', $test)
+                    ->with('error', 'В тесте нет вопросов.');
+            }
+
+            // questionIndex здесь — индекс страницы (1..N)
+            if ($questionIndex < 1) {
+                $questionIndex = 1;
+            }
+            if ($questionIndex > $totalPages) {
+                $questionIndex = $totalPages;
+            }
+
+            $currentPageNumber = $pageNumbers[$questionIndex - 1];
+            $pageQuestions = $pages[$currentPageNumber];
+
+            // Нумерация вопросов сквозная по всему тесту
+            $globalIndexMap = [];
+            $i = 1;
+            foreach ($questions as $q) {
+                $globalIndexMap[$q->id] = $i++;
+            }
+
+            return view('layout', [
+                'content' => view('test_attempt_page_group', [
+                    'test' => $test,
+                    'questions' => $pageQuestions,
+                    'pageIndex' => $questionIndex,
+                    'totalPages' => $totalPages,
+                    'savedAnswers' => $savedAnswers,
+                    'globalIndexMap' => $globalIndexMap,
+                ]),
+            ]);
+        }
+
+        // Обычный режим "по одному вопросу"
+        if ($questionIndex < 1) {
+            $questionIndex = 1;
+        }
+        if ($questionIndex > $questions->count()) {
+            $questionIndex = $questions->count();
+        }
+
+        $question = $questions[$questionIndex - 1];
+
+        return view('layout', [
+            'content' => view('test_attempt_page', [
+                'test' => $test,
+                'question' => $question,
+                'questionIndex' => $questionIndex,
+                'totalQuestions' => $questions->count(),
+                'savedAnswers' => $savedAnswers,
+            ]),
+        ]);
+    }
+
+    /**
+     * Обработка сохранения временного ответа (AJAX).
+     */
+    public function saveAnswer(Request $request, Test $test)
+    {
+        $questionId = $request->input('question_id');
+        $optionIds = $request->input('option_id');
+        $answerText = $request->input('answer_text');
+        $richTextAnswer = $request->input('rich_text_answer');
+
+        // Для текстовых ответов
+        if ($request->has('answer_text')) {
+            // Сохраняем в сессии
+            $answers = session("test_{$test->id}_answers", []);
+            $answers[$questionId] = $answerText;
+            session(["test_{$test->id}_answers" => $answers]);
+
+            if (Auth::check()) {
+                $userId = Auth::id();
+
+                // Получаем текущую попытку
+                $attempt = TestAttempt::where('test_id', $test->id)
+                    ->where('user_id', $userId)
+                    ->whereNull('ended_at')
+                    ->first();
+
+                if (!$attempt) {
+                    return response()->json(['error' => 'Test not started'], 403);
+                }
+
+                // Проверка лимита времени (только если time_limit установлен)
+                if ($test->time_limit && $attempt->started_at) {
+                    $elapsed = now()->diffInSeconds($attempt->started_at);
+                    $timeLimitSeconds = $test->time_limit * 60;
+
+                    if ($elapsed > $timeLimitSeconds) {
+                        return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
+                    }
+                }
+
+                // Удаляем предыдущие ответы на этот вопрос
+                TemporaryAnswer::where('user_id', $userId)
+                    ->where('test_id', $test->id)
+                    ->where('question_id', $questionId)
+                    ->delete();
+
+                // Вставляем новый текстовый ответ
+                TemporaryAnswer::create([
+                    'user_id' => $userId,
+                    'test_id' => $test->id,
+                    'test_attempt_id' => $attempt->id,
+                    'question_id' => $questionId,
+                    'option_id' => null,
+                    'answer_text' => $answerText,
+                ]);
+            }
+
+            return response()->json(['success' => true]);
+        }
+
+        // Для развёрнутых ответов
+        if ($request->has('rich_text_answer')) {
+            // Сохраняем в сессии
+            $answers = session("test_{$test->id}_answers", []);
+            $answers[$questionId] = $richTextAnswer;
+            session(["test_{$test->id}_answers" => $answers]);
+
+            if (Auth::check()) {
+                $userId = Auth::id();
+
+                // Получаем текущую попытку
+                $attempt = TestAttempt::where('test_id', $test->id)
+                    ->where('user_id', $userId)
+                    ->whereNull('ended_at')
+                    ->first();
+
+                if (!$attempt) {
+                    return response()->json(['error' => 'Test not started'], 403);
+                }
+
+                // Проверка лимита времени (только если time_limit установлен)
+                if ($test->time_limit && $attempt->started_at) {
+                    $elapsed = now()->diffInSeconds($attempt->started_at);
+                    $timeLimitSeconds = $test->time_limit * 60;
+
+                    if ($elapsed > $timeLimitSeconds) {
+                        return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
+                    }
+                }
+
+                // Удаляем предыдущие ответы на этот вопрос
+                TemporaryAnswer::where('user_id', $userId)
+                    ->where('test_id', $test->id)
+                    ->where('question_id', $questionId)
+                    ->delete();
+
+                // Вставляем новый развёрнутый ответ
+                TemporaryAnswer::create([
+                    'user_id' => $userId,
+                    'test_id' => $test->id,
+                    'test_attempt_id' => $attempt->id,
+                    'question_id' => $questionId,
+                    'option_id' => null,
+                    'answer_text' => $richTextAnswer,
+                ]);
+            }
+
+            return response()->json(['success' => true]);
+        }
+
+        // Для множественного выбора
+        // Убедимся, что $optionIds всегда массив
+        if (!$request->has('answer_text') && $optionIds) {
+            $optionIds = (array) $optionIds;
+
+            // Сохраняем в сессии
+            $answers = session("test_{$test->id}_answers", []);
+            $answers[$questionId] = $optionIds;
+            session(["test_{$test->id}_answers" => $answers]);
+
+            if (Auth::check()) {
+                $userId = Auth::id();
+
+                // Получаем текущую попытку
+                $attempt = TestAttempt::where('test_id', $test->id)
+                    ->where('user_id', $userId)
+                    ->whereNull('ended_at')
+                    ->first();
+
+                if (!$attempt) {
+                    return response()->json(['error' => 'Test not started'], 403);
+                }
+
+                // Проверка лимита времени (только если time_limit установлен)
+                if ($test->time_limit && $attempt->started_at) {
+                    $elapsed = now()->diffInSeconds($attempt->started_at);
+                    $timeLimitSeconds = $test->time_limit * 60;
+
+                    if ($elapsed > $timeLimitSeconds) {
+                        return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
+                    }
+                }
+
+                // Удаляем предыдущие ответы на этот вопрос
+                TemporaryAnswer::where('user_id', $userId)
+                    ->where('test_id', $test->id)
+                    ->where('question_id', $questionId)
+                    ->delete();
+
+                // Вставляем новый(е) ответ(ы)
+                foreach ($optionIds as $optionId) {
+                    TemporaryAnswer::create([
+                        'user_id' => $userId,
+                        'test_id' => $test->id,
+                        'test_attempt_id' => $attempt->id,
+                        'question_id' => $questionId,
+                        'option_id' => $optionId,
+                    ]);
+                }
+            }
+        }
+
+        return response()->json(['success' => true]);
     }
 }

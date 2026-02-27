@@ -27,6 +27,12 @@ class Course extends Model
         return $this->hasMany(Lecture::class);
     }
 
+    public function sections()
+    {
+        return $this->hasMany(CourseSection::class)
+            ->orderBy('position');
+    }
+
     public function groups()
     {
         return $this->belongsToMany(Group::class, 'course_group', 'course_id', 'group_id');
