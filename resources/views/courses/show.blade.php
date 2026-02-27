@@ -27,57 +27,250 @@
 
     <hr>
 
-    <h2>Тесты курса</h2>
-    <ul>
-        @forelse($course->tests as $test)
-            <li>
-                <a href="{{ route('tests.view', $test) }}">{{ $test->title }}</a><br>
-                @can('edit courses')
-                <a href="{{ route('tests.show', $test) }}">Редактировать тест</a><br>
-                <a href="{{ route('tests.results', $test) }}" class="btn btn-info">Обзор теста</a><br>
-                @endcan
-                @auth
-                    @php
-                        $remainingForThisTest = $remainingByTest[$test->id] ?? null;
-                    @endphp
-                    @if($remainingForThisTest !== null)
-                        <span>
-                            попытки: {{ $remainingForThisTest }}
-                        </span>
-                    @endif
-                @endauth
-                <p class="text-gray-600 flex-grow">
-                    Доступен с {{ $test->formattedPeriodStart() ?? '—' }}
-                </p>
-                <p class="text-gray-600 flex-grow">
-                    Доступен до {{ $test->formattedPeriodEnd() ?? '—' }}
-                </p>
-                @php
-                    $displayMode = $test->display_mode ?? 'per_question';
-                @endphp
-                @if($displayMode === 'single_page')
-                    <a href="{{ route('tests.attempt', $test) }}">пройти тест</a>
-                @else
-                    <a href="{{ route('tests.attempt.page', [$test->id, 1]) }}">пройти тест</a>
-                @endif
-            </li>
-        @empty
-            <li>Тестов пока нет</li>
-        @endforelse
-    </ul>
+    @php
+        $allSectionItemTestIds = collect();
+        $allSectionItemLectureIds = collect();
+        foreach ($course->sections as $section) {
+            foreach ($section->items as $item) {
+                if ($item->item instanceof \App\Models\Test) {
+                    $allSectionItemTestIds->push($item->item->id);
+                }
+                if ($item->item instanceof \App\Models\Lecture) {
+                    $allSectionItemLectureIds->push($item->item->id);
+                }
+            }
+        }
+    @endphp
 
-    <h2>Лекции курса</h2>
-    <ul>
-        @forelse($course->lectures as $lecture)
-            <li>
-                <a href="{{ route('lectures.show', ['course' => $course, 'lecture' => $lecture]) }}">
-                    {{ $lecture->title }}
-                </a>
-            </li>
-        @empty
-            <li>Лекций пока нет</li>
-        @endforelse
-    </ul>
+    @hasanyrole('teacher|admin')
+        <div class="mb-4">
+            <h2>Добавить секцию</h2>
+            <form action="{{ route('courses.sections.store', $course) }}" method="POST">
+                @csrf
+                <input type="text" name="title" placeholder="Название секции" required>
+                <button type="submit" class="btn btn-secondary">Создать секцию</button>
+            </form>
+        </div>
+    @endhasanyrole
+
+    @foreach($course->sections as $section)
+        <div class="course-section mb-4 p-3 border rounded">
+            <div class="flex items-center justify-between mb-2">
+                <div>
+                    <h2 class="inline-block mr-2">{{ $section->title }}</h2>
+                    @hasanyrole('teacher|admin')
+                        <form action="{{ route('courses.sections.update', [$course, $section]) }}" method="POST" class="inline-block">
+                            @csrf
+                            @method('PUT')
+                            <input type="text" name="title" value="{{ $section->title }}" class="small-input">
+                            <button type="submit" class="btn btn-secondary btn-xs">Переименовать</button>
+                        </form>
+                    @endhasanyrole
+                </div>
+                @hasanyrole('teacher|admin')
+                    <div class="flex gap-2">
+                        <form action="{{ route('courses.sections.move', [$course, $section]) }}" method="POST" class="inline-block">
+                            @csrf
+                            <input type="hidden" name="direction" value="up">
+                            <button type="submit" class="btn btn-light btn-xs">↑</button>
+                        </form>
+                        <form action="{{ route('courses.sections.move', [$course, $section]) }}" method="POST" class="inline-block">
+                            @csrf
+                            <input type="hidden" name="direction" value="down">
+                            <button type="submit" class="btn btn-light btn-xs">↓</button>
+                        </form>
+                        <form action="{{ route('courses.sections.destroy', [$course, $section]) }}" method="POST" class="inline-block" onsubmit="return confirm('Удалить секцию?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger btn-xs">Удалить</button>
+                        </form>
+                    </div>
+                @endhasanyrole
+            </div>
+
+            <ul class="ml-4">
+                @forelse($section->items as $sectionItem)
+                    @php
+                        $item = $sectionItem->item;
+                    @endphp
+                    @if($item instanceof \App\Models\Test)
+                        <li class="mb-2">
+                            <strong>Тест:</strong>
+                            <a href="{{ route('tests.view', $item) }}">{{ $item->title }}</a><br>
+                            @can('edit courses')
+                                <a href="{{ route('tests.show', $item) }}">Редактировать тест</a><br>
+                                <a href="{{ route('tests.results', $item) }}" class="btn btn-info">Обзор теста</a><br>
+                            @endcan
+                            @auth
+                                @php
+                                    $remainingForThisTest = $remainingByTest[$item->id] ?? null;
+                                @endphp
+                                @if($remainingForThisTest !== null)
+                                    <span>
+                                        попытки: {{ $remainingForThisTest }}
+                                    </span>
+                                @endif
+                            @endauth
+                            <p class="text-gray-600 flex-grow">
+                                Доступен с {{ $item->formattedPeriodStart() ?? '—' }}
+                            </p>
+                            <p class="text-gray-600 flex-grow">
+                                Доступен до {{ $item->formattedPeriodEnd() ?? '—' }}
+                            </p>
+                            @php
+                                $displayMode = $item->display_mode ?? 'per_question';
+                            @endphp
+                            @if($displayMode === 'single_page')
+                                <a href="{{ route('tests.attempt', $item) }}">пройти тест</a>
+                            @else
+                                <a href="{{ route('tests.attempt.page', [$item->id, 1]) }}">пройти тест</a>
+                            @endif
+
+                            @hasanyrole('teacher|admin')
+                                <div class="mt-1 flex gap-2">
+                                    <form action="{{ route('courses.sections.items.move', [$course, $section, $sectionItem]) }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="direction" value="up">
+                                        <button type="submit" class="btn btn-light btn-xs">↑</button>
+                                    </form>
+                                    <form action="{{ route('courses.sections.items.move', [$course, $section, $sectionItem]) }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="direction" value="down">
+                                        <button type="submit" class="btn btn-light btn-xs">↓</button>
+                                    </form>
+                                    <form action="{{ route('courses.sections.items.detach', [$course, $section, $sectionItem]) }}" method="POST" onsubmit="return confirm('Убрать элемент из секции?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-xs">Убрать</button>
+                                    </form>
+                                </div>
+                            @endhasanyrole
+                        </li>
+                    @elseif($item instanceof \App\Models\Lecture)
+                        <li class="mb-2">
+                            <strong>Лекция:</strong>
+                            <a href="{{ route('lectures.show', ['course' => $course, 'lecture' => $item]) }}">
+                                {{ $item->title }}
+                            </a>
+
+                            @hasanyrole('teacher|admin')
+                                <div class="mt-1 flex gap-2">
+                                    <form action="{{ route('courses.sections.items.move', [$course, $section, $sectionItem]) }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="direction" value="up">
+                                        <button type="submit" class="btn btn-light btn-xs">↑</button>
+                                    </form>
+                                    <form action="{{ route('courses.sections.items.move', [$course, $section, $sectionItem]) }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="direction" value="down">
+                                        <button type="submit" class="btn btn-light btn-xs">↓</button>
+                                    </form>
+                                    <form action="{{ route('courses.sections.items.detach', [$course, $section, $sectionItem]) }}" method="POST" onsubmit="return confirm('Убрать элемент из секции?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-xs">Убрать</button>
+                                    </form>
+                                </div>
+                            @endhasanyrole
+                        </li>
+                    @endif
+                @empty
+                    <li>В этой секции пока нет элементов</li>
+                @endforelse
+            </ul>
+
+            @hasanyrole('teacher|admin')
+                <div class="mt-3">
+                    <form action="{{ route('courses.sections.items.attach', [$course, $section]) }}" method="POST" class="mb-2">
+                        @csrf
+                        <label>
+                            Добавить тест:
+                            <select name="item_id">
+                                @foreach($course->tests as $test)
+                                    @if(!$allSectionItemTestIds->contains($test->id))
+                                        <option value="{{ $test->id }}">{{ $test->title }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </label>
+                        <input type="hidden" name="item_type" value="test">
+                        <button type="submit" class="btn btn-secondary btn-xs">Добавить</button>
+                    </form>
+
+                    <form action="{{ route('courses.sections.items.attach', [$course, $section]) }}" method="POST">
+                        @csrf
+                        <label>
+                            Добавить лекцию:
+                            <select name="item_id">
+                                @foreach($course->lectures as $lecture)
+                                    @if(!$allSectionItemLectureIds->contains($lecture->id))
+                                        <option value="{{ $lecture->id }}">{{ $lecture->title }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </label>
+                        <input type="hidden" name="item_type" value="lecture">
+                        <button type="submit" class="btn btn-secondary btn-xs">Добавить</button>
+                    </form>
+                </div>
+            @endhasanyrole
+        </div>
+    @endforeach
+
+    {{-- Фолбэк: если секций нет, показываем старые блоки --}}
+    @if($course->sections->isEmpty())
+        <h2>Тесты курса</h2>
+        <ul>
+            @forelse($course->tests as $test)
+                <li>
+                    <a href="{{ route('tests.view', $test) }}">{{ $test->title }}</a><br>
+                    @can('edit courses')
+                        <a href="{{ route('tests.show', $test) }}">Редактировать тест</a><br>
+                        <a href="{{ route('tests.results', $test) }}" class="btn btn-info">Обзор теста</a><br>
+                    @endcan
+                    @auth
+                        @php
+                            $remainingForThisTest = $remainingByTest[$test->id] ?? null;
+                        @endphp
+                        @if($remainingForThisTest !== null)
+                            <span>
+                                попытки: {{ $remainingForThisTest }}
+                            </span>
+                        @endif
+                    @endauth
+                    <p class="text-gray-600 flex-grow">
+                        Доступен с {{ $test->formattedPeriodStart() ?? '—' }}
+                    </p>
+                    <p class="text-gray-600 flex-grow">
+                        Доступен до {{ $test->formattedPeriodEnd() ?? '—' }}
+                    </p>
+                    @php
+                        $displayMode = $test->display_mode ?? 'per_question';
+                    @endphp
+                    @if($displayMode === 'single_page')
+                        <a href="{{ route('tests.attempt', $test) }}">пройти тест</a>
+                    @else
+                        <a href="{{ route('tests.attempt.page', [$test->id, 1]) }}">пройти тест</a>
+                    @endif
+                </li>
+            @empty
+                <li>Тестов пока нет</li>
+            @endforelse
+        </ul>
+
+        <h2>Лекции курса</h2>
+        <ul>
+            @forelse($course->lectures as $lecture)
+                <li>
+                    <a href="{{ route('lectures.show', ['course' => $course, 'lecture' => $lecture]) }}">
+                        {{ $lecture->title }}
+                    </a>
+                </li>
+            @empty
+                <li>Лекций пока нет</li>
+            @endforelse
+        </ul>
+    @endif
 </div>
 </body>
 

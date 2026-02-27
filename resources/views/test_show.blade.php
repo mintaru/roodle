@@ -27,39 +27,101 @@
             </div>
             <div class="card">
                 <h3 class="text-xl font-bold mb-4">Вопросы в тесте ({{ $test->questions->count() }})</h3>
-                <div class="space-y-4">
-                    @forelse($test->questions as $question)
-                        <div class="question-item">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                <div style="flex: 1;">
-                                    <p class="font-semibold">{{ $loop->iteration }}. {!! $question->question_text !!}</p>
-                                    <ul class="options-list mt-2">
-                                        @foreach ($question->options as $option)
-                                            <li class="{{ $option->is_correct ? 'correct-answer' : '' }}">
-                                                {{ $option->option_text }}
-                                                @if ($option->is_correct)
-                                                    <span class="correct-label">(Верный ответ)</span>
-                                                @endif
-                                            </li>
-                                        @endforeach
-                                    </ul>
+
+                @if($test->display_mode === 'paged')
+                    <p class="mb-3 text-sm text-gray-600">
+                        Разбиение по страницам активно. Укажите номер страницы для каждого вопроса
+                        (например, 1–5 на первой, 6–10 на второй и т.д.).
+                    </p>
+                    <form action="{{ route('tests.update_layout', $test) }}" method="POST" class="space-y-4">
+                        @csrf
+                        @method('PUT')
+                        @forelse($test->questions as $question)
+                            <div class="question-item">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                                    <div style="flex: 1;">
+                                        <p class="font-semibold">
+                                            {{ $loop->iteration }}. {!! $question->question_text !!}
+                                        </p>
+                                        <ul class="options-list mt-2">
+                                            @foreach ($question->options as $option)
+                                                <li class="{{ $option->is_correct ? 'correct-answer' : '' }}">
+                                                    {{ $option->option_text }}
+                                                    @if ($option->is_correct)
+                                                        <span class="correct-label">(Верный ответ)</span>
+                                                    @endif
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                                        <label class="text-sm text-gray-700">
+                                            Страница
+                                            <input
+                                                type="number"
+                                                name="pages[{{ $question->id }}]"
+                                                min="1"
+                                                value="{{ $question->pivot->page_number ?? 1 }}"
+                                                class="w-20 px-2 py-1 border rounded-md text-sm">
+                                        </label>
+                                        <button
+                                            type="submit"
+                                            form="delete-question-{{ $question->id }}"
+                                            class="delete-btn"
+                                            onclick="return confirm('Вы уверены, что хотите удалить этот вопрос из теста?')"
+                                            style="background-color: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">
+                                            🗑️ Удалить
+                                        </button>
+                                    </div>
                                 </div>
-                                <form
-                                    action="{{ route('tests.removeQuestion', ['test' => $test->id, 'question' => $question->id]) }}"
-                                    method="POST" style="display: inline; margin-left: 10px;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="delete-btn"
-                                        onclick="return confirm('Вы уверены, что хотите удалить этот вопрос из теста?')"
-                                        style="background-color: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">🗑️
-                                        Удалить</button>
-                                </form>
                             </div>
-                        </div>
-                    @empty
-                        <p class="no-questions">В этом тесте еще нет вопросов.</p>
-                    @endforelse
-                </div>
+                        @empty
+                            <p class="no-questions">В этом тесте еще нет вопросов.</p>
+                        @endforelse
+
+                        @if($test->questions->count() > 0)
+                            <div class="mt-4">
+                                <button type="submit" class="submit-btn">
+                                    Сохранить разбиение по страницам
+                                </button>
+                            </div>
+                        @endif
+                    </form>
+                @else
+                    <div class="space-y-4">
+                        @forelse($test->questions as $question)
+                            <div class="question-item">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div style="flex: 1;">
+                                        <p class="font-semibold">{{ $loop->iteration }}. {!! $question->question_text !!}</p>
+                                        <ul class="options-list mt-2">
+                                            @foreach ($question->options as $option)
+                                                <li class="{{ $option->is_correct ? 'correct-answer' : '' }}">
+                                                    {{ $option->option_text }}
+                                                    @if ($option->is_correct)
+                                                        <span class="correct-label">(Верный ответ)</span>
+                                                    @endif
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                    <form
+                                        action="{{ route('tests.removeQuestion', ['test' => $test->id, 'question' => $question->id]) }}"
+                                        method="POST" style="display: inline; margin-left: 10px;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="delete-btn"
+                                            onclick="return confirm('Вы уверены, что хотите удалить этот вопрос из теста?')"
+                                            style="background-color: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">🗑️
+                                            Удалить</button>
+                                    </form>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="no-questions">В этом тесте еще нет вопросов.</p>
+                        @endforelse
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -165,6 +227,18 @@
             </div>
         </div>
     </div>
+
+    {{-- Отдельные скрытые формы для удаления (чтобы не было вложенных form) --}}
+    @foreach($test->questions as $question)
+        <form
+            id="delete-question-{{ $question->id }}"
+            action="{{ route('tests.removeQuestion', ['test' => $test->id, 'question' => $question->id]) }}"
+            method="POST"
+            style="display:none;">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endforeach
     <script src="
         https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.umd.min.js
         "></script>
@@ -221,7 +295,6 @@
             } else {
                 optionsGroup.style.display = 'block';
                 textAnswersGroup.style.display = 'none';
-                richTextAnswersGroup.style.display = 'none';
                 
                 // Добавляем required к полям опций
                 optionInputs.forEach(input => {
