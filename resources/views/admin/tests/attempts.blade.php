@@ -22,6 +22,8 @@
     </tbody>
 </table>
 
-<a href="{{  url()->previous()}}">Назад</a>
+<div class="mb-4">
+    <x-back-button :url="route('admin.tests.index')" text="К списку тестов" />
+</div>
 
 @endsection

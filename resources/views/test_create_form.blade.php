@@ -11,6 +11,9 @@
 </head>
 <body>
 <div class="max-w-2xl mx-auto">
+    <div class="mb-4">
+        <x-back-button :url="route('courses.show', $course)" text="К курсу" />
+    </div>
     <div class="card">
         <h2 class="text-2xl font-bold mb-6 text-center">Создание нового теста</h2>
         <form action="{{ route('tests.store', $course) }}" method="POST">

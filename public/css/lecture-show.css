@@ -56,8 +56,15 @@ a:hover {
     border-radius: 12px;
     line-height: 1.6;
     font-size: 16px;
+    text-align: left;
+}
+.lecture-content-text {
     white-space: pre-line;
-    text-align: left; /* чтобы лекция читалась нормально */
+}
+.lecture-content.trix-content ul,
+.lecture-content.trix-content ol {
+    margin: 0.5em 0;
+    padding-left: 1.5em;
 }
 .nav-bar {
     display: grid;

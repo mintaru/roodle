@@ -130,7 +130,7 @@ class CourseController extends Controller
             // Студент видит только доступные тесты
             $course->load([
                 'tests' => fn ($query) => $query->available(),
-                'lectures',
+                'lectures' => fn ($query) => $query->where('status', 'active'),
                 'sections.items.item',
             ]);
         }

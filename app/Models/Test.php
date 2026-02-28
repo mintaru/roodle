@@ -19,6 +19,7 @@ class Test extends Model
     protected $fillable = [
         'title',
         'description',
+        'status',
         'max_attempts',
         'time_limit',
         'period_start',
@@ -32,7 +33,9 @@ class Test extends Model
         'period_end' => 'datetime',
         'randomize_questions' => 'boolean',
     ];
-    
+
+    const STATUS_ACTIVE = 'active';
+    const STATUS_ARCHIVED = 'archived';
 
     /**
      * Отношение "один ко многим" с моделью Question.
@@ -71,10 +74,13 @@ class Test extends Model
 
     public function isAvailable(): bool
     {
-        if (Auth::check() && Auth::user()->hasRole('admin')) {
+        if (Auth::check() && Auth::user()->hasAnyRole(['admin', 'teacher'])) {
             return true;
         }
-    
+
+        if ($this->status === self::STATUS_ARCHIVED) {
+            return false;
+        }
 
         $now = now();
 
@@ -94,6 +100,7 @@ class Test extends Model
         $now = now();
 
         return $query
+            ->where('status', self::STATUS_ACTIVE)
             ->where(function ($q) use ($now) {
                 $q->whereNull('period_start')
                     ->orWhere('period_start', '<=', $now);

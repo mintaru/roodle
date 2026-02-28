@@ -1,3 +1,6 @@
+<div class="mb-4">
+    <x-back-button :url="route('admin.groups.index')" text="К списку групп" />
+</div>
 <h1>Создать новую группу</h1>
 
 @if ($errors->any())
@@ -18,5 +21,3 @@
     </div>
     <button type="submit">Создать группу</button>
 </form>
-
-<a href="{{ route('admin.groups.index') }}">Назад к списку групп</a>

@@ -10,9 +10,9 @@
 <div class="max-w-6xl mx-auto bg-white p-6 rounded shadow">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <a href="{{ route('admin.dashboard') }}" class="text-blue-600 hover:text-blue-800 mb-4 inline-block">
-                ← Вернуться в админ-панель
-            </a>
+            <div class="mb-4">
+                <x-back-button :url="route('admin.reports.index')" text="К отчётам" />
+            </div>
             <h1 class="text-3xl font-bold text-gray-800">Отчёт по курсам</h1>
         </div>
     </div>

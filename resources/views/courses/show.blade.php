@@ -12,6 +12,9 @@
 @include('components.menu')
 
 <div class="container">
+    <div class="mb-4">
+        <x-back-button :url="route('home')" text="К курсам" />
+    </div>
     <h1>{{ $course->title }}</h1>
     <p>{{ $course->description }}</p>
 
@@ -24,6 +27,13 @@
         Создать лекцию для курса
     </a>
     @endhasanyrole
+
+    @if(session('success'))
+        <div class="p-3 bg-green-200 text-green-800 rounded mb-4">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="p-3 bg-red-200 text-red-800 rounded mb-4">{{ session('error') }}</div>
+    @endif
 
     <hr>
 
@@ -92,10 +102,20 @@
                 @forelse($section->items as $sectionItem)
                     @php
                         $item = $sectionItem->item;
+                        $isArchived = ($item instanceof \App\Models\Test && ($item->status ?? 'active') === \App\Models\Test::STATUS_ARCHIVED)
+                            || ($item instanceof \App\Models\Lecture && ($item->status ?? 'active') === \App\Models\Lecture::STATUS_ARCHIVED);
                     @endphp
+                    @if($isArchived && !auth()->user()?->hasAnyRole(['teacher','admin']))
+                        @continue
+                    @endif
                     @if($item instanceof \App\Models\Test)
                         <li class="mb-2">
                             <strong>Тест:</strong>
+                            @hasanyrole('teacher|admin')
+                                @if(($item->status ?? 'active') === \App\Models\Test::STATUS_ARCHIVED)
+                                    <span class="text-yellow-700 font-medium">[архивирован]</span>
+                                @endif
+                            @endhasanyrole
                             <a href="{{ route('tests.view', $item) }}">{{ $item->title }}</a><br>
                             @can('edit courses')
                                 <a href="{{ route('tests.show', $item) }}">Редактировать тест</a><br>
@@ -149,6 +169,11 @@
                     @elseif($item instanceof \App\Models\Lecture)
                         <li class="mb-2">
                             <strong>Лекция:</strong>
+                            @hasanyrole('teacher|admin')
+                                @if(($item->status ?? 'active') === \App\Models\Lecture::STATUS_ARCHIVED)
+                                    <span class="text-yellow-700 font-medium">[архивирован]</span>
+                                @endif
+                            @endhasanyrole
                             <a href="{{ route('lectures.show', ['course' => $course, 'lecture' => $item]) }}">
                                 {{ $item->title }}
                             </a>
@@ -186,7 +211,7 @@
                         <label>
                             Добавить тест:
                             <select name="item_id">
-                                @foreach($course->tests as $test)
+                                @foreach($course->tests->where('status', \App\Models\Test::STATUS_ACTIVE) as $test)
                                     @if(!$allSectionItemTestIds->contains($test->id))
                                         <option value="{{ $test->id }}">{{ $test->title }}</option>
                                     @endif
@@ -202,7 +227,7 @@
                         <label>
                             Добавить лекцию:
                             <select name="item_id">
-                                @foreach($course->lectures as $lecture)
+                                @foreach($course->lectures->where('status', \App\Models\Lecture::STATUS_ACTIVE) as $lecture)
                                     @if(!$allSectionItemLectureIds->contains($lecture->id))
                                         <option value="{{ $lecture->id }}">{{ $lecture->title }}</option>
                                     @endif
@@ -223,6 +248,11 @@
         <ul>
             @forelse($course->tests as $test)
                 <li>
+                    @hasanyrole('teacher|admin')
+                        @if(($test->status ?? 'active') === \App\Models\Test::STATUS_ARCHIVED)
+                            <span class="text-yellow-700 font-medium">[архивирован]</span>
+                        @endif
+                    @endhasanyrole
                     <a href="{{ route('tests.view', $test) }}">{{ $test->title }}</a><br>
                     @can('edit courses')
                         <a href="{{ route('tests.show', $test) }}">Редактировать тест</a><br>
@@ -262,6 +292,11 @@
         <ul>
             @forelse($course->lectures as $lecture)
                 <li>
+                    @hasanyrole('teacher|admin')
+                        @if(($lecture->status ?? 'active') === \App\Models\Lecture::STATUS_ARCHIVED)
+                            <span class="text-yellow-700 font-medium">[архивирован]</span>
+                        @endif
+                    @endhasanyrole
                     <a href="{{ route('lectures.show', ['course' => $course, 'lecture' => $lecture]) }}">
                         {{ $lecture->title }}
                     </a>

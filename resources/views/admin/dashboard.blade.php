@@ -10,9 +10,9 @@
 <body class="bg-gray-100 p-8">
 
     <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
-        <a href="{{ route('home') }}">
-            вернуться
-        </a>
+        <div class="mb-4">
+            <x-back-button :url="route('home')" text="К курсам" />
+        </div>
         <h1 class="text-3xl font-bold mb-2 text-gray-800">Админ-панель</h1>
         <p class="text-gray-600 mb-8">Добро пожаловать, <span class="font-semibold">{{ auth()->user()->name }}</span>!</p>
 

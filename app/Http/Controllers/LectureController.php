@@ -44,42 +44,67 @@ class LectureController extends Controller
 //
     public function store(Request $request, Course $course)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'pdf'   => 'required|file|mimes:pdf',
-            'from_page' => 'nullable|integer|min:1',
-            'to_page'   => 'nullable|integer|min:1',
-        ]);
+        $contentSource = $request->input('content_source', 'manual');
 
-        $file = $request->file('pdf');
-        $path = $file->store('lectures', 'public');
+        if ($contentSource === 'pdf') {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'pdf'   => 'required|file|mimes:pdf',
+                'from_page' => 'nullable|integer|min:1',
+                'to_page'   => 'nullable|integer|min:1',
+            ]);
 
-        // Парсим PDF
-        $parser = new Parser();
-        $pdf = $parser->parseFile(Storage::disk('public')->path($path));
-        $pages = $pdf->getPages();
+            $file = $request->file('pdf');
+            $path = $file->store('lectures', 'public');
 
-        $from = $request->from_page ?: 1;
-        $to   = $request->to_page ?: count($pages);
-        $to   = min($to, count($pages));
-        $from = max(1, $from);
+            $parser = new Parser();
+            $pdf = $parser->parseFile(Storage::disk('public')->path($path));
+            $pages = $pdf->getPages();
 
-        $text = '';
-        for ($i = $from - 1; $i < $to; $i++) {
-            $text .= $pages[$i]->getText() . "\n\n";
+            $from = $request->from_page ?: 1;
+            $to   = $request->to_page ?: count($pages);
+            $to   = min($to, count($pages));
+            $from = max(1, $from);
+
+            $text = '';
+            for ($i = $from - 1; $i < $to; $i++) {
+                $text .= $pages[$i]->getText() . "\n\n";
+            }
+
+            $lecture = $course->lectures()->create([
+                'title' => $request->title,
+                'pdf_path' => $path,
+                'content' => trim($text),
+                'content_type' => Lecture::CONTENT_TYPE_TEXT,
+            ]);
+        } else {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'content' => 'required|string',
+            ]);
+
+            $content = $request->input('content');
+            if (strip_tags($content) === '' || trim(strip_tags($content)) === '') {
+                return back()->withErrors(['content' => 'Введите текст лекции.'])->withInput();
+            }
+
+            $lecture = $course->lectures()->create([
+                'title' => $request->title,
+                'pdf_path' => null,
+                'content' => $content,
+                'content_type' => Lecture::CONTENT_TYPE_HTML,
+            ]);
         }
-
-        $lecture = $course->lectures()->create([
-            'title' => $request->title,
-            'pdf_path' => $path,
-            'content' => $text,
-        ]);
 
         return redirect()->route('courses.show', $course)->with('success', 'Lecture created!');
     }
 
     public function show(Course $course, Lecture $lecture)
     {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if (!$user?->hasAnyRole(['admin', 'teacher']) && ($lecture->status ?? 'active') === Lecture::STATUS_ARCHIVED) {
+            abort(404);
+        }
         return view('lectures.show', compact('course', 'lecture'));
     }
 
@@ -91,15 +116,17 @@ class LectureController extends Controller
 
     public function update(Request $request, Lecture $lecture)
     {
+        $contentSource = $request->input('content_source', 'manual');
+
         $request->validate([
             'title' => 'required|string|max:255',
             'pdf'   => 'nullable|file|mimes:pdf',
             'from_page' => 'nullable|integer|min:1',
             'to_page'   => 'nullable|integer|min:1',
+            'content' => 'nullable|string',
         ]);
 
-        if ($request->hasFile('pdf')) {
-            // Удаляем старый файл
+        if ($contentSource === 'pdf' && $request->hasFile('pdf')) {
             if ($lecture->pdf_path) {
                 Storage::disk('public')->delete($lecture->pdf_path);
             }
@@ -107,7 +134,6 @@ class LectureController extends Controller
             $file = $request->file('pdf');
             $path = $file->store('lectures', 'public');
 
-            // Парсим PDF
             $parser = new Parser();
             $pdf = $parser->parseFile(Storage::disk('public')->path($path));
             $pages = $pdf->getPages();
@@ -125,12 +151,28 @@ class LectureController extends Controller
             $lecture->update([
                 'title' => $request->title,
                 'pdf_path' => $path,
-                'content' => $text,
+                'content' => trim($text),
+                'content_type' => Lecture::CONTENT_TYPE_TEXT,
             ]);
-        } else {
-            $lecture->update([
+        } elseif ($contentSource === 'manual') {
+            $content = $request->input('content');
+            if ($content === null || strip_tags($content) === '' || trim(strip_tags($content)) === '') {
+                return back()->withErrors(['content' => 'Введите текст лекции.'])->withInput();
+            }
+
+            $updateData = [
                 'title' => $request->title,
-            ]);
+                'content' => $content,
+                'content_type' => Lecture::CONTENT_TYPE_HTML,
+            ];
+            if ($lecture->pdf_path) {
+                Storage::disk('public')->delete($lecture->pdf_path);
+                $updateData['pdf_path'] = null;
+            }
+            $lecture->update($updateData);
+        } else {
+            // PDF selected but no new file - just update title
+            $lecture->update(['title' => $request->title]);
         }
 
         return redirect()->route('admin.lectures.index')->with('success', 'Лекция успешно обновлена!');
@@ -146,5 +188,23 @@ class LectureController extends Controller
         $lecture->delete();
 
         return redirect()->route('admin.lectures.index')->with('success', 'Лекция успешно удалена!');
+    }
+
+    public function archive(Lecture $lecture)
+    {
+        $lecture->update([
+            'status' => Lecture::STATUS_ARCHIVED,
+        ]);
+
+        return back()->with('success', 'Лекция отправлена в архив');
+    }
+
+    public function restore(Lecture $lecture)
+    {
+        $lecture->update([
+            'status' => Lecture::STATUS_ACTIVE,
+        ]);
+
+        return back()->with('success', 'Лекция восстановлена из архива');
     }
 }

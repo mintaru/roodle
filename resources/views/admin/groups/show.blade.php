@@ -8,6 +8,9 @@
 <body class="bg-gray-100 p-8">
 
 <div class="max-w-2xl mx-auto">
+    <div class="mb-4">
+        <x-back-button :url="route('admin.groups.index')" text="К списку групп" />
+    </div>
     <h1 class="text-3xl font-bold mb-8 text-gray-800">Группа: {{ $group->name }}</h1>
 
     <!-- Форма изменения названия группы -->
@@ -63,9 +66,6 @@
         @endif
     </div>
 
-    <div class="mt-6">
-        <a href="{{ route('admin.groups.index') }}" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 inline-block">Назад к списку групп</a>
-    </div>
 </div>
 
 </body>

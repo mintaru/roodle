@@ -8,6 +8,9 @@
 <body class="bg-gray-100 p-8">
 
 <div class="max-w-6xl mx-auto bg-white p-6 rounded shadow">
+    <div class="mb-4">
+        <x-back-button :url="route('admin.dashboard')" text="В админ-панель" />
+    </div>
     <h1 class="text-2xl font-bold mb-4">Список лекций</h1>
 
     @if(session('success'))
@@ -45,6 +48,7 @@
                 <th class="p-2 border">Название</th>
                 <th class="p-2 border">Курс</th>
                 <th class="p-2 border">PDF файл</th>
+                <th class="p-2 border">Статус</th>
                 <th class="p-2 border">Действия</th>
             </tr>
             </thead>
@@ -64,8 +68,28 @@
                         @endif
                     </td>
                     <td class="p-2 border">
+                        @if($lecture->status === \App\Models\Lecture::STATUS_ARCHIVED)
+                            <span class="text-yellow-700">В архиве</span>
+                        @else
+                            <span class="text-green-700">Активна</span>
+                        @endif
+                    </td>
+                    <td class="p-2 border">
                         <div class="flex gap-2">
                             <a href="{{ route('admin.lectures.edit', $lecture) }}" class="text-blue-600 hover:underline">Редактировать</a>
+                            @if($lecture->status === \App\Models\Lecture::STATUS_ACTIVE)
+                                <form action="{{ route('admin.lectures.archive', $lecture) }}" method="POST" style="display:inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="text-yellow-700 hover:underline" onclick="return confirm('Отправить лекцию в архив?')">Архивировать</button>
+                                </form>
+                            @else
+                                <form action="{{ route('admin.lectures.restore', $lecture) }}" method="POST" style="display:inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="text-green-700 hover:underline" onclick="return confirm('Восстановить лекцию из архива?')">Восстановить</button>
+                                </form>
+                            @endif
                             <form action="{{ route('admin.lectures.destroy', $lecture) }}" method="POST" style="display:inline">
                                 @csrf
                                 @method('DELETE')

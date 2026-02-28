@@ -8,6 +8,9 @@
 <body class="bg-gray-100 p-8">
 
 <div class="max-w-6xl mx-auto bg-white p-6 rounded shadow">
+    <div class="mb-4">
+        <x-back-button :url="route('admin.dashboard')" text="В админ-панель" />
+    </div>
     <h1 class="text-2xl font-bold mb-4">Список тестов</h1>
 
     @if(session('success'))
@@ -57,6 +60,7 @@
                 <th class="p-2 border">Курс</th>
                 <th class="p-2 border">Вопросов</th>
                 <th class="p-2 border">Макс. попыток</th>
+                <th class="p-2 border">Статус</th>
                 <th class="p-2 border">Действия</th>
             </tr>
             </thead>
@@ -78,9 +82,29 @@
                             {{ $test->max_attempts }}
                         @endif
                     </td>
+                    <td class="p-2 border text-center">
+                        @if($test->status === \App\Models\Test::STATUS_ARCHIVED)
+                            <span class="text-yellow-700">В архиве</span>
+                        @else
+                            <span class="text-green-700">Активен</span>
+                        @endif
+                    </td>
                     <td class="p-2 border">
                         <div class="flex gap-2">
                             <a href="{{ route('admin.tests.edit', $test) }}" class="text-blue-600 hover:underline">Редактировать</a>
+                            @if($test->status === \App\Models\Test::STATUS_ACTIVE)
+                                <form action="{{ route('admin.tests.archive', $test) }}" method="POST" style="display:inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="text-yellow-700 hover:underline" onclick="return confirm('Отправить тест в архив?')">Архивировать</button>
+                                </form>
+                            @else
+                                <form action="{{ route('admin.tests.restore', $test) }}" method="POST" style="display:inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="text-green-700 hover:underline" onclick="return confirm('Восстановить тест из архива?')">Восстановить</button>
+                                </form>
+                            @endif
                             <form action="{{ route('admin.tests.destroy', $test) }}" method="POST" style="display:inline">
                                 @csrf
                                 @method('DELETE')

@@ -174,6 +174,8 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::get('/lectures/{lecture}/edit', [LectureController::class, 'edit'])->name('admin.lectures.edit');
     Route::put('/lectures/{lecture}', [LectureController::class, 'update'])->name('admin.lectures.update');
     Route::delete('/lectures/{lecture}', [LectureController::class, 'destroy'])->name('admin.lectures.destroy');
+    Route::patch('/lectures/{lecture}/archive', [LectureController::class, 'archive'])->name('admin.lectures.archive');
+    Route::patch('/lectures/{lecture}/restore', [LectureController::class, 'restore'])->name('admin.lectures.restore');
 
     // Секции курсов и элементы секций
     Route::post('/courses/{course}/sections', [CourseSectionController::class, 'store'])->name('courses.sections.store');
@@ -195,6 +197,8 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::get('/tests/{test}/edit', [TestManagementController::class, 'edit'])->name('admin.tests.edit');
     Route::put('/tests/{test}', [TestManagementController::class, 'update'])->name('admin.tests.update');
     Route::delete('/tests/{test}', [TestManagementController::class, 'destroy'])->name('admin.tests.destroy');
+    Route::patch('/tests/{test}/archive', [TestManagementController::class, 'archive'])->name('admin.tests.archive');
+    Route::patch('/tests/{test}/restore', [TestManagementController::class, 'restore'])->name('admin.tests.restore');
     Route::get('/tests/{id}/attempts', [TestController::class, 'attempts'])->name('admin.tests.attempts');
 
     Route::post('/questions/upload', [QuestionController::class, 'upload'])->name('questions.upload');

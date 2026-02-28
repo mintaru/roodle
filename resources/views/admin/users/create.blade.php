@@ -1,3 +1,6 @@
+<div class="mb-4">
+    <x-back-button :url="route('admin.users.index')" text="К списку пользователей" />
+</div>
 <h1>Создание пользователя</h1>
 
 <form action="{{ route('admin.users.store') }}" method="POST">
