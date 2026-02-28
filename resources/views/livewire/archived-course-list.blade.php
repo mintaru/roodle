@@ -71,10 +71,10 @@
                     {{ Str::limit($course->description, 120) }}
                 </p>
                 <p class="text-gray-600 flex-grow">
-                    Доступен с {{ $course->formattedPeriodStart() ?? '—' }}
+                    Доступен с {{ $course->formattedPeriodStartForUser(auth()->user()) ?? '—' }}
                 </p>
                 <p class="text-gray-600 flex-grow">
-                    Доступен до {{ $course->formattedPeriodEnd() ?? '—' }}
+                    Доступен до {{ $course->formattedPeriodEndForUser(auth()->user()) ?? '—' }}
                 </p>
 
 

@@ -50,6 +50,11 @@ class CourseController extends Controller
 
         $courses = $query->get();
 
+        // Для студентов фильтруем по isAvailable (учитывает периоды по группам)
+        if (! $user->hasRole('admin') && ! $user->hasRole('teacher')) {
+            $courses = $courses->filter(fn ($course) => $course->isAvailable());
+        }
+
         return view('courses.index', compact('courses', 'searchColumn', 'searchValue'));
     }
 
@@ -103,10 +108,8 @@ class CourseController extends Controller
 
         $course = Course::create($validated);
 
-        // Привязываем выбранные группы
-        if ($request->has('groups')) {
-            $course->groups()->sync($request->groups);
-        }
+        // Привязываем выбранные группы с периодами доступа
+        $course->groups()->sync($this->buildGroupSyncData($request));
 
         return redirect()->route('courses.create')->with('success', 'Курс успешно создан!');
     }
@@ -199,7 +202,7 @@ class CourseController extends Controller
             )->utc()
             : null;
 
-        $course->groups()->sync($request->groups);
+        $course->groups()->sync($this->buildGroupSyncData($request));
 
         $course->update($validated);
 
@@ -239,5 +242,28 @@ class CourseController extends Controller
     {
         $courses = Course::archived()->get();
         return view('courses.archived', compact('courses'));
+    }
+
+    /**
+     * Формирует данные для sync групп с периодами доступа.
+     */
+    private function buildGroupSyncData(Request $request): array
+    {
+        $syncData = [];
+        foreach ($request->groups ?? [] as $groupId) {
+            $periodStart = $request->input("group_period_start.{$groupId}");
+            $periodEnd = $request->input("group_period_end.{$groupId}");
+
+            $syncData[$groupId] = [
+                'period_start' => $periodStart
+                    ? Carbon::createFromFormat('Y-m-d\TH:i', $periodStart, 'Asia/Krasnoyarsk')->utc()
+                    : null,
+                'period_end' => $periodEnd
+                    ? Carbon::createFromFormat('Y-m-d\TH:i', $periodEnd, 'Asia/Krasnoyarsk')->utc()
+                    : null,
+            ];
+        }
+
+        return $syncData;
     }
 }
