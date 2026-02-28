@@ -106,6 +106,8 @@ class TestController extends Controller
 
     public function view(Test $test)
     {
+        abort_if(!$test->isAvailable(), 404);
+
         $user = Auth::user();
 
         // Количество попыток пользователя
@@ -253,6 +255,8 @@ class TestController extends Controller
 
     public function result(Test $test, Request $request)
     {
+        abort_if(!$test->isAvailable(), 404);
+
         $user = Auth::user();
 
         // Получаем активную попытку из БД
@@ -699,6 +703,8 @@ class TestController extends Controller
      */
     public function attempt(Test $test)
     {
+        abort_if(!$test->isAvailable(), 404);
+
         $user = Auth::user();
 
         // Проверка количества попыток
@@ -819,6 +825,8 @@ class TestController extends Controller
      */
     public function attemptPage(Test $test, $questionIndex = 1)
     {
+        abort_if(!$test->isAvailable(), 404);
+
         $user = Auth::user();
 
         // Проверка количества попыток
@@ -995,6 +1003,8 @@ class TestController extends Controller
      */
     public function saveAnswer(Request $request, Test $test)
     {
+        abort_if(!$test->isAvailable(), 404);
+
         $questionId = $request->input('question_id');
         $optionIds = $request->input('option_id');
         $answerText = $request->input('answer_text');

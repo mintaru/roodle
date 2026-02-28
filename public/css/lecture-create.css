@@ -88,6 +88,40 @@ button[type="submit"]:active {
 }
 
 
+.content-source-tabs {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+.tab-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 10px 16px;
+    border: 1px solid #dcdde1;
+    border-radius: 10px;
+    background: #fdfdfd;
+    transition: all 0.25s ease;
+}
+.tab-option:hover, .tab-option:has(input:checked) {
+    border-color: #3498db;
+    background: #f0f8ff;
+}
+.tab-option input { display: none; }
+
+trix-editor.trix-editor-lecture {
+    min-height: 300px;
+    border: 1px solid #dcdde1;
+    border-radius: 10px;
+    padding: 12px;
+    background: #fdfdfd;
+}
+trix-editor.trix-editor-lecture:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 6px rgba(52, 152, 219, 0.25);
+}
+
 * {
     transition: background-color 0.2s ease, color 0.2s ease;
 }

@@ -242,7 +242,9 @@
 @include('components.menu')
 
 <div class="container">
-    <a href="{{ route('courses.show', $course) }}" class="back-button">← Назад к курсу</a>
+    <div class="mb-4">
+    <x-back-button :url="route('courses.show', $course)" text="К курсу" />
+</div>
 
     <div class="header">
         <h1>Результаты теста: {{ $test->title }}</h1>

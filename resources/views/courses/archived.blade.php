@@ -15,6 +15,9 @@
 {{-- Подключаем меню --}}
 @include('components.menu')
 <div class="container mx-auto py-8">
+    <div class="mb-4">
+        <x-back-button :url="route('home')" text="К курсам" />
+    </div>
     @livewire('archived-course-list')
 </div>
 

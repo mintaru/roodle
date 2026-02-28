@@ -2,6 +2,9 @@
 
 @section('content')
     <div class="max-w-3xl mx-auto">
+        <div class="mb-4">
+            <x-back-button :url="route('courses.show', $test->course)" text="К курсу" />
+        </div>
         <div class="card">
             <h2 class="text-2xl font-bold text-center">{{ $test->title }}</h2>
             <p class="text-center text-gray-600 mt-2 mb-4">{{ $test->description }}</p>

@@ -8,6 +8,9 @@
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen p-6">
 
 <div class="max-w-4xl mx-auto">
+    <div class="mb-4">
+        <x-back-button :url="route('admin.question-bank.index')" text="К банку вопросов" />
+    </div>
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-gray-800">Редактирование вопроса</h1>
         <p class="text-gray-600 mt-2">ID вопроса: {{ $question->id }}</p>

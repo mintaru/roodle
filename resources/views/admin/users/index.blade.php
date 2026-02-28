@@ -8,6 +8,9 @@
 <body class="bg-gray-100 p-8">
 
 <div class="max-w-6xl mx-auto bg-white p-6 rounded shadow">
+    <div class="mb-4">
+        <x-back-button :url="route('admin.dashboard')" text="В админ-панель" />
+    </div>
     <h1 class="text-2xl font-bold mb-4">Пользователи</h1>
 
     @if(session('success'))

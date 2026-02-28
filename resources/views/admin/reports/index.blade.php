@@ -8,9 +8,9 @@
 <body class="bg-gray-100 p-8">
 
 <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
-    <a href="{{ route('admin.dashboard') }}" class="text-blue-600 hover:text-blue-800 mb-4 inline-block">
-        ← Вернуться в админ-панель
-    </a>
+    <div class="mb-4">
+        <x-back-button :url="route('admin.dashboard')" text="В админ-панель" />
+    </div>
     <h1 class="text-3xl font-bold mb-2 text-gray-800">Отчёты</h1>
     <p class="text-gray-600 mb-8">Выберите тип отчёта для просмотра</p>
 

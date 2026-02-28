@@ -87,8 +87,14 @@ class CourseSectionController extends Controller
 
         if ($data['item_type'] === 'test') {
             $item = Test::where('course_id', $course->id)->findOrFail($data['item_id']);
+            if (($item->status ?? 'active') === Test::STATUS_ARCHIVED) {
+                return back()->with('error', 'Нельзя добавить архивный тест в секцию');
+            }
         } else {
             $item = Lecture::where('course_id', $course->id)->findOrFail($data['item_id']);
+            if (($item->status ?? 'active') === Lecture::STATUS_ARCHIVED) {
+                return back()->with('error', 'Нельзя добавить архивную лекцию в секцию');
+            }
         }
 
         $existing = CourseSectionItem::where('item_type', get_class($item))

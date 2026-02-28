@@ -95,4 +95,22 @@ class TestManagementController extends Controller
         return redirect()->route('admin.tests.index')
             ->with('success', 'Тест успешно удалён!');
     }
+
+    public function archive(Test $test)
+    {
+        $test->update([
+            'status' => Test::STATUS_ARCHIVED,
+        ]);
+
+        return back()->with('success', 'Тест отправлен в архив');
+    }
+
+    public function restore(Test $test)
+    {
+        $test->update([
+            'status' => Test::STATUS_ACTIVE,
+        ]);
+
+        return back()->with('success', 'Тест восстановлен из архива');
+    }
 }

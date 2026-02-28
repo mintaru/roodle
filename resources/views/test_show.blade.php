@@ -19,6 +19,9 @@
     </header>
 
     <div class="container-main">
+        <div class="mb-4">
+            <x-back-button :url="route('courses.show', $test->course)" text="К курсу" />
+        </div>
         <!-- Список вопросов теста -->
         <div>
             <div class="card-title">

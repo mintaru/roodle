@@ -8,6 +8,9 @@
 <body class="bg-gray-100 p-8">
 
 <div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+    <div class="mb-4">
+        <x-back-button :url="route('admin.users.index')" text="К списку пользователей" />
+    </div>
     <h1 class="text-3xl font-bold mb-6 text-gray-800">Редактирование пользователя: {{ $user->name }}</h1>
 
     @if($errors->any())

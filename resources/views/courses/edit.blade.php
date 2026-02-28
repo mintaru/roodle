@@ -8,6 +8,9 @@
 <body class="bg-gray-100 p-8">
 
 <div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+    <div class="mb-4">
+        <x-back-button :url="route('courses.show', $course)" text="К курсу" />
+    </div>
     <h1 class="text-2xl font-bold mb-4">Редактировать курс</h1>
 
     @if ($errors->any())
