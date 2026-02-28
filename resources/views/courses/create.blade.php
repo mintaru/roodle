@@ -60,14 +60,31 @@
 
         @if(isset($groups) && $groups->count() > 0)
             <div>
-                <label class="block font-medium mb-2">Доступен группам:</label>
-                <div class="grid grid-cols-2 gap-2">
+                <label class="block font-medium mb-2">Доступен группам (можно задать своё время открытия/закрытия для каждой группы):</label>
+                <div class="space-y-4">
                     @foreach($groups as $group)
-                        <label class="flex items-center space-x-2 border rounded p-2 hover:bg-gray-50">
-                            <input type="checkbox" name="groups[]" value="{{ $group->id }}"
-                                   class="text-blue-600 focus:ring-blue-500">
-                            <span>{{ $group->name }}</span>
-                        </label>
+                        <div class="border rounded p-4 hover:bg-gray-50">
+                            <label class="flex items-center space-x-2 mb-3">
+                                <input type="checkbox" name="groups[]" value="{{ $group->id }}"
+                                       class="group-checkbox text-blue-600 focus:ring-blue-500">
+                                <span class="font-medium">{{ $group->name }}</span>
+                            </label>
+                            <div class="ml-6 grid grid-cols-2 gap-3 text-sm">
+                                <div>
+                                    <label class="block text-gray-600 mb-1">Открыть с:</label>
+                                    <input type="datetime-local" name="group_period_start[{{ $group->id }}]"
+                                           class="w-full border rounded p-2 text-sm"
+                                           placeholder="Или общие даты курса">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-600 mb-1">Закрыть до:</label>
+                                    <input type="datetime-local" name="group_period_end[{{ $group->id }}]"
+                                           class="w-full border rounded p-2 text-sm"
+                                           placeholder="Или общие даты курса">
+                                </div>
+                            </div>
+                            <p class="ml-6 text-xs text-gray-500 mt-1">Оставьте пустым — будут использоваться общие даты курса выше</p>
+                        </div>
                     @endforeach
                 </div>
             </div>

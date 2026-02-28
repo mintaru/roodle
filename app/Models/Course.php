@@ -35,7 +35,9 @@ class Course extends Model
 
     public function groups()
     {
-        return $this->belongsToMany(Group::class, 'course_group', 'course_id', 'group_id');
+        return $this->belongsToMany(Group::class, 'course_group', 'course_id', 'group_id')
+            ->withPivot('period_start', 'period_end')
+            ->withTimestamps();
     }
 
     public function author()
@@ -43,19 +45,60 @@ class Course extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function isAvailable(): bool
+    /** Даты в БД хранятся в UTC. Парсим pivot-значение как UTC. */
+    private function parseUtc($value): ?\Carbon\Carbon
+    {
+        if (! $value) {
+            return null;
+        }
+        $raw = $value instanceof \Carbon\Carbon ? $value->format('Y-m-d H:i:s') : (string) $value;
+
+        return \Carbon\Carbon::parse($raw, 'UTC');
+    }
+
+    public function isAvailable(?int $groupId = null): bool
     {
         if (Auth::check() && Auth::user()->hasRole('admin')) {
             return true;
         }
 
-        $now = now();
-
-        if ($this->period_start && $now->lt($this->period_start)) {
-            return false;
+        $user = Auth::user();
+        if ($user && $user->hasRole('teacher') && $this->user_id === $user->id) {
+            return true;
         }
 
-        if ($this->period_end && $now->gt($this->period_end)) {
+        $now = now()->utc();
+
+        // Для студента: проверяем период доступа по группам пользователя
+        if ($user) {
+            $userGroupIds = $user->groups->pluck('id');
+            $hasGroupInCourse = false;
+            foreach ($userGroupIds as $gid) {
+                $pivot = $this->groups()->where('group_id', $gid)->first()?->pivot;
+                if (! $pivot) {
+                    continue;
+                }
+                $hasGroupInCourse = true;
+                $groupStart = $this->parseUtc($pivot->period_start) ?? $this->parseUtc($this->getRawOriginal('period_start'));
+                $groupEnd = $this->parseUtc($pivot->period_end) ?? $this->parseUtc($this->getRawOriginal('period_end'));
+                $withinStart = ! $groupStart || $now->gte($groupStart);
+                $withinEnd = ! $groupEnd || $now->lte($groupEnd);
+                if ($withinStart && $withinEnd) {
+                    return true;
+                }
+            }
+            if ($hasGroupInCourse) {
+                return false;
+            }
+        }
+
+        // Глобальный период (если пользователь не в группах курса)
+        $globalStart = $this->parseUtc($this->getRawOriginal('period_start'));
+        $globalEnd = $this->parseUtc($this->getRawOriginal('period_end'));
+        if ($globalStart && $now->lt($globalStart)) {
+            return false;
+        }
+        if ($globalEnd && $now->gt($globalEnd)) {
             return false;
         }
 
@@ -79,15 +122,71 @@ class Course extends Model
 
     public function formattedPeriodStart(): ?string
     {
-        return $this->period_start
-            ? $this->period_start->setTimezone('Asia/Krasnoyarsk')->format('d.m.Y H:i')
-            : null;
+        $start = $this->parseUtc($this->getRawOriginal('period_start'));
+
+        return $start ? $start->copy()->setTimezone('Asia/Krasnoyarsk')->format('d.m.Y H:i') : null;
     }
 
     public function formattedPeriodEnd(): ?string
     {
-        return $this->period_end
-            ? $this->period_end->setTimezone('Asia/Krasnoyarsk')->format('d.m.Y H:i')
+        $end = $this->parseUtc($this->getRawOriginal('period_end'));
+
+        return $end ? $end->copy()->setTimezone('Asia/Krasnoyarsk')->format('d.m.Y H:i') : null;
+    }
+
+    /** Форматирует дату для input datetime-local (Y-m-d\TH:i) в Asia/Krasnoyarsk. */
+    public function formatPeriodForInput(string $attribute): string
+    {
+        $raw = $this->getRawOriginal($attribute);
+        $parsed = $this->parseUtc($raw);
+
+        return $parsed ? $parsed->copy()->setTimezone('Asia/Krasnoyarsk')->format('Y-m-d\TH:i') : '';
+    }
+
+    /**
+     * Возвращает период доступа для текущего пользователя (с учётом группы).
+     * Для админа/преподавателя — глобальный период курса.
+     * Для студента — период по первой подходящей группе или глобальный.
+     */
+    public function getEffectivePeriodForUser(?\Illuminate\Contracts\Auth\Authenticatable $user): array
+    {
+        $start = $this->parseUtc($this->getRawOriginal('period_start'));
+        $end = $this->parseUtc($this->getRawOriginal('period_end'));
+
+        if ($user && method_exists($user, 'groups')) {
+            $userGroupIds = $user->groups->pluck('id');
+            foreach ($userGroupIds as $gid) {
+                $pivot = $this->groups()->where('group_id', $gid)->first()?->pivot;
+                if ($pivot) {
+                    $groupStart = $this->parseUtc($pivot->period_start) ?? $start;
+                    $groupEnd = $this->parseUtc($pivot->period_end) ?? $end;
+
+                    return [
+                        'start' => $groupStart,
+                        'end' => $groupEnd,
+                    ];
+                }
+            }
+        }
+
+        return ['start' => $start, 'end' => $end];
+    }
+
+    public function formattedPeriodStartForUser(?\Illuminate\Contracts\Auth\Authenticatable $user): ?string
+    {
+        $period = $this->getEffectivePeriodForUser($user);
+
+        return $period['start']
+            ? $period['start']->copy()->setTimezone('Asia/Krasnoyarsk')->format('d.m.Y H:i')
+            : null;
+    }
+
+    public function formattedPeriodEndForUser(?\Illuminate\Contracts\Auth\Authenticatable $user): ?string
+    {
+        $period = $this->getEffectivePeriodForUser($user);
+
+        return $period['end']
+            ? $period['end']->copy()->setTimezone('Asia/Krasnoyarsk')->format('d.m.Y H:i')
             : null;
     }
 

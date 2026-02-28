@@ -26,7 +26,6 @@ class CourseList extends Component
             $groupIds = $user->groups->pluck('id');
 
             $courses
-                ->available()
                 ->active()
                 ->whereHas('groups', function ($q) use ($groupIds) {
                     $q->whereIn('groups.id', $groupIds);
@@ -41,8 +40,15 @@ class CourseList extends Component
             });
         }
 
+        $courses = $courses->with('groups')->latest()->get();
+
+        // Для студентов фильтруем по isAvailable (учитывает периоды по группам)
+        if (! $user->hasRole('admin') && ! $user->hasRole('teacher')) {
+            $courses = $courses->filter(fn ($course) => $course->isAvailable());
+        }
+
         return view('livewire.course-list', [
-            'courses' => $courses->latest()->get(),
+            'courses' => $courses->values(),
         ]);
     }
 }

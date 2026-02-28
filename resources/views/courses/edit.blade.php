@@ -45,27 +45,46 @@
 
         <div>
             <label class="block font-medium">Доступен с:</label>
-            <input type="datetime-local" name="period_start" value="{{ $course->period_start ? $course->period_start->setTimezone('Asia/Krasnoyarsk')->format('Y-m-d\TH:i') : '' }}"
+            <input type="datetime-local" name="period_start" value="{{ old('period_start', $course->formatPeriodForInput('period_start')) }}"
                    class="w-full border rounded p-2">
         </div>
 
         <div>
             <label class="block font-medium">Доступен до:</label>
-            <input type="datetime-local" name="period_end" value="{{ $course->period_end ? $course->period_end->setTimezone('Asia/Krasnoyarsk')->format('Y-m-d\TH:i') : '' }}"
+            <input type="datetime-local" name="period_end" value="{{ old('period_end', $course->formatPeriodForInput('period_end')) }}"
                    class="w-full border rounded p-2">
         </div>
 
         <div>
-            <label class="block font-medium mb-2">Доступен группам:</label>
-            <div class="grid grid-cols-2 gap-2">
+            <label class="block font-medium mb-2">Доступен группам (можно задать своё время открытия/закрытия для каждой группы):</label>
+            <div class="space-y-4">
                 @foreach($groups as $group)
-                    <label class="flex items-center space-x-2 border rounded p-2 hover:bg-gray-50">
-                        <input type="checkbox" name="groups[]" value="{{ $group->id }}"
-                               class="text-blue-600 focus:ring-blue-500" 
-                               @if($course->groups->contains($group->id)) checked @endif
-                               >
-                        <span>{{ $group->name }}</span>
-                    </label>
+                    @php
+                        $pivot = $course->groups->firstWhere('id', $group->id)?->pivot;
+                    @endphp
+                    <div class="border rounded p-4 hover:bg-gray-50">
+                        <label class="flex items-center space-x-2 mb-3">
+                            <input type="checkbox" name="groups[]" value="{{ $group->id }}"
+                                   class="group-checkbox text-blue-600 focus:ring-blue-500"
+                                   @if($course->groups->contains($group->id)) checked @endif>
+                            <span class="font-medium">{{ $group->name }}</span>
+                        </label>
+                        <div class="ml-6 grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <label class="block text-gray-600 mb-1">Открыть с:</label>
+                                <input type="datetime-local" name="group_period_start[{{ $group->id }}]"
+                                       value="{{ $pivot && $pivot->period_start ? \Carbon\Carbon::parse($pivot->period_start, 'UTC')->setTimezone('Asia/Krasnoyarsk')->format('Y-m-d\TH:i') : '' }}"
+                                       class="w-full border rounded p-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-gray-600 mb-1">Закрыть до:</label>
+                                <input type="datetime-local" name="group_period_end[{{ $group->id }}]"
+                                       value="{{ $pivot && $pivot->period_end ? \Carbon\Carbon::parse($pivot->period_end, 'UTC')->setTimezone('Asia/Krasnoyarsk')->format('Y-m-d\TH:i') : '' }}"
+                                       class="w-full border rounded p-2 text-sm">
+                            </div>
+                        </div>
+                        <p class="ml-6 text-xs text-gray-500 mt-1">Оставьте пустым — будут использоваться общие даты курса выше</p>
+                    </div>
                 @endforeach
             </div>
         </div>
