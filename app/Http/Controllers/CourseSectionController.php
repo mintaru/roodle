@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\CourseSection;
 use App\Models\CourseSectionItem;
 use App\Models\Lecture;
+use App\Models\Material;
 use App\Models\Test;
 use Illuminate\Http\Request;
 
@@ -81,7 +82,7 @@ class CourseSectionController extends Controller
         abort_unless($section->course_id === $course->id, 404);
 
         $data = $request->validate([
-            'item_type' => 'required|string|in:test,lecture',
+            'item_type' => 'required|string|in:test,lecture,material',
             'item_id' => 'required|integer',
         ]);
 
@@ -90,10 +91,15 @@ class CourseSectionController extends Controller
             if (($item->status ?? 'active') === Test::STATUS_ARCHIVED) {
                 return back()->with('error', 'Нельзя добавить архивный тест в секцию');
             }
-        } else {
+        } elseif ($data['item_type'] === 'lecture') {
             $item = Lecture::where('course_id', $course->id)->findOrFail($data['item_id']);
             if (($item->status ?? 'active') === Lecture::STATUS_ARCHIVED) {
                 return back()->with('error', 'Нельзя добавить архивную лекцию в секцию');
+            }
+        } else {
+            $item = Material::where('course_id', $course->id)->findOrFail($data['item_id']);
+            if (($item->status ?? 'active') === Material::STATUS_ARCHIVED) {
+                return back()->with('error', 'Нельзя добавить архивный материал в секцию');
             }
         }
 

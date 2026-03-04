@@ -10,6 +10,7 @@ use App\Http\Controllers\CourseController;
 use App\Models\Lecture;
 use App\Http\Controllers\LectureController;
 use App\Http\Controllers\CourseSectionController;
+use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\Admin\GroupUserController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\AdminController;
@@ -128,10 +129,19 @@ Route::post('/tests/{test}/result', [TestController::class, 'result'])
 
 Route::get('/courses/{course}/lectures/create', [LectureController::class, 'create'])->middleware('auth')->name('lectures.create');
 Route::post('/courses/{course}/lectures', [LectureController::class, 'store'])->middleware('auth')->name('lectures.store');
+Route::post('/lectures/upload-attachment', [LectureController::class, 'uploadAttachment'])->middleware('auth')->name('lectures.upload-attachment');
 
 
 // Новый маршрут для просмотра лекции через курс
 Route::get('/courses/{course}/lectures/{lecture}', [LectureController::class, 'show'])->middleware('auth')->name('lectures.show');
+
+// Маршруты для материалов
+Route::get('/courses/{course}/materials/create', [MaterialController::class, 'create'])->middleware('auth')->name('materials.create');
+Route::post('/courses/{course}/materials', [MaterialController::class, 'store'])->middleware('auth')->name('materials.store');
+Route::get('/courses/{course}/materials/{material}/download', [MaterialController::class, 'download'])->middleware('auth')->name('materials.download');
+Route::delete('/courses/{course}/materials/{material}', [MaterialController::class, 'destroy'])->middleware('auth')->name('materials.destroy');
+Route::patch('/courses/{course}/materials/{material}/toggle-status', [MaterialController::class, 'toggleStatus'])->middleware('auth')->name('materials.toggle-status');
+
 // Подключение маршрутов аутентификации Laravel
 Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
 
@@ -176,6 +186,10 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::delete('/lectures/{lecture}', [LectureController::class, 'destroy'])->name('admin.lectures.destroy');
     Route::patch('/lectures/{lecture}/archive', [LectureController::class, 'archive'])->name('admin.lectures.archive');
     Route::patch('/lectures/{lecture}/restore', [LectureController::class, 'restore'])->name('admin.lectures.restore');
+
+    // Маршруты для управления материалами
+    Route::patch('/materials/{material}/archive', [MaterialController::class, 'archive'])->name('admin.materials.archive');
+    Route::patch('/materials/{material}/restore', [MaterialController::class, 'restore'])->name('admin.materials.restore');
 
     // Секции курсов и элементы секций
     Route::post('/courses/{course}/sections', [CourseSectionController::class, 'store'])->name('courses.sections.store');

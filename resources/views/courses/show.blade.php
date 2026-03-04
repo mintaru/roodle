@@ -26,6 +26,9 @@
     <a href="{{ route('lectures.create', $course) }}" class="btn btn-success">
         Создать лекцию для курса
     </a>
+    <a href="{{ route('materials.create', $course) }}" class="btn btn-info">
+        Загрузить материал для курса
+    </a>
     @endhasanyrole
 
     @if(session('success'))
@@ -40,6 +43,7 @@
     @php
         $allSectionItemTestIds = collect();
         $allSectionItemLectureIds = collect();
+        $allSectionItemMaterialIds = collect();
         foreach ($course->sections as $section) {
             foreach ($section->items as $item) {
                 if ($item->item instanceof \App\Models\Test) {
@@ -47,6 +51,9 @@
                 }
                 if ($item->item instanceof \App\Models\Lecture) {
                     $allSectionItemLectureIds->push($item->item->id);
+                }
+                if ($item->item instanceof \App\Models\Material) {
+                    $allSectionItemMaterialIds->push($item->item->id);
                 }
             }
         }
@@ -198,6 +205,39 @@
                                 </div>
                             @endhasanyrole
                         </li>
+                    @elseif($item instanceof \App\Models\Material)
+                        <li class="mb-2">
+                            <strong>📎 Материал:</strong>
+                            @hasanyrole('teacher|admin')
+                                @if(($item->status ?? 'active') === \App\Models\Material::STATUS_ARCHIVED)
+                                    <span class="text-yellow-700 font-medium">[архивирован]</span>
+                                @endif
+                            @endhasanyrole
+                            <span>{{ $item->title }}</span>
+                            <a href="{{ route('materials.download', ['course' => $course, 'material' => $item]) }}" class="btn btn-sm">
+                                ⬇ Скачать
+                            </a>
+
+                            @hasanyrole('teacher|admin')
+                                <div class="mt-1 flex gap-2">
+                                    <form action="{{ route('courses.sections.items.move', [$course, $section, $sectionItem]) }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="direction" value="up">
+                                        <button type="submit" class="btn btn-light btn-xs">↑</button>
+                                    </form>
+                                    <form action="{{ route('courses.sections.items.move', [$course, $section, $sectionItem]) }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="direction" value="down">
+                                        <button type="submit" class="btn btn-light btn-xs">↓</button>
+                                    </form>
+                                    <form action="{{ route('courses.sections.items.detach', [$course, $section, $sectionItem]) }}" method="POST" onsubmit="return confirm('Убрать элемент из секции?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-xs">Убрать</button>
+                                    </form>
+                                </div>
+                            @endhasanyrole
+                        </li>
                     @endif
                 @empty
                     <li>В этой секции пока нет элементов</li>
@@ -235,6 +275,22 @@
                             </select>
                         </label>
                         <input type="hidden" name="item_type" value="lecture">
+                        <button type="submit" class="btn btn-secondary btn-xs">Добавить</button>
+                    </form>
+
+                    <form action="{{ route('courses.sections.items.attach', [$course, $section]) }}" method="POST">
+                        @csrf
+                        <label>
+                            Добавить материал:
+                            <select name="item_id">
+                                @foreach($course->materials->where('status', \App\Models\Material::STATUS_ACTIVE) as $material)
+                                    @if(!$allSectionItemMaterialIds->contains($material->id))
+                                        <option value="{{ $material->id }}">{{ $material->title }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </label>
+                        <input type="hidden" name="item_type" value="material">
                         <button type="submit" class="btn btn-secondary btn-xs">Добавить</button>
                     </form>
                 </div>
@@ -304,6 +360,60 @@
             @empty
                 <li>Лекций пока нет</li>
             @endforelse
+        </ul>
+
+        <h2>Материалы курса</h2>
+        <ul>
+            @forelse($course->materials->where('status', \App\Models\Material::STATUS_ACTIVE) as $material)
+                <li class="mb-2">
+                    <strong>📎 {{ $material->title }}</strong>
+                    <a href="{{ route('materials.download', ['course' => $course, 'material' => $material]) }}" class="btn btn-sm" style="margin-left: 10px;">
+                        ⬇ Скачать ({{ strtoupper($material->file_type) }})
+                    </a>
+                    @hasanyrole('teacher|admin')
+                        <div class="mt-1 flex gap-2">
+                            <form action="{{ route('admin.materials.archive', $material) }}" method="POST" class="inline-block">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="btn btn-secondary btn-xs">Архивировать</button>
+                            </form>
+                            <form action="{{ route('materials.destroy', [$course, $material]) }}" method="POST" class="inline-block" onsubmit="return confirm('Удалить материал?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-xs">Удалить</button>
+                            </form>
+                        </div>
+                    @endhasanyrole
+                </li>
+            @empty
+                <li>Материалов пока нет</li>
+            @endforelse
+
+            {{-- Архивированные материалы для учителей --}}
+            @hasanyrole('teacher|admin')
+                @forelse($course->materials->where('status', \App\Models\Material::STATUS_ARCHIVED) as $material)
+                    <li class="mb-2">
+                        <strong>📎 {{ $material->title }}</strong>
+                        <span class="text-yellow-700 font-medium">[архивирован]</span>
+                        <a href="{{ route('materials.download', ['course' => $course, 'material' => $material]) }}" class="btn btn-sm" style="margin-left: 10px;">
+                            ⬇ Скачать ({{ strtoupper($material->file_type) }})
+                        </a>
+                        <div class="mt-1 flex gap-2">
+                            <form action="{{ route('admin.materials.restore', $material) }}" method="POST" class="inline-block">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="btn btn-secondary btn-xs">Восстановить</button>
+                            </form>
+                            <form action="{{ route('materials.destroy', [$course, $material]) }}" method="POST" class="inline-block" onsubmit="return confirm('Удалить материал?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-xs">Удалить</button>
+                            </form>
+                        </div>
+                    </li>
+                @empty
+                @endforelse
+            @endhasanyrole
         </ul>
     @endif
 </div>
