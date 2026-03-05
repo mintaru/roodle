@@ -31,9 +31,9 @@
 
     @include('components.menu')
 
-    <div class="content">
-        @yield('content')
-    </div>
+    <main>
+        {{ $slot }}
+    </main>
 </div>
 
 {{-- Livewire scripts --}}

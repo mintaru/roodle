@@ -20,7 +20,15 @@ class CourseList extends Component
             $courses->active();
 
         } elseif ($user->hasRole('teacher')) {
-            $courses->active()->where('user_id', $user->id);
+            // Учитель видит свои курсы + курсы с правами доступа
+            $courses->active()->where(function ($q) use ($user) {
+                // Свои курсы (где user_id = текущий пользователь)
+                $q->where('user_id', $user->id)
+                    // ИЛИ курсы, к которым есть права доступа
+                    ->orWhereHas('permittedTeachers', function ($q2) use ($user) {
+                        $q2->where('users.id', $user->id);
+                    });
+            });
 
         } else {
             $groupIds = $user->groups->pluck('id');

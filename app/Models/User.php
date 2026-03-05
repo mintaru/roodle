@@ -55,4 +55,15 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Group::class);
     }
+
+    public function coursePermissions()
+    {
+        return $this->hasMany(TeacherCoursePermission::class);
+    }
+
+    public function permittedCourses()
+    {
+        return $this->belongsToMany(Course::class, 'teacher_course_permissions', 'user_id', 'course_id')
+            ->withPivot('can_edit', 'can_delete', 'can_manage_students');
+    }
 }
