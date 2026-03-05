@@ -156,3 +156,173 @@ a {
 a:hover {
     color: #3498db;
 }
+
+/* Кнопки различных типов */
+.btn-secondary {
+    background: #718096;
+    color: #fff;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: #4a5568;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: #e53e3e;
+    color: #fff;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: #c53030;
+    transform: translateY(-2px);
+}
+
+.btn-light {
+    background: #edf2f7;
+    color: #2d3748;
+    padding: 8px 16px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-light:hover {
+    background: #e2e8f0;
+    transform: translateY(-2px);
+}
+
+.btn-xs {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.btn-sm {
+    padding: 8px 12px;
+    font-size: 13px;
+    display: inline-block;
+    background: #0891b2;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-sm:hover {
+    background: #0e7490;
+    transform: translateY(-2px);
+}
+
+/* Вспомогательные классы */
+.flex {
+    display: flex;
+}
+
+.gap-2 {
+    gap: 8px;
+}
+
+.mt-1 {
+    margin-top: 8px;
+}
+
+.mt-3 {
+    margin-top: 16px;
+}
+
+.mb-2 {
+    margin-bottom: 12px;
+}
+
+.mb-4 {
+    margin-bottom: 20px;
+}
+
+.p-3 {
+    padding: 12px;
+}
+
+.ml-4 {
+    margin-left: 20px;
+}
+
+.small-input {
+    padding: 6px 10px;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    font-size: 13px;
+    width: auto;
+}
+
+.course-section {
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    padding: 16px;
+    background: #f7fafc;
+}
+
+.text-yellow-700 {
+    color: #b7791f;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+.text-gray-600 {
+    color: #718096;
+}
+
+.inline-block {
+    display: inline-block;
+}
+
+.mr-2 {
+    margin-right: 10px;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+/* Успех и ошибки */
+.bg-green-200 {
+    background: #c6f6d5;
+}
+
+.text-green-800 {
+    color: #22543d;
+}
+
+.bg-red-200 {
+    background: #fed7d7;
+}
+
+.text-red-800 {
+    color: #742a2a;
+}
+
+.rounded {
+    border-radius: 6px;
+}

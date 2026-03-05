@@ -16,22 +16,17 @@ class CourseController extends Controller
     {
         $user = Auth::user();
 
+        // Для главной страницы студентам и учителям показываем Livewire компонент
+        if (! $user->hasRole('admin')) {
+            return view('courses');
+        }
+
         // Search parameters
         $searchColumn = $request->input('search_column', 'title');
         $searchValue = $request->input('search_value', '');
 
-        if ($user->hasRole('admin')) {
-            $query = Course::with('groups', 'author');
-        } elseif ($user->hasRole('teacher')) {
-            $query = Course::with('groups', 'author')
-                ->where('user_id', $user->id);
-        } else {
-            $groupIds = $user->groups->pluck('id');
-            $query = Course::with('groups', 'author')
-                ->whereHas('groups', function ($q) use ($groupIds) {
-                    $q->whereIn('groups.id', $groupIds);
-                });
-        }
+        // Админ видит все курсы
+        $query = Course::with('groups', 'author');
 
         // Apply search filter
         if ($searchValue) {
@@ -50,11 +45,6 @@ class CourseController extends Controller
 
         $courses = $query->get();
 
-        // Для студентов фильтруем по isAvailable (учитывает периоды по группам)
-        if (! $user->hasRole('admin') && ! $user->hasRole('teacher')) {
-            $courses = $courses->filter(fn ($course) => $course->isAvailable());
-        }
-
         return view('courses.index', compact('courses', 'searchColumn', 'searchValue'));
     }
 
@@ -66,6 +56,66 @@ class CourseController extends Controller
         $groups = \App\Models\Group::all();
 
         return view('courses.create', compact('groups')); // вернем Blade форму
+    }
+
+    /**
+     * Проверить может ли учитель редактировать курс
+     */
+    private function canTeacherEdit(Course $course, $teacher = null)
+    {
+        $teacher = $teacher ?? Auth::user();
+        
+        // Автор курса может редактировать
+        if ($course->user_id === $teacher->id) {
+            return true;
+        }
+
+        // Проверяем права доступа через таблицу permissions
+        $permission = $course->teacherPermissions()
+            ->where('user_id', $teacher->id)
+            ->first();
+
+        return $permission && $permission->can_edit;
+    }
+
+    /**
+     * Проверить может ли учитель удалять курс
+     */
+    private function canTeacherDelete(Course $course, $teacher = null)
+    {
+        $teacher = $teacher ?? Auth::user();
+        
+        // Автор курса может удалять
+        if ($course->user_id === $teacher->id) {
+            return true;
+        }
+
+        // Проверяем права доступа через таблицу permissions
+        $permission = $course->teacherPermissions()
+            ->where('user_id', $teacher->id)
+            ->first();
+
+        return $permission && $permission->can_delete;
+    }
+
+    /**
+     * Проверить может ли учитель видеть курс
+     */
+    private function canTeacherView(Course $course, $teacher = null)
+    {
+        $teacher = $teacher ?? Auth::user();
+        
+        // Автор курса активного может видеть
+        if ($course->user_id === $teacher->id) {
+            return true;
+        }
+
+        // Проверяем права доступа через таблицу permissions
+        $permission = $course->teacherPermissions()
+            ->where('user_id', $teacher->id)
+            ->first();
+
+        return $permission !== null;
     }
 
     /**
@@ -119,9 +169,14 @@ class CourseController extends Controller
      */
     public function show(Course $course)
     {
-        abort_if(! $course->isAvailable(), 404);
-
         $user = Auth::user();
+
+        // Проверяем доступ для учителей
+        if ($user->hasRole('teacher')) {
+            abort_if(! $this->canTeacherView($course, $user), 404);
+        } else {
+            abort_if(! $course->isAvailable(), 404);
+        }
 
         if ($user->hasRole('admin') || $user->hasRole('teacher')) {
             // Админ и преподаватель видят все тесты
@@ -162,6 +217,13 @@ class CourseController extends Controller
      */
     public function edit(Course $course)
     {
+        $user = Auth::user();
+
+        // Проверяем что учитель может редактировать
+        if ($user->hasRole('teacher')) {
+            abort_if(! $this->canTeacherEdit($course, $user), 403);
+        }
+
         $groups = \App\Models\Group::all();
 
         return view('courses.edit', compact('course', 'groups'));
@@ -172,6 +234,13 @@ class CourseController extends Controller
      */
     public function update(Request $request, Course $course)
     {
+        $user = Auth::user();
+
+        // Проверяем что учитель может редактировать
+        if ($user->hasRole('teacher')) {
+            abort_if(! $this->canTeacherEdit($course, $user), 403);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -206,7 +275,8 @@ class CourseController extends Controller
 
         $course->update($validated);
 
-        return redirect()->route('admin.courses.index')->with('success', 'Курс обновлён!');
+        $redirectRoute = $user->hasRole('admin') ? 'admin.courses.index' : 'home';
+        return redirect()->route($redirectRoute)->with('success', 'Курс успешно обновлен!');
     }
 
     /**
@@ -214,9 +284,17 @@ class CourseController extends Controller
      */
     public function destroy(Course $course)
     {
+        $user = Auth::user();
+
+        // Проверяем что учитель может удалять
+        if ($user->hasRole('teacher')) {
+            abort_if(! $this->canTeacherDelete($course, $user), 403);
+        }
+
         $course->delete();
 
-        return redirect()->route('admin.courses.index')->with('success', 'Курс успешно удалён!');
+        $redirectRoute = $user->hasRole('admin') ? 'admin.courses.index' : 'home';
+        return redirect()->route($redirectRoute)->with('success', 'Курс успешно удалён!');
     }
 
     //*АРХИВИРОВАНИЕ И ВОССТАНОВЛЕНИЕ

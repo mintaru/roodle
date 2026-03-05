@@ -27,6 +27,11 @@ class Course extends Model
         return $this->hasMany(Lecture::class);
     }
 
+    public function materials()
+    {
+        return $this->hasMany(Material::class);
+    }
+
     public function sections()
     {
         return $this->hasMany(CourseSection::class)
@@ -198,5 +203,16 @@ class Course extends Model
     public function scopeArchived($query)
     {
         return $query->where('status', self::STATUS_ARCHIVED);
+    }
+
+    public function teacherPermissions()
+    {
+        return $this->hasMany(TeacherCoursePermission::class);
+    }
+
+    public function permittedTeachers()
+    {
+        return $this->belongsToMany(User::class, 'teacher_course_permissions', 'course_id', 'user_id')
+            ->withPivot('can_edit', 'can_delete', 'can_manage_students');
     }
 }

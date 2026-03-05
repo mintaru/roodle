@@ -10,9 +10,11 @@ use App\Http\Controllers\CourseController;
 use App\Models\Lecture;
 use App\Http\Controllers\LectureController;
 use App\Http\Controllers\CourseSectionController;
+use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\Admin\GroupUserController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\TeacherCoursePermissionController;
 use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\Admin\TestManagementController;
 use App\Http\Controllers\Admin\ReportController;
@@ -36,16 +38,15 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile-edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 
 
-Route::get('/', function () {
-    return view('courses');
-})->middleware('auth')->name("home");
+
+Route::get('/', [CourseController::class, 'index'])->middleware('auth')->name("home");
 Route::get('/courses/archived', [CourseController::class, 'archived'])->name('courses.archived');
 
 Route::get('/courses/create', [CourseController::class, 'create'])->middleware('auth')->name('courses.create');
@@ -128,16 +129,26 @@ Route::post('/tests/{test}/result', [TestController::class, 'result'])
 
 Route::get('/courses/{course}/lectures/create', [LectureController::class, 'create'])->middleware('auth')->name('lectures.create');
 Route::post('/courses/{course}/lectures', [LectureController::class, 'store'])->middleware('auth')->name('lectures.store');
+Route::post('/lectures/upload-attachment', [LectureController::class, 'uploadAttachment'])->middleware('auth')->name('lectures.upload-attachment');
 
 
 // Новый маршрут для просмотра лекции через курс
 Route::get('/courses/{course}/lectures/{lecture}', [LectureController::class, 'show'])->middleware('auth')->name('lectures.show');
+
+// Маршруты для материалов
+Route::get('/courses/{course}/materials/create', [MaterialController::class, 'create'])->middleware('auth')->name('materials.create');
+Route::post('/courses/{course}/materials', [MaterialController::class, 'store'])->middleware('auth')->name('materials.store');
+Route::get('/courses/{course}/materials/{material}/download', [MaterialController::class, 'download'])->middleware('auth')->name('materials.download');
+Route::delete('/courses/{course}/materials/{material}', [MaterialController::class, 'destroy'])->middleware('auth')->name('materials.destroy');
+Route::patch('/courses/{course}/materials/{material}/toggle-status', [MaterialController::class, 'toggleStatus'])->middleware('auth')->name('materials.toggle-status');
+
 // Подключение маршрутов аутентификации Laravel
-Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
+Route::post('/courses', [CourseController::class, 'store'])->middleware('auth')->name('courses.store');
 
 
 Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->middleware('auth')->name('courses.edit'); // форма редактирования
-Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+Route::put('/courses/{course}', [CourseController::class, 'update'])->middleware('auth')->name('courses.update');
+Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->middleware('auth')->name('courses.destroy');
 
 Route::post('/tests/{test}/add-from-bank', [TestController::class, 'addFromBank'])->name('tests.add_from_bank');
 
@@ -160,6 +171,13 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
     Route::delete('/admin/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
 
+    //для прав доступа преподавателей
+    Route::get('/admin/teacher-permissions', [TeacherCoursePermissionController::class, 'index'])->name('admin.teacher-permissions.index');
+    Route::get('/admin/teacher-permissions/{user}/edit-teacher', [TeacherCoursePermissionController::class, 'editTeacher'])->name('admin.teacher-permissions.edit-teacher');
+    Route::put('/admin/teacher-permissions/{user}/update-teacher', [TeacherCoursePermissionController::class, 'updateTeacher'])->name('admin.teacher-permissions.update-teacher');
+    Route::get('/admin/teacher-permissions/{course}/edit-course', [TeacherCoursePermissionController::class, 'editCourse'])->name('admin.teacher-permissions.edit-course');
+    Route::put('/admin/teacher-permissions/{course}/update-course', [TeacherCoursePermissionController::class, 'updateCourse'])->name('admin.teacher-permissions.update-course');
+
     //для курсов
     Route::get('/admin/courses', [CourseController::class, 'index'])->name('admin.courses.index');
     Route::delete('/admin/courses/{course}', [CourseController::class, 'destroy'])->name('admin.courses.destroy');
@@ -176,6 +194,10 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::delete('/lectures/{lecture}', [LectureController::class, 'destroy'])->name('admin.lectures.destroy');
     Route::patch('/lectures/{lecture}/archive', [LectureController::class, 'archive'])->name('admin.lectures.archive');
     Route::patch('/lectures/{lecture}/restore', [LectureController::class, 'restore'])->name('admin.lectures.restore');
+
+    // Маршруты для управления материалами
+    Route::patch('/materials/{material}/archive', [MaterialController::class, 'archive'])->name('admin.materials.archive');
+    Route::patch('/materials/{material}/restore', [MaterialController::class, 'restore'])->name('admin.materials.restore');
 
     // Секции курсов и элементы секций
     Route::post('/courses/{course}/sections', [CourseSectionController::class, 'store'])->name('courses.sections.store');
@@ -221,7 +243,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
 });
 
-
+Route::get('/profile-update', function () {
+    return view('profile.edit');
+})->middleware(['auth'])->name('profile.update-profile-information-form');
 
 
 require __DIR__.'/auth.php';

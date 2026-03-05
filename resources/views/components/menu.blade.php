@@ -6,8 +6,8 @@
         <img src="{{ asset('images/logo.png') }}" alt="Logo" style="height:50px;">
         <nav>
             <a href="/" style="margin-right:15px;">В начало</a>
-            <a href="/profile">Личный кабинет</a>
-            <a href="/">Мои курсы</a>
+            <a href="/profile-edit">Личный кабинет</a>
+            <a href="/">Мои курсы</a>   
 
             @role('admin')
             <a href="{{ route('admin.dashboard') }}" style="margin-right:15px; color:red;">Админ-панель</a>
