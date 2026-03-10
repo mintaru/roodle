@@ -57,6 +57,32 @@
 
 ---
 
+
+## Установка (Docker)
+
+### 1. Клонировать репозиторий
+```bash
+git clone https://github.com/mintaru/roodle.git
+cd roodle
+```
+### 2. Настроить переменные окружения
+```bash
+cp .env.example .env
+```
+### 3. Запустить контейнеры
+```bash
+docker-compose up -d --build
+```
+### 4. Сгенерировать ключ приложения
+```bash
+docker-compose exec app php artisan key:generate
+```
+### 5. Запустить миграции
+```bash
+docker-compose exec app php artisan migrate -seed
+```
+Приложение будет доступно по адресу: [http://localhost:8080](http://localhost:8080)
+
 ## Установка (обычная)
 
 ### Требования
@@ -106,39 +132,6 @@ DB_PASSWORD=your_db_password
 php artisan migrate --seed
 php artisan serve
 ```
-
-## Установка (Docker)
-
-### 1. Клонировать репозиторий
-git clone https://github.com/mintaru/roodle.git
-cd roodle
-
-### 2. Настроить переменные окружения
-cp .env.example .env
-
-### 3. Запустить контейнеры
-docker-compose up -d --build
-
-### 4. Сгенерировать ключ приложения
-docker-compose exec app php artisan key:generate
-
-### 5. Запустить миграции
-docker-compose exec app php artisan migrate -seed
-
-Приложение будет доступно по адресу: [http://localhost:8080](http://localhost:8080)
-
-
-## Роли и права доступа
-
-| Роль | Описание |
-|------|----------|
-| `admin` | Полный доступ к системе |
-| `teacher` | Создание курсов, управление студентами своих курсов |
-| `student` | Просмотр и прохождение курсов, на которые записан |
-
----
-
-
 
 
 <div align="center">
