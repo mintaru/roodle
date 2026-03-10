@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class Course extends Model
 {
+    use HasFactory;
     protected $fillable = ['title', 'description', 'image_path', 'user_id', 'period_start', 'period_end','status'];
 
     const STATUS_ACTIVE = 'active';
