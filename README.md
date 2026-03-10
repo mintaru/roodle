@@ -68,8 +68,6 @@ cd roodle
 ### 2. Настройка окружения
 ```bash
 cp .env.example .env
-php artisan key:generate
-php artisan storage:link
 ```
 ### 3. Запустить контейнеры
 ```bash
@@ -78,6 +76,7 @@ docker-compose up -d --build
 ### 4. Сгенерировать ключ приложения
 ```bash
 docker-compose exec app php artisan key:generate
+docker-compose exec app php artisan storage:link
 ```
 ### 5. Запустить миграции
 ```bash
