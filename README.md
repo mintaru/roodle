@@ -65,9 +65,11 @@
 git clone https://github.com/mintaru/roodle.git
 cd roodle
 ```
-### 2. Настроить переменные окружения
+### 2. Настройка окружения
 ```bash
 cp .env.example .env
+php artisan key:generate
+php artisan storage:link
 ```
 ### 3. Запустить контейнеры
 ```bash
@@ -116,6 +118,7 @@ npm install && npm run build
 ```bash
 cp .env.example .env
 php artisan key:generate
+php artisan storage:link
 ```
 
 Отредактируйте файл `.env`, указав параметры подключения к базе данных:
