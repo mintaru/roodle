@@ -85,7 +85,7 @@ docker-compose exec app php artisan migrate
 ```
 Для заполнения тестовыми данными и пользователями:
 ```bash
-php artisan db:seed
+docker-compose exec app php artisan db:seed
 ```
 Приложение будет доступно по адресу: [http://localhost:8080](http://localhost:8080)
 
