@@ -143,6 +143,8 @@ php artisan migrate
 php artisan db:seed
 ```
 
+## Скриншоты
+![Скриншот интерфейса](https://github.com/mintaru/roodle/blob/main/screenshots/screenshot1.jpg)
 
 <div align="center">
 </div>
