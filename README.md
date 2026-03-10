@@ -100,9 +100,10 @@ DB_PASSWORD=your_db_password
 ```
 
 
-### 4. Запуск сервера разработки
+### 4. Запуск миграций и сервера разработки
 
 ```bash
+php artisan migrate
 php artisan serve
 ```
 
