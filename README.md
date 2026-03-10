@@ -72,6 +72,7 @@ cp .env.example .env
 ### 3. Запустить контейнеры
 ```bash
 docker-compose up -d --build
+docker-compose build --progress=plain
 ```
 ### 4. Сгенерировать ключ приложения
 ```bash
