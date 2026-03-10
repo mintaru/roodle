@@ -57,7 +57,7 @@
 
 ---
 
-## Установка и запуск
+## Установка (обычная)
 
 ### Требования
 
@@ -106,6 +106,24 @@ DB_PASSWORD=your_db_password
 php artisan migrate --seed
 php artisan serve
 ```
+
+## Установка (Docker)
+
+### 1. Клонировать репозиторий
+git clone https://github.com/mintaru/roodle.git
+cd roodle
+
+### 2. Настроить переменные окружения
+cp .env.example .env
+
+### 3. Запустить контейнеры
+docker-compose up -d --build
+
+### 4. Сгенерировать ключ приложения
+docker-compose exec app php artisan key:generate
+
+### 5. Запустить миграции
+docker-compose exec app php artisan migrate -seed
 
 Приложение будет доступно по адресу: [http://localhost:8080](http://localhost:8080)
 
