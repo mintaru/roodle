@@ -103,11 +103,11 @@ DB_PASSWORD=your_db_password
 ### 4. Запуск миграций и сервера разработки
 
 ```bash
-php artisan migrate
+php artisan migrate --seed
 php artisan serve
 ```
 
-Приложение будет доступно по адресу: [http://localhost:8000](http://localhost:8000)
+Приложение будет доступно по адресу: [http://localhost:8080](http://localhost:8080)
 
 
 ## Роли и права доступа
