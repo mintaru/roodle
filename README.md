@@ -79,7 +79,11 @@ docker-compose exec app php artisan key:generate
 ```
 ### 5. Запустить миграции
 ```bash
-docker-compose exec app php artisan migrate -seed
+docker-compose exec app php artisan migrate 
+```
+Для заполнения тестовыми данными и пользователями:
+```bash
+php artisan db:seed
 ```
 Приложение будет доступно по адресу: [http://localhost:8080](http://localhost:8080)
 
@@ -129,8 +133,11 @@ DB_PASSWORD=your_db_password
 ### 4. Запуск миграций и сервера разработки
 
 ```bash
-php artisan migrate --seed
-php artisan serve
+php artisan migrate
+```
+Для заполнения тестовыми данными и пользователями:
+```bash
+php artisan db:seed
 ```
 
 
