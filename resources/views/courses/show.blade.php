@@ -29,6 +29,9 @@
     <a href="{{ route('materials.create', $course) }}" class="btn btn-info">
         Загрузить материал для курса
     </a>
+    <a href="{{ route('assignments.create', $course) }}" class="btn btn-warning">
+        Создать задание для курса
+    </a>
     @endhasanyrole
 
     @if(session('success'))
@@ -388,7 +391,6 @@
             @empty
                 <li>Материалов пока нет</li>
             @endforelse
-
             {{-- Архивированные материалы для учителей --}}
             @hasanyrole('teacher|admin')
                 @forelse($course->materials->where('status', \App\Models\Material::STATUS_ARCHIVED) as $material)
@@ -405,6 +407,63 @@
                                 <button type="submit" class="btn btn-secondary btn-xs">Восстановить</button>
                             </form>
                             <form action="{{ route('materials.destroy', [$course, $material]) }}" method="POST" class="inline-block" onsubmit="return confirm('Удалить материал?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-xs">Удалить</button>
+                            </form>
+                        </div>
+                    </li>
+                @empty
+                @endforelse
+            @endhasanyrole
+        </ul>
+
+        <h2>Задания курса</h2>
+        <ul>
+            @forelse($course->assignments->where('status', \App\Models\Assignment::STATUS_ACTIVE) as $assignment)
+                <li class="mb-2">
+                    <strong>📝 {{ $assignment->title }}</strong>
+                    @if($assignment->due_date)
+                        <br><small>
+                            Срок: {{ $assignment->due_date->format('d.m.Y H:i') }}
+                            @if($assignment->isOverdue())
+                                <strong style="color: #dc3545;">(Сроки истекли)</strong>
+                            @endif
+                        </small>
+                    @endif
+                    <a href="{{ route('assignments.view', ['course' => $course, 'assignment' => $assignment]) }}" class="btn btn-sm" style="margin-left: 10px;">
+                        → Перейти к заданию
+                    </a>
+                    @hasanyrole('teacher|admin')
+                        <div class="mt-1 flex gap-2">
+                            <a href="{{ route('assignments.show', [$course, $assignment]) }}" class="btn btn-secondary btn-xs">Управл. ответами</a>
+                            <form action="{{ route('assignments.destroy', [$course, $assignment]) }}" method="POST" class="inline-block" onsubmit="return confirm('Удалить задание?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger btn-xs">Удалить</button>
+                            </form>
+                        </div>
+                    @endhasanyrole
+                </li>
+            @empty
+                <li>Заданий пока нет</li>
+            @endforelse
+
+            {{-- Архивированные задания для учителей --}}
+            @hasanyrole('teacher|admin')
+                @forelse($course->assignments->where('status', \App\Models\Assignment::STATUS_ARCHIVED) as $assignment)
+                    <li class="mb-2">
+                        <strong>📝 {{ $assignment->title }}</strong>
+                        <span class="text-yellow-700 font-medium">[архивировано]</span>
+                        @if($assignment->due_date)
+                            <br><small>Срок: {{ $assignment->due_date->format('d.m.Y H:i') }}</small>
+                        @endif
+                        <a href="{{ route('assignments.view', ['course' => $course, 'assignment' => $assignment]) }}" class="btn btn-sm" style="margin-left: 10px;">
+                            → Узнать больше
+                        </a>
+                        <div class="mt-1 flex gap-2">
+                            <a href="{{ route('assignments.edit', [$course, $assignment]) }}" class="btn btn-secondary btn-xs">Изменить</a>
+                            <form action="{{ route('assignments.destroy', [$course, $assignment]) }}" method="POST" class="inline-block" onsubmit="return confirm('Удалить задание?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger btn-xs">Удалить</button>

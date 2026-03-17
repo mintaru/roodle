@@ -34,6 +34,12 @@ class Course extends Model
         return $this->hasMany(Material::class);
     }
 
+    public function assignments()
+    {
+        return $this->hasMany(Assignment::class)
+            ->orderBy('position');
+    }
+
     public function sections()
     {
         return $this->hasMany(CourseSection::class)
