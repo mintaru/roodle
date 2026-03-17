@@ -11,6 +11,8 @@ use App\Models\Lecture;
 use App\Http\Controllers\LectureController;
 use App\Http\Controllers\CourseSectionController;
 use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\AssignmentSubmissionController;
 use App\Http\Controllers\Admin\GroupUserController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\AdminController;
@@ -141,6 +143,24 @@ Route::post('/courses/{course}/materials', [MaterialController::class, 'store'])
 Route::get('/courses/{course}/materials/{material}/download', [MaterialController::class, 'download'])->middleware('auth')->name('materials.download');
 Route::delete('/courses/{course}/materials/{material}', [MaterialController::class, 'destroy'])->middleware('auth')->name('materials.destroy');
 Route::patch('/courses/{course}/materials/{material}/toggle-status', [MaterialController::class, 'toggleStatus'])->middleware('auth')->name('materials.toggle-status');
+
+// Маршруты для заданий
+Route::get('/courses/{course}/assignments/create', [AssignmentController::class, 'create'])->middleware('auth')->name('assignments.create');
+Route::post('/courses/{course}/assignments', [AssignmentController::class, 'store'])->middleware('auth')->name('assignments.store');
+Route::get('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'show'])->middleware('auth')->name('assignments.show');
+Route::get('/courses/{course}/assignments/{assignment}/edit', [AssignmentController::class, 'edit'])->middleware('auth')->name('assignments.edit');
+Route::put('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'update'])->middleware('auth')->name('assignments.update');
+Route::delete('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'destroy'])->middleware('auth')->name('assignments.destroy');
+Route::delete('/courses/{course}/assignments/{assignment}/files/{file}', [AssignmentController::class, 'deleteFile'])->middleware('auth')->name('assignments.delete-file');
+Route::get('/courses/{course}/assignments/{assignment}/files/{file}/download', [AssignmentController::class, 'downloadFile'])->middleware('auth')->name('assignments.download-file');
+Route::post('/courses/{course}/assignments/{assignment}/move', [AssignmentController::class, 'move'])->middleware('auth')->name('assignments.move');
+
+// Маршруты для ответов на задания
+Route::get('/courses/{course}/assignments/{assignment}/view', [AssignmentSubmissionController::class, 'view'])->middleware('auth')->name('assignments.view');
+Route::post('/courses/{course}/assignments/{assignment}/submit', [AssignmentSubmissionController::class, 'submit'])->middleware('auth')->name('assignments.submit');
+Route::post('/courses/{course}/assignments/{assignment}/submissions/{submission}/grade', [AssignmentSubmissionController::class, 'grade'])->middleware('auth')->name('assignments.grade');
+Route::get('/courses/{course}/assignments/{assignment}/submissions/{submission}/files/{file}/download', [AssignmentSubmissionController::class, 'downloadSubmissionFile'])->middleware('auth')->name('assignments.download-submission-file');
+Route::delete('/courses/{course}/assignments/{assignment}/submissions/{submission}/files/{file}', [AssignmentSubmissionController::class, 'deleteSubmissionFile'])->middleware('auth')->name('assignments.delete-submission-file');
 
 // Подключение маршрутов аутентификации Laravel
 Route::post('/courses', [CourseController::class, 'store'])->middleware('auth')->name('courses.store');

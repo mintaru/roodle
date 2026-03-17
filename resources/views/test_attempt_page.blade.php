@@ -34,7 +34,40 @@
             @csrf
 
             <div class="border-t pt-6">
-                <p class="font-semibold text-lg mb-4">{{ $questionIndex }}. {!! $question->question_text !!}</p>
+                @php
+                    $questionDisplay = $question->question_text;
+                    if ($question->question_type === 'fill_in_dropdown') {
+                        $dropdownsByBlank = [];
+                        foreach ($question->options as $option) {
+                            $data = json_decode($option->option_text, true);
+                            if (!isset($dropdownsByBlank[$data['blank_id']])) {
+                                $dropdownsByBlank[$data['blank_id']] = [];
+                            }
+                            $dropdownsByBlank[$data['blank_id']][] = [
+                                'id' => $option->id,
+                                'text' => $data['text'],
+                            ];
+                        }
+                        
+                        foreach ($dropdownsByBlank as $blankId => $options) {
+                            $savedValue = '';
+                            if (isset($savedAnswers[$question->id]) && is_array($savedAnswers[$question->id])) {
+                                $savedValue = $savedAnswers[$question->id][$blankId] ?? '';
+                            }
+                            
+                            $selectHTML = '<select class="fill-in-dropdown-select-inline" data-question-id="' . $question->id . '" data-blank-id="' . $blankId . '" style="display: inline-block; padding: 4px 8px; margin: 0 4px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">';
+                            $selectHTML .= '<option value="">--</option>';
+                            foreach ($options as $option) {
+                                $selectedAttr = ($savedValue == $option['id']) ? 'selected' : '';
+                                $selectHTML .= '<option value="' . $option['id'] . '" ' . $selectedAttr . '>' . htmlspecialchars($option['text'], ENT_QUOTES, 'UTF-8') . '</option>';
+                            }
+                            $selectHTML .= '</select>';
+                            
+                            $questionDisplay = str_replace('{' . $blankId . '}', $selectHTML, $questionDisplay);
+                        }
+                    }
+                @endphp
+                <p class="font-semibold text-lg mb-4">{{ $questionIndex }}. {!! $questionDisplay !!}</p>
                 <div class="space-y-3 pl-4">
                     @if ($question->question_type === 'short_answer')
                         {{-- Текстовый ответ --}}
@@ -61,8 +94,8 @@
                         @endphp
                         <input type="hidden" id="rich_text_answer_{{ $question->id }}" name="rich_text_answers[{{ $question->id }}]" value="{{ $savedRichText }}">
                         <trix-editor input="rich_text_answer_{{ $question->id }}" data-question-id="{{ $question->id }}" class="rich-text-answer-input"></trix-editor>
-                    @else
-                        {{-- Варианты выбора --}}
+                    @elseif ($question->question_type !== 'fill_in_dropdown')
+                        {{-- Варианты выбора (single_choice, multiple_choice) --}}
                         @foreach($question->options as $option)
                             @php
                                 $isChecked = false;
@@ -222,6 +255,45 @@
                     }
                 } catch (error) {
                     console.error('Error saving rich text answer:', error);
+                }
+            });
+        });
+
+        // Сохранение ответов для fill_in_dropdown
+        const dropdownSelects = document.querySelectorAll('.fill-in-dropdown-select-inline');
+        dropdownSelects.forEach(select => {
+            select.addEventListener('change', async function() {
+                try {
+                    const questionId = this.dataset.questionId;
+                    
+                    // Собираем все выбранные ответы для всех пропусков в этом вопросе
+                    const filledAnswers = {};
+                    document.querySelectorAll(`.fill-in-dropdown-select-inline[data-question-id="${questionId}"]`).forEach(sel => {
+                        const blankId = sel.dataset.blankId;
+                        const selectedValue = sel.value;
+                        if (selectedValue) {
+                            filledAnswers[blankId] = parseInt(selectedValue);
+                        }
+                    });
+
+                    const response = await fetch(`/tests/{{ $test->id }}/save-answer`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            question_id: questionId,
+                            fill_in_dropdown_answers: filledAnswers
+                        })
+                    });
+
+                    if (!response.ok) {
+                        console.error('Save fill_in_dropdown answer failed', response.status);
+                    }
+                } catch (error) {
+                    console.error('Error saving fill_in_dropdown answer:', error);
                 }
             });
         });

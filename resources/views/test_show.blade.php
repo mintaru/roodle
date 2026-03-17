@@ -31,7 +31,7 @@
             <div class="card">
                 <h3 class="text-xl font-bold mb-4">Вопросы в тесте ({{ $test->questions->count() }})</h3>
 
-                @if($test->display_mode === 'paged')
+                @if ($test->display_mode === 'paged')
                     <p class="mb-3 text-sm text-gray-600">
                         Разбиение по страницам активно. Укажите номер страницы для каждого вопроса
                         (например, 1–5 на первой, 6–10 на второй и т.д.).
@@ -41,7 +41,8 @@
                         @method('PUT')
                         @forelse($test->questions as $question)
                             <div class="question-item">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
                                     <div style="flex: 1;">
                                         <p class="font-semibold">
                                             {{ $loop->iteration }}. {!! $question->question_text !!}
@@ -57,19 +58,15 @@
                                             @endforeach
                                         </ul>
                                     </div>
-                                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                                    <div
+                                        style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
                                         <label class="text-sm text-gray-700">
                                             Страница
-                                            <input
-                                                type="number"
-                                                name="pages[{{ $question->id }}]"
-                                                min="1"
+                                            <input type="number" name="pages[{{ $question->id }}]" min="1"
                                                 value="{{ $question->pivot->page_number ?? 1 }}"
                                                 class="w-20 px-2 py-1 border rounded-md text-sm">
                                         </label>
-                                        <button
-                                            type="submit"
-                                            form="delete-question-{{ $question->id }}"
+                                        <button type="submit" form="delete-question-{{ $question->id }}"
                                             class="delete-btn"
                                             onclick="return confirm('Вы уверены, что хотите удалить этот вопрос из теста?')"
                                             style="background-color: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">
@@ -82,7 +79,7 @@
                             <p class="no-questions">В этом тесте еще нет вопросов.</p>
                         @endforelse
 
-                        @if($test->questions->count() > 0)
+                        @if ($test->questions->count() > 0)
                             <div class="mt-4">
                                 <button type="submit" class="submit-btn">
                                     Сохранить разбиение по страницам
@@ -144,7 +141,8 @@
 
                     <!-- Вывод ошибок валидации -->
                     @if ($errors->any())
-                        <div style="background-color: #fee; border: 1px solid #f00; color: #c00; padding: 15px; margin-bottom: 15px; border-radius: 4px;">
+                        <div
+                            style="background-color: #fee; border: 1px solid #f00; color: #c00; padding: 15px; margin-bottom: 15px; border-radius: 4px;">
                             <strong>Ошибки валидации:</strong>
                             <ul style="margin: 10px 0 0 20px;">
                                 @foreach ($errors->all() as $error)
@@ -155,7 +153,7 @@
                     @endif
 
                     <!-- Текст вопроса -->
-                    <div class="form-group">
+                    <div class="form-group" id="question-text-group">
                         <label for="question_text">Текст вопроса</label>
                         <input id="question_text" type="hidden" name="question_text">
                         <trix-editor input="question_text"></trix-editor>
@@ -170,6 +168,7 @@
                             <option value="multiple_choice">Несколько правильных ответов (чекбоксы)</option>
                             <option value="short_answer">Текстовый ответ</option>
                             <option value="rich_text_answer">Развёрнутый ответ (форматирование)</option>
+                            <option value="fill_in_dropdown">Пропуски с выпадающим списком</option>
                         </select>
                     </div>
 
@@ -178,12 +177,12 @@
                         <label>Варианты ответов</label>
                         <div id="options-container" class="options-container">
                             <div class="option-item">
-                                <input type="radio" name="correct_option" value="0" required>
-                                <input type="text" name="options[0]" placeholder="Вариант 1" required>
+                                <input type="radio" name="correct_option" value="0">
+                                <input type="text" name="options[0]" placeholder="Вариант 1">
                             </div>
                             <div class="option-item">
                                 <input type="radio" name="correct_option" value="1">
-                                <input type="text" name="options[1]" placeholder="Вариант 2" required>
+                                <input type="text" name="options[1]" placeholder="Вариант 2">
                             </div>
                         </div>
                         <button type="button" id="add-option" class="add-option-btn">+ Добавить вариант</button>
@@ -194,7 +193,8 @@
                         <label>Правильные ответы</label>
                         <div id="text-answers-container" class="text-answers-container">
                             <div class="text-answer-item">
-                                <input type="text" name="correct_answers[0]" placeholder="Правильный ответ 1" required>
+                                <input type="text" name="correct_answers[0]" placeholder="Правильный ответ 1"
+                                    required>
                             </div>
                         </div>
                         <button type="button" id="add-text-answer" class="add-option-btn">+ Добавить ответ</button>
@@ -208,6 +208,16 @@
                         <input type="hidden" name="case_insensitive" value="0">
                     </div>
 
+                    <!-- Пропуски с dropdown (fill_in_dropdown) -->
+                    <div class="form-group" id="fill-dropdown-group" style="display: none;">
+                        <label>Текст с пропусками</label>
+                        <textarea name="fill_text" id="fill_text" rows="3"
+                            placeholder="Введите текст с пропусками, используйте {N} для каждого пропуска (например: 'Париж — столица {1}')"
+                            class="w-full border rounded p-2"></textarea>
+                        <div id="dropdowns-container" class="mt-3">
+                            <!-- Здесь будут появляться настройки для каждого пропуска -->
+                        </div>
+                    </div>
                     <button type="submit" class="submit-btn">Создать вопрос</button>
                 </form>
 
@@ -232,19 +242,17 @@
     </div>
 
     {{-- Отдельные скрытые формы для удаления (чтобы не было вложенных form) --}}
-    @foreach($test->questions as $question)
-        <form
-            id="delete-question-{{ $question->id }}"
+    @foreach ($test->questions as $question)
+        <form id="delete-question-{{ $question->id }}"
             action="{{ route('tests.removeQuestion', ['test' => $test->id, 'question' => $question->id]) }}"
-            method="POST"
-            style="display:none;">
+            method="POST" style="display:none;">
             @csrf
             @method('DELETE')
         </form>
     @endforeach
     <script src="
-        https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.umd.min.js
-        "></script>
+            https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.umd.min.js
+            "></script>
 
     <script>
         // Переключение темы
@@ -267,53 +275,155 @@
 
         function updateQuestionTypeUI() {
             const type = questionTypeSelect.value;
-            const optionInputs = optionsContainer.querySelectorAll('input[type="text"], input[type="radio"], input[type="checkbox"]');
+            const optionInputs = optionsContainer.querySelectorAll(
+                'input[type="text"], input[type="radio"], input[type="checkbox"]');
             const textAnswerInputs = textAnswersContainer.querySelectorAll('input[type="text"]');
+            const fillDropdownGroup = document.getElementById('fill-dropdown-group');
+            const questionTextGroup = document.getElementById('question-text-group');
             
             if (type === 'short_answer') {
+                questionTextGroup.style.display = 'block';
                 optionsGroup.style.display = 'none';
                 textAnswersGroup.style.display = 'block';
-                
-                // Убираем required у скрытых полей опций
+                fillDropdownGroup.style.display = 'none';
                 optionInputs.forEach(input => {
                     input.required = false;
+                    input.removeAttribute('required');
                 });
-                
-                // Добавляем required к полям текстовых ответов
                 textAnswerInputs.forEach(input => {
                     input.required = true;
                 });
             } else if (type === 'rich_text_answer') {
-                // Для развёрнутых ответов не требуется задавать правильные варианты
+                questionTextGroup.style.display = 'block';
                 optionsGroup.style.display = 'none';
                 textAnswersGroup.style.display = 'none';
-
-                // Убираем required у всех полей вариантов и текстовых ответов
+                fillDropdownGroup.style.display = 'none';
                 optionInputs.forEach(input => {
                     input.required = false;
+                    input.removeAttribute('required');
                 });
                 textAnswerInputs.forEach(input => {
                     input.required = false;
+                    input.removeAttribute('required');
                 });
+            } else if (type === 'fill_in_dropdown') {
+                questionTextGroup.style.display = 'none';
+                optionsContainer.querySelectorAll('input').forEach(input => {
+                    input.removeAttribute('name');
+                });
+                textAnswersContainer.querySelectorAll('input[type="text"]').forEach(input => {
+                    input.removeAttribute('name');
+                });
+                optionsGroup.style.display = 'none';
+                textAnswersGroup.style.display = 'none';
+                fillDropdownGroup.style.display = 'block';
+                optionInputs.forEach(input => {
+                    input.required = false;
+                    input.removeAttribute('required');
+                });
+                textAnswerInputs.forEach(input => {
+                    input.required = false;
+                    input.removeAttribute('required');
+                });
+                updateDropdownsUI();
             } else {
+                questionTextGroup.style.display = 'block';
                 optionsGroup.style.display = 'block';
                 textAnswersGroup.style.display = 'none';
-                
-                // Добавляем required к полям опций
+                fillDropdownGroup.style.display = 'none';
                 optionInputs.forEach(input => {
                     if (input.type === 'text') {
                         input.required = true;
                     }
                 });
-                
-                // Убираем required у скрытых полей текстовых ответов
                 textAnswerInputs.forEach(input => {
                     input.required = false;
+                    input.removeAttribute('required');
                 });
-                
                 updateOptionInputs();
             }
         }
+
+
+        // Для fill_in_dropdown: динамически создаём UI для каждого пропуска по {N}
+        function updateDropdownsUI() {
+            const fillText = document.getElementById('fill_text').value;
+            const dropdownsContainer = document.getElementById('dropdowns-container');
+            
+            // Ищем все уникальные {N} в тексте
+            const regex = /\{(\d+)\}/g;
+            let match;
+            let blanks = [];
+            while ((match = regex.exec(fillText)) !== null) {
+                const idx = parseInt(match[1], 10);
+                if (!blanks.includes(idx)) blanks.push(idx);
+            }
+            blanks.sort((a, b) => a - b);
+            
+            // Получаем существующие блоки пропусков
+            const existingBlocks = {};
+            dropdownsContainer.querySelectorAll('.dropdown-blank-block').forEach(block => {
+                const label = block.querySelector('label');
+                const match = label && label.textContent.match(/Пропуск #(\d+)/);
+                if (match) {
+                    existingBlocks[match[1]] = block;
+                }
+            });
+            
+            // Удаляем блоки для пропусков, которых больше нет в тексте
+            Object.keys(existingBlocks).forEach(idx => {
+                if (!blanks.includes(parseInt(idx))) {
+                    existingBlocks[idx].remove();
+                }
+            });
+            
+            // Добавляем или обновляем блоки для пропусков
+            blanks.forEach(idx => {
+                if (existingBlocks[idx]) {
+                    // Блок уже существует, перемещаем его в конец (для правильного порядка)
+                    dropdownsContainer.appendChild(existingBlocks[idx]);
+                } else {
+                    // Создаём новый блок для нового пропуска
+                    let block = document.createElement('div');
+                    block.className = 'dropdown-blank-block';
+                    block.innerHTML = `
+                        <label>Пропуск #${idx}: варианты (один правильный)</label>
+                        <div id="dropdown-options-${idx}">
+                            <div class="dropdown-option-item">
+                                <input type="radio" name="dropdown_correct[${idx}]" value="0" required>
+                                <input type="text" name="dropdown_options[${idx}][]" placeholder="Вариант 1" required>
+                            </div>
+                            <div class="dropdown-option-item">
+                                <input type="radio" name="dropdown_correct[${idx}]" value="1">
+                                <input type="text" name="dropdown_options[${idx}][]" placeholder="Вариант 2" required>
+                            </div>
+                        </div>
+                        <button type="button" class="add-dropdown-option-btn" data-blank="${idx}">+ Добавить вариант</button>
+                    `;
+                    dropdownsContainer.appendChild(block);
+                }
+            });
+        }
+
+        // Слушатель для textarea fill_text
+        document.getElementById('fill_text').addEventListener('input', updateDropdownsUI);
+
+        // Делегирование для кнопок добавления вариантов в dropdown
+        document.getElementById('dropdowns-container').addEventListener('click', function(e) {
+            if (e.target.classList.contains('add-dropdown-option-btn')) {
+                const idx = e.target.getAttribute('data-blank');
+                const optionsDiv = document.getElementById('dropdown-options-' + idx);
+                // Считаем только .dropdown-option-item (чтобы не учитывать текстовые узлы)
+                const count = optionsDiv.querySelectorAll('.dropdown-option-item').length;
+                const newOption = document.createElement('div');
+                newOption.className = 'dropdown-option-item';
+                newOption.innerHTML = `
+                    <input type="radio" name="dropdown_correct[${idx}]" value="${count}">
+                    <input type="text" name="dropdown_options[${idx}][]" placeholder="Вариант ${count+1}" required>
+                `;
+                optionsDiv.appendChild(newOption);
+            }
+        });
 
         function updateOptionInputs() {
             const type = questionTypeSelect.value;
@@ -347,7 +457,7 @@
             <input type="text" name="options[${index}]" placeholder="Вариант ${index + 1}" required>
         `;
             optionsContainer.appendChild(newOption);
-            
+
             // Убедимся, что новые поля имеют правильный required статус
             if (optionsGroup.style.display === 'none') {
                 const inputs = newOption.querySelectorAll('input');
@@ -365,7 +475,7 @@
             <input type="text" name="correct_answers[${index}]" placeholder="Правильный ответ ${index + 1}" required>
         `;
             textAnswersContainer.appendChild(newAnswer);
-            
+
             // Убедимся, что новые поля имеют правильный required статус
             if (textAnswersGroup.style.display === 'none') {
                 const input = newAnswer.querySelector('input');
@@ -411,7 +521,7 @@
         const questionForm = document.getElementById('question-form');
         questionForm.addEventListener('submit', function(e) {
             const type = questionTypeSelect.value;
-            
+
             // Удаляем атрибут name у скрытых полей (браузер будет их игнорировать)
             if (type === 'short_answer') {
                 // Удаляем name у полей опций
@@ -433,11 +543,11 @@
                     input.removeAttribute('name');
                 });
             }
-            
+
             const submitBtn = questionForm.querySelector('.submit-btn');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Создание вопроса...';
-            
+
             // Небольшая задержка перед перезагрузкой, чтобы данные успели сохраниться
             setTimeout(() => {
                 location.reload();
