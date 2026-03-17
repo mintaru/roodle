@@ -5,14 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\Question;
 use App\Models\TemporaryAnswer;
-use App\Models\TestAttempt;
 use App\Models\Test;
+use App\Models\TestAttempt;
 use App\Models\User;
 use App\Models\UserTestExtraAttempt;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+
 class TestController extends Controller
 {
     // Список тестов
@@ -49,20 +50,20 @@ class TestController extends Controller
 
         $validatedData['period_start'] = $request->period_start
         ? Carbon::createFromFormat(
-              'Y-m-d\TH:i', 
-              $request->period_start, 
-              'Asia/Krasnoyarsk'
-          )->utc()
+            'Y-m-d\TH:i',
+            $request->period_start,
+            'Asia/Krasnoyarsk'
+        )->utc()
         : null;
-    
-    $validatedData['period_end'] = $request->period_end
-        ? Carbon::createFromFormat(
-              'Y-m-d\TH:i', 
-              $request->period_end, 
-              'Asia/Krasnoyarsk'
-          )->utc()
-        : null;
-    
+
+        $validatedData['period_end'] = $request->period_end
+            ? Carbon::createFromFormat(
+                'Y-m-d\TH:i',
+                $request->period_end,
+                'Asia/Krasnoyarsk'
+            )->utc()
+            : null;
+
         // Определяем max_attempts
         if ($request->has('unlimited_attempts')) {
             $validatedData['max_attempts'] = 0; // 0 = неограниченно
@@ -84,8 +85,10 @@ class TestController extends Controller
     public function attempts($id)
     {
         $test = Test::with('attempts')->findOrFail($id);
+
         return view('admin.tests.attempts', compact('test'));
     }
+
     // Отображение теста с вопросами
     public function show(Test $test)
     {
@@ -106,7 +109,7 @@ class TestController extends Controller
 
     public function view(Test $test)
     {
-        abort_if(!$test->isAvailable(), 404);
+        abort_if(! $test->isAvailable(), 404);
 
         $user = Auth::user();
 
@@ -131,7 +134,7 @@ class TestController extends Controller
             ->where('user_id', $user->id)
             ->whereNull('ended_at')
             ->exists();
-        
+
         $activeAttempt = null;
         if ($hasActiveAttempt) {
             $activeAttempt = $test->attempts()
@@ -159,28 +162,60 @@ class TestController extends Controller
     {
         // Валидация
         $validatedData = $request->validate([
-            'question_text' => 'required|string',
-            'question_type' => 'required|in:single_choice,multiple_choice,short_answer,rich_text_answer',
-            'options' => 'required_if:question_type,single_choice,multiple_choice|array|min:2',
-            'options.*' => 'required_if:question_type,single_choice,multiple_choice|string',
+            'question_text' => 'required_unless:question_type,fill_in_dropdown|string',
+            'question_type' => 'required|in:single_choice,multiple_choice,short_answer,rich_text_answer,fill_in_dropdown',
+            'options' => [
+                'required_if:question_type,single_choice',
+                'required_if:question_type,multiple_choice',
+                'nullable',
+                'array',
+                'min:2',
+            ],
+            'options.*' => [
+                'required_if:question_type,single_choice',
+                'required_if:question_type,multiple_choice',
+                'nullable',
+                'string',
+            ],
             'correct_option' => 'required_if:question_type,single_choice|integer',
             'correct_options' => 'required_if:question_type,multiple_choice|array',
             'correct_options.*' => 'integer',
             'correct_answers' => 'required_if:question_type,short_answer|array|min:1',
             'correct_answers.*' => 'required_if:question_type,short_answer|string|min:1',
             'case_insensitive' => 'nullable|in:0,1',
+            'fill_text' => 'required_if:question_type,fill_in_dropdown|string',
+            'dropdown_options' => 'required_if:question_type,fill_in_dropdown|array',
+            'dropdown_options.*' => 'array',
+            'dropdown_correct' => 'required_if:question_type,fill_in_dropdown|array',
         ]);
 
         // Создаём вопрос
-        $question = Question::create([
-            'question_text' => $validatedData['question_text'],
-            'question_type' => $validatedData['question_type'],
-        ]);
-
-        if ($validatedData['question_type'] === 'short_answer') {
+        if ($validatedData['question_type'] === 'fill_in_dropdown') {
+            $question = Question::create([
+                'question_text' => $validatedData['fill_text'],
+                'question_type' => 'fill_in_dropdown',
+            ]);
+            // Для каждого пропуска создаём опции (blank_id, текст, правильность)
+            foreach ($validatedData['dropdown_options'] as $blankId => $optionsArr) {
+                foreach ($optionsArr as $idx => $optionText) {
+                    $isCorrect = (isset($validatedData['dropdown_correct'][$blankId]) && $validatedData['dropdown_correct'][$blankId] == $idx);
+                    $question->options()->create([
+                        'option_text' => json_encode([
+                            'blank_id' => $blankId,
+                            'text' => $optionText,
+                        ], JSON_UNESCAPED_UNICODE),
+                        'is_correct' => $isCorrect,
+                        'case_insensitive' => false,
+                    ]);
+                }
+            }
+        } elseif ($validatedData['question_type'] === 'short_answer') {
+            $question = Question::create([
+                'question_text' => $validatedData['question_text'],
+                'question_type' => $validatedData['question_type'],
+            ]);
             // Для текстовых ответов создаём опции с правильными ответами
             $caseInsensitive = ($validatedData['case_insensitive'] ?? 0) == 1;
-            
             foreach ($validatedData['correct_answers'] as $answer) {
                 if (trim($answer) !== '') { // Пропускаем пустые ответы
                     $question->options()->create([
@@ -191,22 +226,30 @@ class TestController extends Controller
                 }
             }
         } elseif (in_array($validatedData['question_type'], ['single_choice', 'multiple_choice'], true)) {
+            $question = Question::create([
+                'question_text' => $validatedData['question_text'],
+                'question_type' => $validatedData['question_type'],
+            ]);
             // Сохраняем варианты и отмечаем правильные для вопросов с выбором ответа
             foreach ($validatedData['options'] as $key => $optionText) {
                 $isCorrect = false;
-
                 if ($validatedData['question_type'] === 'single_choice') {
                     $isCorrect = ($key == $validatedData['correct_option']);
                 } else {
                     $isCorrect = in_array($key, $validatedData['correct_options']);
                 }
-
                 $question->options()->create([
                     'option_text' => $optionText,
                     'is_correct' => $isCorrect,
                     'case_insensitive' => false, // для множественных выборов это не используется
                 ]);
             }
+        } elseif ($validatedData['question_type'] === 'rich_text_answer') {
+            $question = Question::create([
+                'question_text' => $validatedData['question_text'],
+                'question_type' => $validatedData['question_type'],
+            ]);
+            // Для rich_text_answer не создаём опций
         }
 
         // Привязываем вопрос к тесту
@@ -232,7 +275,7 @@ class TestController extends Controller
     public function updateLayout(Request $request, Test $test)
     {
         // Только преподаватели/админы могут менять структуру теста
-        if (!Auth::user()->can('edit courses')) {
+        if (! Auth::user()->can('edit courses')) {
             abort(403, 'Unauthorized');
         }
 
@@ -255,7 +298,7 @@ class TestController extends Controller
 
     public function result(Test $test, Request $request)
     {
-        abort_if(!$test->isAvailable(), 404);
+        abort_if(! $test->isAvailable(), 404);
 
         $user = Auth::user();
 
@@ -266,7 +309,7 @@ class TestController extends Controller
             ->first();
 
         // Если активной попытки нет, перенаправляем
-        if (!$attempt) {
+        if (! $attempt) {
             return redirect()->route('tests.view', $test)
                 ->with('error', 'Активная попытка не найдена.');
         }
@@ -324,7 +367,7 @@ class TestController extends Controller
         // Получаем время начала из сессии
         $startedAt = session("test_{$test->id}_started_at");
 
-        if (!$startedAt) {
+        if (! $startedAt) {
             return response()->json(['time_left' => $test->time_limit * 60], 400);
         }
 
@@ -346,13 +389,13 @@ class TestController extends Controller
     public function results(Test $test)
     {
         // Проверяем, что пользователь с правом редактирования курсов (учитель/админ)
-        if (!Auth::user()->can('edit courses')) {
+        if (! Auth::user()->can('edit courses')) {
             abort(403, 'Unauthorized');
         }
 
         // Получаем все группы, связанные с курсом теста
         $course = $test->course;
-        
+
         // Получаем всех уникальных пользователей из групп курса
         $usersInCourse = $course->groups()
             ->with('users')
@@ -364,7 +407,7 @@ class TestController extends Controller
 
         // Подготавливаем данные для каждого пользователя
         $studentsData = [];
-        
+
         foreach ($usersInCourse as $user) {
             // Все попытки пользователя (завершённые и текущие)
             $attempts = $test->attempts()
@@ -375,14 +418,14 @@ class TestController extends Controller
             // Определяем, есть ли активная попытка
             $activeAttempt = $attempts->where('ended_at', null)->first();
             $completedAttempts = $attempts->where('ended_at', '!=', null);
-            
+
             // Какой номер попытки сейчас/будет
             $currentAttemptNumber = $attempts->count() + 1;
-            
+
             // Статус
             $status = 'не начинали';
             $minutesSpent = null;
-            
+
             if ($activeAttempt) {
                 $status = 'в процессе';
                 // Считаем минуты, прошедшие с начала попытки
@@ -409,6 +452,7 @@ class TestController extends Controller
             if ($statusOrder[$a['status']] !== $statusOrder[$b['status']]) {
                 return $statusOrder[$a['status']] <=> $statusOrder[$b['status']];
             }
+
             return $a['user']->name <=> $b['user']->name;
         });
 
@@ -421,7 +465,7 @@ class TestController extends Controller
     public function viewAttemptDetails(TestAttempt $attempt)
     {
         // Проверяем, что пользователь имеет право просматривать (учитель/админ)
-        if (!Auth::user()->can('edit courses')) {
+        if (! Auth::user()->can('edit courses')) {
             abort(403, 'Unauthorized');
         }
 
@@ -441,29 +485,29 @@ class TestController extends Controller
 
         // Подготавливаем данные для каждого вопроса
         $questionDetails = [];
-        
+
         foreach ($test->questions as $question) {
             $answers = $studentAnswers->get($question->id, collect());
-            
+
             // Определяем, правильный ли ответ
             $isCorrect = false;
             $userAnswerText = '';
             $userSelectedOptions = [];
             $isManuallyGraded = false;
-            
+
             if ($question->question_type === 'short_answer') {
                 // Для текстовых ответов
                 $answer = $answers->first();
                 if ($answer && $answer->answer_text) {
                     $userAnswerText = $answer->answer_text;
-                    
+
                     // Проверяем правильность
                     $correctOptions = $question->options->where('is_correct', true);
                     foreach ($correctOptions as $option) {
                         $correctText = trim($option->option_text);
-                        
+
                         if ($option->case_insensitive) {
-                            if (strtolower(preg_replace('/\s+/', '', $userAnswerText)) === 
+                            if (strtolower(preg_replace('/\s+/', '', $userAnswerText)) ===
                                 strtolower(preg_replace('/\s+/', '', $correctText))) {
                                 $isCorrect = true;
                                 break;
@@ -484,7 +528,7 @@ class TestController extends Controller
                     $isManuallyGraded = (bool) $answer->is_manually_graded;
 
                     // Для развёрнутых ответов учитываем только ручную проверку учителя
-                    if ($answer->is_manually_graded && !is_null($answer->is_correct_manual)) {
+                    if ($answer->is_manually_graded && ! is_null($answer->is_correct_manual)) {
                         $isCorrect = (bool) $answer->is_correct_manual;
                     }
                 }
@@ -495,9 +539,9 @@ class TestController extends Controller
                     ->where('is_correct', true)
                     ->pluck('id')
                     ->toArray();
-                
+
                 if ($question->question_type === 'single_choice') {
-                    $isCorrect = (count($userSelectedOptions) === 1 && 
+                    $isCorrect = (count($userSelectedOptions) === 1 &&
                                  in_array($userSelectedOptions[0], $correctOptionIds));
                 } else {
                     // multiple_choice
@@ -526,7 +570,7 @@ class TestController extends Controller
     public function gradeRichTextAnswers(Request $request, TestAttempt $attempt)
     {
         // Проверяем права (учитель/админ)
-        if (!Auth::user()->can('edit courses')) {
+        if (! Auth::user()->can('edit courses')) {
             abort(403, 'Unauthorized');
         }
 
@@ -541,7 +585,7 @@ class TestController extends Controller
                 ->where('question_id', (int) $questionId)
                 ->first();
 
-            if (!$answer) {
+            if (! $answer) {
                 continue;
             }
 
@@ -614,9 +658,37 @@ class TestController extends Controller
             } elseif ($question->question_type === 'rich_text_answer') {
                 // Только ручная оценка учителя
                 $answer = $answers->first();
-                if ($answer && $answer->is_manually_graded && !is_null($answer->is_correct_manual)) {
+                if ($answer && $answer->is_manually_graded && ! is_null($answer->is_correct_manual)) {
                     $isCorrect = (bool) $answer->is_correct_manual;
                 }
+            } elseif ($question->question_type === 'fill_in_dropdown') {
+                // Для каждого blank_id сравниваем выбранный вариант с правильным
+                $correct = true;
+                // Группируем опции по blank_id
+                $optionsByBlank = [];
+                foreach ($question->options as $opt) {
+                    $data = json_decode($opt->option_text, true);
+                    if (! isset($optionsByBlank[$data['blank_id']])) {
+                        $optionsByBlank[$data['blank_id']] = [];
+                    }
+                    $optionsByBlank[$data['blank_id']][] = [
+                        'id' => $opt->id,
+                        'is_correct' => $opt->is_correct,
+                    ];
+                }
+                // Собираем ответы пользователя: blank_id => option_id
+                $userAnswers = [];
+                foreach ($answers as $ans) {
+                    $userAnswers[$ans->answer_text] = $ans->option_id; // answer_text = blank_id
+                }
+                foreach ($optionsByBlank as $blankId => $opts) {
+                    $correctOption = collect($opts)->firstWhere('is_correct', true);
+                    if (! $correctOption || ! isset($userAnswers[$blankId]) || $userAnswers[$blankId] != $correctOption['id']) {
+                        $correct = false;
+                        break;
+                    }
+                }
+                $isCorrect = $correct;
             } else {
                 // single_choice / multiple_choice
                 $userOptionIds = $answers
@@ -667,13 +739,13 @@ class TestController extends Controller
     public function grantExtraAttempts(Request $request, Test $test, User $user)
     {
         // Проверяем, что пользователь имеет право (учитель/админ)
-        if (!Auth::user()->can('edit courses')) {
+        if (! Auth::user()->can('edit courses')) {
             abort(403, 'Unauthorized');
         }
 
         // Валидируем данные
         $validated = $request->validate([
-            'extra_attempts' => 'required|integer|min:1|max:100'
+            'extra_attempts' => 'required|integer|min:1|max:100',
         ]);
 
         // Ищем существующую запись
@@ -691,7 +763,7 @@ class TestController extends Controller
                 'user_id' => $user->id,
                 'test_id' => $test->id,
                 'extra_attempts' => $validated['extra_attempts'],
-                'created_by' => Auth::id()
+                'created_by' => Auth::id(),
             ]);
         }
 
@@ -703,7 +775,7 @@ class TestController extends Controller
      */
     public function attempt(Test $test)
     {
-        abort_if(!$test->isAvailable(), 404);
+        abort_if(! $test->isAvailable(), 404);
 
         $user = Auth::user();
 
@@ -733,7 +805,7 @@ class TestController extends Controller
             ->first();
 
         // Если нет активной попытки, создаём новую
-        if (!$activeAttempt) {
+        if (! $activeAttempt) {
             $lastAttemptNumber = TestAttempt::where('test_id', $test->id)
                 ->where('user_id', $user->id)
                 ->max('attempt_number') ?? 0;
@@ -744,7 +816,7 @@ class TestController extends Controller
                 'attempt_number' => $lastAttemptNumber + 1,
                 'started_at' => now(),
             ]);
-        } elseif (!$activeAttempt->started_at) {
+        } elseif (! $activeAttempt->started_at) {
             // Ensure started_at is set if it was null
             $activeAttempt->update(['started_at' => now()]);
         }
@@ -761,7 +833,7 @@ class TestController extends Controller
 
         $questions = $test->questions;
 
-        if (!$questionOrder) {
+        if (! $questionOrder) {
             $questionOrder = $questions->pluck('id')->toArray();
 
             // В режиме разбиения по страницам порядок задаётся вручную, не перемешиваем
@@ -800,9 +872,18 @@ class TestController extends Controller
             // Для текстовых и развёрнутых ответов сохраняем как строка
             if (in_array($questionType, ['short_answer', 'rich_text_answer'])) {
                 $savedAnswers[$answer->question_id] = $answer->answer_text;
+            } elseif ($questionType === 'fill_in_dropdown') {
+                // Для fill_in_dropdown сохраняем как массив: blank_id => option_id
+                if (! isset($savedAnswers[$answer->question_id])) {
+                    $savedAnswers[$answer->question_id] = [];
+                }
+                // answer_text содержит blank_id
+                if ($answer->answer_text && $answer->option_id) {
+                    $savedAnswers[$answer->question_id][$answer->answer_text] = $answer->option_id;
+                }
             } else {
                 // Для множественного выбора сохраняем как массив option_id
-                if (!isset($savedAnswers[$answer->question_id])) {
+                if (! isset($savedAnswers[$answer->question_id])) {
                     $savedAnswers[$answer->question_id] = [];
                 }
                 if ($answer->option_id) {
@@ -825,7 +906,7 @@ class TestController extends Controller
      */
     public function attemptPage(Test $test, $questionIndex = 1)
     {
-        abort_if(!$test->isAvailable(), 404);
+        abort_if(! $test->isAvailable(), 404);
 
         $user = Auth::user();
 
@@ -855,7 +936,7 @@ class TestController extends Controller
             ->first();
 
         // Если активной попытки нет, создаём новую (как в одностраничном режиме)
-        if (!$activeAttempt) {
+        if (! $activeAttempt) {
             $lastAttemptNumber = TestAttempt::where('test_id', $test->id)
                 ->where('user_id', $user->id)
                 ->max('attempt_number') ?? 0;
@@ -866,7 +947,7 @@ class TestController extends Controller
                 'attempt_number' => $lastAttemptNumber + 1,
                 'started_at' => now(),
             ]);
-        } elseif (!$activeAttempt->started_at) {
+        } elseif (! $activeAttempt->started_at) {
             // Если попытка была создана без started_at — установим его
             $activeAttempt->update(['started_at' => now()]);
         }
@@ -881,7 +962,7 @@ class TestController extends Controller
 
         $questions = $test->questions;
 
-        if (!$questionOrder) {
+        if (! $questionOrder) {
             $questionOrder = $questions->pluck('id')->toArray();
 
             // В режиме разбиения по страницам порядок задаётся вручную, не перемешиваем
@@ -920,9 +1001,18 @@ class TestController extends Controller
             // Для текстовых и развёрнутых ответов сохраняем как строка
             if (in_array($questionType, ['short_answer', 'rich_text_answer'])) {
                 $savedAnswers[$answer->question_id] = $answer->answer_text;
+            } elseif ($questionType === 'fill_in_dropdown') {
+                // Для fill_in_dropdown сохраняем как массив: blank_id => option_id
+                if (! isset($savedAnswers[$answer->question_id])) {
+                    $savedAnswers[$answer->question_id] = [];
+                }
+                // answer_text содержит blank_id
+                if ($answer->answer_text && $answer->option_id) {
+                    $savedAnswers[$answer->question_id][$answer->answer_text] = $answer->option_id;
+                }
             } else {
                 // Для множественного выбора сохраняем как массив option_id
-                if (!isset($savedAnswers[$answer->question_id])) {
+                if (! isset($savedAnswers[$answer->question_id])) {
                     $savedAnswers[$answer->question_id] = [];
                 }
                 if ($answer->option_id) {
@@ -1003,7 +1093,51 @@ class TestController extends Controller
      */
     public function saveAnswer(Request $request, Test $test)
     {
-        abort_if(!$test->isAvailable(), 404);
+        // Для fill_in_dropdown
+        if ($request->has('fill_in_dropdown_answers')) {
+            $questionId = $request->input('question_id');
+            $answersArr = $request->input('fill_in_dropdown_answers'); // [blank_id => option_id]
+            // Сохраняем в сессии
+            $answers = session("test_{$test->id}_answers", []);
+            $answers[$questionId] = $answersArr;
+            session(["test_{$test->id}_answers" => $answers]);
+
+            if (Auth::check()) {
+                $userId = Auth::id();
+                $attempt = TestAttempt::where('test_id', $test->id)
+                    ->where('user_id', $userId)
+                    ->whereNull('ended_at')
+                    ->first();
+                if (! $attempt) {
+                    return response()->json(['error' => 'Test not started'], 403);
+                }
+                if ($test->time_limit && $attempt->started_at) {
+                    $elapsed = now()->diffInSeconds($attempt->started_at);
+                    $timeLimitSeconds = $test->time_limit * 60;
+                    if ($elapsed > $timeLimitSeconds) {
+                        return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
+                    }
+                }
+                // Удаляем предыдущие ответы на этот вопрос
+                TemporaryAnswer::where('user_id', $userId)
+                    ->where('test_id', $test->id)
+                    ->where('question_id', $questionId)
+                    ->delete();
+                // Сохраняем каждый пропуск как отдельный TemporaryAnswer
+                foreach ($answersArr as $blankId => $optionId) {
+                    TemporaryAnswer::create([
+                        'user_id' => $userId,
+                        'test_id' => $test->id,
+                        'test_attempt_id' => $attempt->id,
+                        'question_id' => $questionId,
+                        'option_id' => $optionId,
+                        'answer_text' => $blankId, // сохраняем blank_id для удобства
+                    ]);
+                }
+            }
+
+            return response()->json(['success' => true]);
+        }
 
         $questionId = $request->input('question_id');
         $optionIds = $request->input('option_id');
@@ -1026,7 +1160,7 @@ class TestController extends Controller
                     ->whereNull('ended_at')
                     ->first();
 
-                if (!$attempt) {
+                if (! $attempt) {
                     return response()->json(['error' => 'Test not started'], 403);
                 }
 
@@ -1076,7 +1210,7 @@ class TestController extends Controller
                     ->whereNull('ended_at')
                     ->first();
 
-                if (!$attempt) {
+                if (! $attempt) {
                     return response()->json(['error' => 'Test not started'], 403);
                 }
 
@@ -1112,7 +1246,7 @@ class TestController extends Controller
 
         // Для множественного выбора
         // Убедимся, что $optionIds всегда массив
-        if (!$request->has('answer_text') && $optionIds) {
+        if (! $request->has('answer_text') && $optionIds) {
             $optionIds = (array) $optionIds;
 
             // Сохраняем в сессии
@@ -1129,7 +1263,7 @@ class TestController extends Controller
                     ->whereNull('ended_at')
                     ->first();
 
-                if (!$attempt) {
+                if (! $attempt) {
                     return response()->json(['error' => 'Test not started'], 403);
                 }
 
