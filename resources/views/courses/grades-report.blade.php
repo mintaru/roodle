@@ -404,17 +404,16 @@
                                                 @if($score === '-') - @else {{ $score }} @endif
                                             </td>
                                             <td class="score {{ $scoreClass }}">
-                                                @if($score === '-') - @else {{ $percentage }}% @endif
-                                            </td>
-                                            <td class="score {{ $scoreClass }}">
                                                 @if($score === '-') 
                                                     Не пройден
-                                                @elseif($percentage >= 80)
+                                                @elseif($score == 5)
                                                     Отлично
-                                                @elseif($percentage >= 60)
+                                                @elseif($score == 4)
                                                     Хорошо
-                                                @else
-                                                    Слабо
+                                                @elseif($score ==3 )
+                                                    Удовлетворительно
+                                                @elseif($score==2)
+                                                    Неудовлетворительно
                                                 @endif
                                             </td>
                                         </tr>
@@ -429,13 +428,12 @@
                                         @php
                                             $score = $assignmentData['score'];
                                             $maxScore = $assignmentData['max_score'];
-                                            $percentage = $score === '-' ? 0 : ($score / $maxScore) * 100;
                                             $scoreClass = 'not-graded';
                                             
                                             if ($score !== '-') {
-                                                if ($percentage >= 80) {
+                                                if ($score >= 4) {
                                                     $scoreClass = 'good';
-                                                } elseif ($percentage >= 60) {
+                                                } elseif ($score >= 3) {
                                                     $scoreClass = 'average';
                                                 } else {
                                                     $scoreClass = 'low';
@@ -448,17 +446,16 @@
                                                 @if($score === '-') - @else {{ $score }}/{{ $maxScore }} @endif
                                             </td>
                                             <td class="score {{ $scoreClass }}">
-                                                @if($score === '-') - @else {{ round($percentage, 1) }}% @endif
-                                            </td>
-                                            <td class="score {{ $scoreClass }}">
                                                 @if($score === '-') 
-                                                    Не сдано
-                                                @elseif($percentage >= 80)
+                                                    Не пройден
+                                                @elseif($score == 5)
                                                     Отлично
-                                                @elseif($percentage >= 60)
+                                                @elseif($score == 4)
                                                     Хорошо
-                                                @else
-                                                    Слабо
+                                                @elseif($score ==3 )
+                                                    Удовлетворительно
+                                                @elseif($score==2)
+                                                    Неудовлетворительно
                                                 @endif
                                             </td>
                                         </tr>
@@ -474,7 +471,6 @@
                                 <tr>
                                     <th style="width: 250px;">Ученик</th>
                                     <th style="width: 150px;">Оценка</th>
-                                    <th style="width: 150px;">Процент</th>
                                     <th style="width: 150px;">Статус</th>
                                 </tr>
                             </thead>
@@ -499,21 +495,20 @@
                                     <tr>
                                         <td class="student-name">{{ $itemGrade['student']->name }}</td>
                                         <td class="score {{ $scoreClass }}">
-                                            @if($score === '-') - @else {{ $score }}/{{ $maxScore }} @endif
-                                        </td>
-                                        <td class="score {{ $scoreClass }}">
-                                            @if($score === '-') - @else {{ round($percentage, 1) }}% @endif
+                                            @if($score === '-') - @else {{ $score }} @endif
                                         </td>
                                         <td class="score {{ $scoreClass }}">
                                             @if($score === '-') 
-                                                Не пройден
-                                            @elseif($percentage >= 80)
-                                                Отлично
-                                            @elseif($percentage >= 60)
-                                                Хорошо
-                                            @else
-                                                Слабо
-                                            @endif
+                                            Не пройден
+                                        @elseif($score == 5)
+                                            Отлично
+                                        @elseif($score == 4)
+                                            Хорошо
+                                        @elseif($score ==3 )
+                                            Удовлетворительно
+                                        @elseif($score==2)
+                                            Неудовлетворительно
+                                        @endif
                                         </td>
                                     </tr>
                                 @empty
@@ -527,14 +522,6 @@
                         </table>
                     @endif
                 </div>
-
-                <p style="margin-top: 20px; color: #7f8c8d; font-size: 14px;">
-                    <strong>Легенда:</strong>
-                    <span style="color: #27ae60; margin-left: 15px;">● Зелёный (80-100%) — Отличный результат</span>
-                    <span style="color: #f39c12; margin-left: 15px;">● Оранжевый (60-79%) — Хороший результат</span>
-                    <span style="color: #e74c3c; margin-left: 15px;">● Красный (&lt;60%) — Низкий результат</span>
-                    <span style="color: #95a5a6; margin-left: 15px;">● Серый — Не оценено</span>
-                </p>
             @elseif($selectedGroup && $students->count() === 0)
                 <div class="no-students">
                     В группе <strong>{{ $selectedGroup->name }}</strong> нет студентов
