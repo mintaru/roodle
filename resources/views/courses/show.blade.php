@@ -32,6 +32,9 @@
     <a href="{{ route('assignments.create', $course) }}" class="btn btn-warning">
         Создать задание для курса
     </a>
+    <a href="{{ route('courses.grades', $course) }}" class="btn btn-secondary">
+        📊 Просмотр оценок
+    </a>
     @endhasanyrole
 
     @if(session('success'))
