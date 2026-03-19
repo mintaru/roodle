@@ -48,14 +48,47 @@
                                             {{ $loop->iteration }}. {!! $question->question_text !!}
                                         </p>
                                         <ul class="options-list mt-2">
-                                            @foreach ($question->options as $option)
-                                                <li class="{{ $option->is_correct ? 'correct-answer' : '' }}">
-                                                    {{ $option->option_text }}
-                                                    @if ($option->is_correct)
-                                                        <span class="correct-label">(Верный ответ)</span>
-                                                    @endif
-                                                </li>
-                                            @endforeach
+                                            @if ($question->question_type === 'fill_in_dropdown')
+                                                @php
+                                                    $dropdownsByBlank = [];
+                                                    foreach ($question->options as $option) {
+                                                        $data = json_decode($option->option_text, true);
+                                                        if (!is_array($data) || !isset($data['blank_id'], $data['text'])) {
+                                                            continue;
+                                                        }
+                                                        $dropdownsByBlank[$data['blank_id']][] = [
+                                                            'text' => $data['text'],
+                                                            'is_correct' => $option->is_correct,
+                                                        ];
+                                                    }
+                                                    ksort($dropdownsByBlank);
+                                                @endphp
+
+                                                @foreach ($dropdownsByBlank as $blankId => $options)
+                                                    <li class="fill-dropdown-blank">
+                                                        <strong>Пропуск #{{ $blankId }}:</strong>
+                                                        <ul class="nested-options-list">
+                                                            @foreach ($options as $opt)
+                                                                <li class="{{ $opt['is_correct'] ? 'correct-answer' : '' }}">
+                                                                    {{ $opt['text'] }}
+                                                                    @if ($opt['is_correct'])
+                                                                        <span class="correct-label">(Верный ответ)</span>
+                                                                    @endif
+                                                                </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </li>
+                                                @endforeach
+                                            @else
+                                                @foreach ($question->options as $option)
+                                                    <li class="{{ $option->is_correct ? 'correct-answer' : '' }}">
+                                                        {{ $option->option_text }}
+                                                        @if ($option->is_correct)
+                                                            <span class="correct-label">(Верный ответ)</span>
+                                                        @endif
+                                                    </li>
+                                                @endforeach
+                                            @endif
                                         </ul>
                                     </div>
                                     <div
@@ -95,14 +128,47 @@
                                     <div style="flex: 1;">
                                         <p class="font-semibold">{{ $loop->iteration }}. {!! $question->question_text !!}</p>
                                         <ul class="options-list mt-2">
-                                            @foreach ($question->options as $option)
-                                                <li class="{{ $option->is_correct ? 'correct-answer' : '' }}">
-                                                    {{ $option->option_text }}
-                                                    @if ($option->is_correct)
-                                                        <span class="correct-label">(Верный ответ)</span>
-                                                    @endif
-                                                </li>
-                                            @endforeach
+                                            @if ($question->question_type === 'fill_in_dropdown')
+                                                @php
+                                                    $dropdownsByBlank = [];
+                                                    foreach ($question->options as $option) {
+                                                        $data = json_decode($option->option_text, true);
+                                                        if (!is_array($data) || !isset($data['blank_id'], $data['text'])) {
+                                                            continue;
+                                                        }
+                                                        $dropdownsByBlank[$data['blank_id']][] = [
+                                                            'text' => $data['text'],
+                                                            'is_correct' => $option->is_correct,
+                                                        ];
+                                                    }
+                                                    ksort($dropdownsByBlank);
+                                                @endphp
+
+                                                @foreach ($dropdownsByBlank as $blankId => $options)
+                                                    <li class="fill-dropdown-blank">
+                                                        <strong>Пропуск #{{ $blankId }}:</strong>
+                                                        <ul class="nested-options-list">
+                                                            @foreach ($options as $opt)
+                                                                <li class="{{ $opt['is_correct'] ? 'correct-answer' : '' }}">
+                                                                    {{ $opt['text'] }}
+                                                                    @if ($opt['is_correct'])
+                                                                        <span class="correct-label">(Верный ответ)</span>
+                                                                    @endif
+                                                                </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </li>
+                                                @endforeach
+                                            @else
+                                                @foreach ($question->options as $option)
+                                                    <li class="{{ $option->is_correct ? 'correct-answer' : '' }}">
+                                                        {{ $option->option_text }}
+                                                        @if ($option->is_correct)
+                                                            <span class="correct-label">(Верный ответ)</span>
+                                                        @endif
+                                                    </li>
+                                                @endforeach
+                                            @endif
                                         </ul>
                                     </div>
                                     <form
