@@ -21,6 +21,7 @@ use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\Admin\TestManagementController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\GradeReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -161,6 +162,9 @@ Route::post('/courses/{course}/assignments/{assignment}/submit', [AssignmentSubm
 Route::post('/courses/{course}/assignments/{assignment}/submissions/{submission}/grade', [AssignmentSubmissionController::class, 'grade'])->middleware('auth')->name('assignments.grade');
 Route::get('/courses/{course}/assignments/{assignment}/submissions/{submission}/files/{file}/download', [AssignmentSubmissionController::class, 'downloadSubmissionFile'])->middleware('auth')->name('assignments.download-submission-file');
 Route::delete('/courses/{course}/assignments/{assignment}/submissions/{submission}/files/{file}', [AssignmentSubmissionController::class, 'deleteSubmissionFile'])->middleware('auth')->name('assignments.delete-submission-file');
+
+// Маршруты для оценок
+Route::get('/courses/{course}/grades', [GradeReportController::class, 'courseGrades'])->middleware('auth')->name('courses.grades');
 
 // Подключение маршрутов аутентификации Laravel
 Route::post('/courses', [CourseController::class, 'store'])->middleware('auth')->name('courses.store');
