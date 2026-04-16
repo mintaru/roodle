@@ -47,13 +47,6 @@
         </div>
 
         <div class="flex items-center justify-between mt-6">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-indigo-600 hover:text-indigo-800 rounded-md
-                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                   href="{{ route('password.request') }}">
-                    Забыли пароль?
-                </a>
-            @endif
 
             <x-primary-button class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg">
                 Войти

@@ -36,9 +36,6 @@ use App\Http\Controllers\GradeReportController;
 
 
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile-edit', [ProfileController::class, 'edit'])->name('profile.edit');

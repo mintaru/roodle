@@ -53,7 +53,7 @@
                 @foreach($group->users as $user)
                     <div class="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-200">
                         <span class="text-gray-800">{{ $user->name }}</span>
-                        <form action="{{ route('admin.groups.destroy', [$group, $user]) }}" method="POST">
+                        <form action="{{ route('admin.users.destroy', [$user]) }}" method="POST">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700">Удалить</button>
