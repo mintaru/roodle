@@ -1,7 +1,6 @@
 <x-guest-layout>
     <div class="text-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Восстановление пароля</h2>
-        <p class="text-gray-600 dark:text-gray-400 text-sm mt-2">Забыли пароль? Не проблема.</p>
     </div>
 
     <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">

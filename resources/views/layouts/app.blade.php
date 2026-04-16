@@ -29,7 +29,6 @@
         </header>
     @endisset
 
-    @include('components.menu')
 
     <main>
         {{ $slot }}
