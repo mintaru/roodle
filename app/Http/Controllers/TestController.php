@@ -1084,6 +1084,8 @@ class TestController extends Controller
                 'questionIndex' => $questionIndex,
                 'totalQuestions' => $questions->count(),
                 'savedAnswers' => $savedAnswers,
+                'activeAttempt' => $activeAttempt,
+                'serverTime' => now()->timestamp,
             ]),
         ]);
     }
