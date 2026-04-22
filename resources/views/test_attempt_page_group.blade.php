@@ -2,6 +2,9 @@
 
 @section('head')
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="server-time" content="{{ $serverTime }}">
+    <meta name="test-start-time" content="{{ $activeAttempt->started_at->timestamp }}">
+    <meta name="test-id" content="{{ $test->id }}">
     <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.umd.min.js"></script>
     <style>
@@ -29,7 +32,12 @@
         <p class="text-center text-gray-600 mt-2 mb-8">
             Страница {{ $pageIndex }} из {{ $totalPages }}
         </p>
-
+        @if ($test->time_limit > 0)
+        <div class="text-center p-4 bg-yellow-100 rounded-lg border-2 border-yellow-400">
+            <div class="text-sm text-gray-700 mb-2">Время на тест:</div>
+            <div id="timer" class="text-3xl font-bold text-red-600">{{ floor($test->time_limit) }} :00</div>
+        </div>
+    @endif
         <form action="/tests/{{ $test->id }}/result" method="POST">
             @csrf
 
@@ -295,6 +303,77 @@
             });
         });
     });
+
+    @if ($test->time_limit > 0)
+                const testId = document.querySelector('meta[name="test-id"]')?.content;
+                const serverTimeMeta = parseInt(document.querySelector('meta[name="server-time"]')?.content || 0);
+                const testStartTimeMeta = parseInt(document.querySelector('meta[name="test-start-time"]')?.content || 0);
+                const clientTimeAtLoad = Date.now() / 1000; // в секундах
+                const timerElement = document.getElementById('timer');
+                const timeLimitSeconds = {{ $test->time_limit }} * 60;
+                let timerInterval;
+                let serverTimeOffset = 0; // смещение серверного времени
+
+                function updateTimer() {
+                    // Рассчитываем текущее серверное время на основе смещения
+                    const clientNow = Date.now() / 1000;
+                    const timeSinceLoad = clientNow - clientTimeAtLoad;
+                    const currentServerTime = serverTimeMeta + timeSinceLoad + serverTimeOffset;
+
+                    // Оставшееся время
+                    const elapsedSeconds = Math.round(currentServerTime - testStartTimeMeta);
+                    const timeLeftSeconds = Math.max(0, timeLimitSeconds - elapsedSeconds);
+
+                    const minutes = Math.floor(timeLeftSeconds / 60);
+                    const seconds = timeLeftSeconds % 60;
+
+                    timerElement.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+
+                    if (timeLeftSeconds <= 60) {
+                        timerElement.classList.add('animate-pulse');
+                    }
+
+                    if (timeLeftSeconds <= 0) {
+                        timerElement.textContent = '00:00';
+                        clearInterval(timerInterval);
+                        // Находим форму и отправляем её
+                        const form = document.querySelector('form[action*="/result"]');
+                        if (form) {
+                            form.submit();
+                        }
+                        return;
+                    }
+                }
+
+                // Периодическая синхронизация с сервером (каждые 30 секунд)
+                async function syncWithServer() {
+                    try {
+                        const response = await fetch(`/tests/${testId}/timer-sync`, {
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            // Корректируем смещение на основе актуального времени с сервера
+                            const clientNow = Date.now() / 1000;
+                            const timeSinceLoad = clientNow - clientTimeAtLoad;
+                            const calculatedServerTime = serverTimeMeta + timeSinceLoad;
+                            serverTimeOffset = data.server_time - calculatedServerTime;
+                        }
+                    } catch (error) {
+                        console.error('Error syncing timer with server:', error);
+                    }
+                }
+
+                updateTimer(); // сразу показать стартовое время
+                timerInterval = setInterval(updateTimer, 1000);
+                
+                // Синхронизируемся с сервером каждые 30 секунд
+                setInterval(syncWithServer, 30000);
+            @endif
 </script>
 @endsection
 

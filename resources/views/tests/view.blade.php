@@ -21,7 +21,10 @@
                 <p class="font-semibold">Всего попыток: {{ $isUnlimited ? '∞' : $maxAttemptsForUser }}</p>
                 <p>Использовано: {{ $userAttemptsCount }}</p>
                 <p>Осталось: {{ $remaining }}</p>
-
+                @if ($test->time_limit > 0)
+                <p>Минут на тест: {{ $test->time_limit }}</p>
+                    
+                @endif
                 @if ($hasActiveAttempt)
                     <div class="mt-4 p-4 bg-blue-100 border-l-4 border-blue-500 text-left">
                         <p class="text-blue-800 font-semibold">⏳ У вас есть активная попытка прохождения теста</p>

@@ -1063,6 +1063,8 @@ class TestController extends Controller
                     'totalPages' => $totalPages,
                     'savedAnswers' => $savedAnswers,
                     'globalIndexMap' => $globalIndexMap,
+                    'activeAttempt' => $activeAttempt,
+                    'serverTime' => now()->timestamp,
                 ]),
             ]);
         }
