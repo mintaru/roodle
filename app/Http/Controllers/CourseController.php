@@ -38,8 +38,6 @@ class CourseController extends Controller
                 $query->whereHas('author', function ($q) use ($searchValue) {
                     $q->where('name', 'like', '%'.$searchValue.'%');
                 });
-            } elseif ($searchColumn === 'description') {
-                $query->where('description', 'like', '%'.$searchValue.'%');
             }
         }
 
@@ -125,7 +123,6 @@ class CourseController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'required|string',
             'image_path' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'groups' => 'array',
             'period_start' => 'nullable|date',
@@ -243,7 +240,6 @@ class CourseController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'required|string',
             'instructor' => 'nullable|string|max:255',
             'image_path' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'groups' => 'array',

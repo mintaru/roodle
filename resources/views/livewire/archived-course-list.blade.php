@@ -68,9 +68,6 @@
                     {{ $course->title }}
                 </h2>
                 <p class="text-gray-600 flex-grow">
-                    {{ Str::limit($course->description, 120) }}
-                </p>
-                <p class="text-gray-600 flex-grow">
                     Доступен с {{ $course->formattedPeriodStartForUser(auth()->user()) ?? '—' }}
                 </p>
                 <p class="text-gray-600 flex-grow">

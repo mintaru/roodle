@@ -17,10 +17,10 @@ class ArchivedCourseList extends Component
         $courses = Course::with('groups', 'author');
 
         if ($user->hasRole('admin')) {
-            $courses->archived();
+            $courses = $courses->archived();
 
         } elseif ($user->hasRole('teacher')) {
-            $courses->archived()->where('user_id', $user->id);
+            $courses = $courses->archived()->where('user_id', $user->id);
 
         } else {
             //НЕЛЬЗЯ ШКОЛЬНИКАМ!!
@@ -28,7 +28,7 @@ class ArchivedCourseList extends Component
 
         // 🔍 Поиск
         if ($this->search) {
-            $courses->where(function ($query) {
+            $courses = $courses->where(function ($query) {
                 $query->where('title', 'like', '%' . $this->search . '%')
                       ->orWhere('description', 'like', '%' . $this->search . '%');
             });
