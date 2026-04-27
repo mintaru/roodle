@@ -39,12 +39,6 @@
         </div>
 
         <div>
-            <label class="block font-medium">Описание *</label>
-            <textarea name="description" rows="4"
-                      class="w-full border rounded p-2">{{ old('description') }}</textarea>
-        </div>
-
-        <div>
             <label class="block font-medium">Изображение</label>
             <input type="file" name="image_path" class="w-full">
         </div>

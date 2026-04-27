@@ -37,12 +37,6 @@
             </div>
 
             <div>
-                <label class="block font-medium">Описание *</label>
-                <textarea name="description" rows="4" class="w-full border rounded p-2">{{ old('description', $course->description) }}</textarea>
-            </div>
-
-
-            <div>
                 <label class="block font-medium">Текущее изображение</label>
                 @if ($course->image_path)
                     <img src="{{ asset('storage/' . $course->image_path) }}" alt=""

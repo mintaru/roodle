@@ -1,128 +1,143 @@
-<div class="py-10 px-6">
-    <div class="flex justify-between items-center mb-10">
-        <h1 class="text-3xl font-bold">Наши курсы</h1>
-        @if(auth()->user()->hasRole('teacher'))
-            <a href="{{ route('courses.create') }}" class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-semibold">
-                ➕ Создать курс
+<div class="layout" x-data="{}">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <p class="sidebar-section-title">Главное</p>
+
+    <a class="sidebar-link" href="#" onclick="window.location.href='/'; return false;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Недавние курсы
+    </a>
+    <a class="sidebar-link active" href="{{ route('home') }}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      Все курсы
+    </a>
+
+
+    <a class="sidebar-link" href="#">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Оценки
+    </a>
+
+    <a class="sidebar-link" href="/profile-edit">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Профиль
+    </a>
+    <a class="sidebar-link" href="#">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Настройки
+    </a>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="courses-header">
+      <div>
+        <h1 class="section-title">Наши курсы</h1>
+      </div>
+      @if(auth()->user()->hasRole('teacher'))
+        <a href="{{ route('courses.create') }}" class="btn btn-primary">
+          ➕ Создать курс
+        </a>
+      @endif
+    </div>
+
+    <div class="courses-search">
+      <h2 class="section-subtitle">Поиск</h2>
+      <div class="search-input-wrapper">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" wire:model.live.debounce-300ms="search" placeholder="Введите название курса..." class="search-input">
+      </div>
+    </div>
+
+    <div class="courses-grid">
+      @forelse($courses as $course)
+        @php
+          $canEdit = auth()->user()->hasRole('admin') || 
+                     $course->user_id === auth()->id() || 
+                     $course->teacherPermissions()
+                         ->where('user_id', auth()->id())
+                         ->where('can_edit', true)
+                         ->exists();
+          
+          $canDelete = auth()->user()->hasRole('admin') || 
+                      $course->user_id === auth()->id() || 
+                      $course->teacherPermissions()
+                          ->where('user_id', auth()->id())
+                          ->where('can_delete', true)
+                          ->exists();
+        @endphp
+
+        <div class="course-card" x-data="{ open: false }">
+          @if(auth()->user()->hasRole('admin') || $course->user_id === auth()->id())
+            <button @click="open = !open" class="course-card-menu-btn" title="Меню">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="5" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="12" cy="19" r="2" />
+              </svg>
+            </button>
+
+            <div x-show="open" @click.away="open = false" x-transition class="course-card-menu">
+              <form action="{{ route('courses.archive', $course) }}" method="POST" style="display: inline;">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="course-card-menu-item">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  Архивировать
+                </button>
+              </form>
+            </div>
+          @endif
+
+          @if ($course->image_path)
+            <img src="{{ asset('storage/' . $course->image_path) }}" alt="{{ $course->title }}" class="course-card__image">
+          @else
+            <div class="course-card__image course-card__image--placeholder" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+          @endif
+
+          <div class="course-card__body">
+            <h2 class="course-card__title">{{ $course->title }}</h2>
+            
+
+
+            <div class="course-card__actions">
+              <a href="{{ route('courses.show', $course) }}" class="btn btn-primary btn-block">
+                Перейти в курс
+              </a>
+              
+              @if($canEdit)
+                <a href="{{ route('courses.edit', $course) }}" class="btn btn-secondary" title="Редактировать">
+                  ✏️
+                </a>
+              @endif
+              
+              @if($canDelete)
+                <form action="{{ route('courses.destroy', $course) }}" method="POST" style="display: inline;">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="btn btn-danger" title="Удалить" onclick="return confirm('Вы уверены, что хотите удалить этот курс?')">
+                    🗑️
+                  </button>
+                </form>
+              @endif
+            </div>
+          </div>
+        </div>
+      @empty
+        <div class="courses-empty">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          <p>Курсов пока нет</p>
+          @if(auth()->user()->hasRole('teacher'))
+            <a href="{{ route('courses.create') }}" class="btn btn-primary" style="margin-top: 16px;">
+              Создать первый курс
             </a>
-        @endif
+          @endif
+        </div>
+      @endforelse
     </div>
-
-    <div class="p-6">
-        <h1 class="text-xl font-bold mb-3">Поиск</h1>
-        <input type="text" wire:model.live="search" placeholder="Введите текст..." class="border rounded p-2">
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-        @if (auth()->check())
-            {{-- <div class="p-4 bg-gray-100 rounded mb-4">
-        <strong>Ваши группы:</strong>
-        @forelse(auth()->user()->groups as $group)
-            <span class="inline-block bg-blue-200 text-blue-800 px-2 py-1 rounded mr-2">
-                {{ $group->name }}
-            </span>
-        @empty
-            <span class="text-gray-500">Вы пока не в группе</span>
-        @endforelse
-    </div> --}}
-        @endif
-
-        @forelse($courses as $course)
-            @php
-                // Проверяем права редактирования
-                $canEdit = auth()->user()->hasRole('admin') || 
-                           $course->user_id === auth()->id() || 
-                           $course->teacherPermissions()
-                               ->where('user_id', auth()->id())
-                               ->where('can_edit', true)
-                               ->exists();
-                
-                $canDelete = auth()->user()->hasRole('admin') || 
-                            $course->user_id === auth()->id() || 
-                            $course->teacherPermissions()
-                                ->where('user_id', auth()->id())
-                                ->where('can_delete', true)
-                                ->exists();
-            @endphp
-            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition p-6 flex flex-col relative"
-                x-data="{ open: false }">
-
-                @if(auth()->user()->hasRole('admin') || $course->user_id === auth()->id())
-                    <button @click="open = !open"
-                        class="mt-4 inline-block text-center absolute top-4 right-4 hover:bg-gray-100 p-2 rounded">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                            <circle cx="12" cy="5" r="2" />
-                            <circle cx="12" cy="12" r="2" />
-                            <circle cx="12" cy="19" r="2" />
-                        </svg>
-                    </button>
-
-                    <div x-show="open" @click.away="open = false" x-transition x-cloak
-                        class="absolute right-0 top-10 z-30 bg-white border rounded-lg shadow-lg w-44">
-                        <form action="{{ route('courses.archive', $course) }}" method="POST">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit"
-                                class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100">
-                                Архивировать
-                            </button>
-                        </form>
-                    </div>
-                @endif
-
-                @if ($course->image_path)
-                    <img src="{{ asset('storage/' . $course->image_path) }}" alt="{{ $course->title }}"
-                        class="w-full h-48 object-cover rounded-lg mb-4">
-                @endif
-                
-                <h2 class="text-2xl font-semibold mb-3 text-gray-800">
-                    {{ $course->title }}
-                </h2>
-                <p class="text-gray-600 flex-grow">
-                    {{ Str::limit($course->description, 120) }}
-                </p>
-                <p class="text-gray-600 flex-grow">
-                    Доступен с {{ $course->formattedPeriodStartForUser(auth()->user()) ?? '—' }}
-                </p>
-                <p class="text-gray-600 flex-grow">
-                    Доступен до {{ $course->formattedPeriodEndForUser(auth()->user()) ?? '—' }}
-                </p>
-
-                <div class="flex gap-2 mt-4">
-                    <a href="{{ route('courses.show', $course) }}"
-                        class="flex-1 inline-block text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition">
-                        Перейти
-                    </a>
-                    
-                    @if($canEdit)
-                        <a href="{{ route('courses.edit', $course) }}" 
-                            class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 font-medium">
-                            ✏️
-                        </a>
-                    @endif
-                    
-                    @if($canDelete)
-                        <form action="{{ route('courses.destroy', $course) }}" method="POST" style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-medium" 
-                                onclick="return confirm('Вы уверены?')">
-                                🗑️
-                            </button>
-                        </form>
-                    @endif
-                </div>
-            </div>
-        @empty
-            <div class="col-span-full text-center text-gray-500 py-8">
-                <p class="text-lg">Курсов пока нет 🙁</p>
-                @if(auth()->user()->hasRole('teacher'))
-                    <a href="{{ route('courses.create') }}" class="mt-4 inline-block px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700">
-                        Создать первый курс
-                    </a>
-                @endif
-            </div>
-        @endforelse
-    </div>
+  </main>
 </div>

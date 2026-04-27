@@ -17,11 +17,11 @@ class CourseList extends Component
         $courses = Course::with('groups', 'author');
 
         if ($user->hasRole('admin')) {
-            $courses->active();
+            $courses = $courses->active();
 
         } elseif ($user->hasRole('teacher')) {
             // Учитель видит свои курсы + курсы с правами доступа
-            $courses->active()->where(function ($q) use ($user) {
+            $courses = $courses->active()->where(function ($q) use ($user) {
                 // Свои курсы (где user_id = текущий пользователь)
                 $q->where('user_id', $user->id)
                     // ИЛИ курсы, к которым есть права доступа
@@ -33,7 +33,7 @@ class CourseList extends Component
         } else {
             $groupIds = $user->groups->pluck('id');
 
-            $courses
+            $courses = $courses
                 ->active()
                 ->whereHas('groups', function ($q) use ($groupIds) {
                     $q->whereIn('groups.id', $groupIds);
@@ -42,13 +42,12 @@ class CourseList extends Component
 
         // 🔍 Поиск
         if ($this->search) {
-            $courses->where(function ($query) {
-                $query->where('title', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%');
+            $courses = $courses->where(function ($query) {
+                $query->where('title', 'like', '%' . $this->search . '%');
             });
         }
 
-        $courses = $courses->with('groups')->latest()->get();
+        $courses = $courses->latest()->get();
 
         // Для студентов фильтруем по isAvailable (учитывает периоды по группам)
         if (! $user->hasRole('admin') && ! $user->hasRole('teacher')) {

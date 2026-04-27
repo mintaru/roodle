@@ -52,7 +52,9 @@ Route::get('/courses/archived', [CourseController::class, 'archived'])->name('co
 Route::get('/courses/create', [CourseController::class, 'create'])->middleware('auth')->name('courses.create');
 Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
 
-
+Route::get('/newview', function () {
+    return view('newview');
+})->name('newview');
 // Маршрут для настройки базы данных
 
 // --- Маршруты для управления тестами (используя TestController) ---

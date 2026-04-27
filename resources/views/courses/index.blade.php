@@ -77,7 +77,6 @@
                     
                     <div class="p-4">
                         <h3 class="text-lg font-bold text-gray-800 mb-2">{{ $course->title }}</h3>
-                        <p class="text-sm text-gray-600 mb-3">{{ Str::limit($course->description, 100) }}</p>
                         <p class="text-xs text-gray-500 mb-4">Автор: <strong>{{ $course->author->name ?? 'Неизвестен' }}</strong></p>
                         
                         <div class="flex gap-2 flex-wrap">
