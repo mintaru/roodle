@@ -226,9 +226,7 @@
   }
 
   .btn-primary:hover {
-    background: var(--teal-600);
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(0,181,165,.35);
   }
 
   .btn-ghost {
@@ -480,12 +478,11 @@
     color: inherit;
     display: flex;
     flex-direction: column;
+    position: relative;
   }
 
   .course-card:hover {
-    box-shadow: var(--shadow-lg);
     transform: translateY(-3px);
-    border-color: var(--teal-200);
   }
 
   .course-card__cover {
@@ -1357,3 +1354,5 @@
       gap: 0.5rem;
     }
   }
+
+

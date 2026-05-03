@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мои курсы - Roodle</title>
+    <title>Курсы - Roodle</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
@@ -21,6 +21,6 @@
 
     <!-- SCRIPTS -->
     @livewireScripts
-
+    
 </body>
 </html>

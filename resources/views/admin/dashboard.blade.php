@@ -4,73 +4,181 @@
 <head>
     <meta charset="UTF-8">
     <title>Админ-панель</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    @livewireStyles
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        .admin-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .admin-header {
+            margin-bottom: 3rem;
+        }
+
+        .admin-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-header p {
+            font-size: 1rem;
+            color: var(--color-text-secondary);
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .admin-card {
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--r-lg);
+            text-decoration: none;
+            color: inherit;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, currentColor, currentColor);
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+
+        .admin-card:hover {
+            border-color: var(--color-border-2);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .admin-card.accent {
+            color: var(--teal-500);
+        }
+
+        .admin-card.accent:hover::before {
+            opacity: 1;
+        }
+
+        .admin-card.sky {
+            color: var(--sky-500);
+        }
+
+        .admin-card.sky:hover::before {
+            opacity: 1;
+        }
+
+        .admin-card.green {
+            color: var(--green-500);
+        }
+
+        .admin-card.green:hover::before {
+            opacity: 1;
+        }
+
+        .admin-card.red {
+            color: var(--red-500);
+        }
+
+        .admin-card.red:hover::before {
+            opacity: 1;
+        }
+
+        .admin-card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--color-text-primary);
+        }
+
+        .admin-card-description {
+            font-size: 0.875rem;
+            color: var(--color-text-secondary);
+            flex-grow: 1;
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100 p-8">
+<body>
+    @include('components.menu')
+    
+    <div class="admin-container">
 
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded shadow">
-        <div class="mb-4">
-            <x-back-button :url="route('home')" text="К курсам" />
+        
+        <div class="admin-header">
+            <h1>Админ-панель</h1>
+            <p>Добро пожаловать, <span style="font-weight: 600;">{{ auth()->user()->name }}</span>!</p>
         </div>
-        <h1 class="text-3xl font-bold mb-2 text-gray-800">Админ-панель</h1>
-        <p class="text-gray-600 mb-8">Добро пожаловать, <span class="font-semibold">{{ auth()->user()->name }}</span>!</p>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <a href="{{ route('admin.courses.index') }}"
-                class="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
-                <h2 class="text-lg font-bold mb-2">📚 Список курсов</h2>
-                <p class="text-sm opacity-90">Управляйте всеми курсами платформы</p>
+        <div class="admin-grid">
+            <a href="{{ route('admin.courses.index') }}" class="admin-card accent">
+                <h2 class="admin-card-title">📚 Список курсов</h2>
+                <p class="admin-card-description">Управляйте всеми курсами платформы</p>
             </a>
 
-            <a href="{{ route('admin.lectures.index') }}"
-                class="p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
-                <h2 class="text-lg font-bold mb-2">📖 Список лекций</h2>
-                <p class="text-sm opacity-90">Управляйте всеми лекциями</p>
+            <a href="{{ route('admin.lectures.index') }}" class="admin-card sky">
+                <h2 class="admin-card-title">📖 Список лекций</h2>
+                <p class="admin-card-description">Управляйте всеми лекциями</p>
             </a>
 
-            <a href="{{ route('admin.tests.index') }}"
-                class="p-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
-                <h2 class="text-lg font-bold mb-2">📝 Список тестов</h2>
-                <p class="text-sm opacity-90">Управляйте всеми тестами</p>
+            <a href="{{ route('admin.tests.index') }}" class="admin-card green">
+                <h2 class="admin-card-title">📝 Список тестов</h2>
+                <p class="admin-card-description">Управляйте всеми тестами</p>
             </a>
 
-            <a href="{{ route('admin.question-bank.index') }}"
-                class="p-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
-                <h2 class="text-lg font-bold mb-2">❓ Банк вопросов</h2>
-                <p class="text-sm opacity-90">Управляйте всеми вопросами</p>
+            <a href="{{ route('admin.question-bank.index') }}" class="admin-card accent">
+                <h2 class="admin-card-title">❓ Банк вопросов</h2>
+                <p class="admin-card-description">Управляйте всеми вопросами</p>
             </a>
 
-            <a href="{{ route('admin.groups.index') }}"
-                class="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
-                <h2 class="text-lg font-bold mb-2">👥 Список групп</h2>
-                <p class="text-sm opacity-90">Управляйте группами обучающихся</p>
+            <a href="{{ route('admin.groups.index') }}" class="admin-card sky">
+                <h2 class="admin-card-title">👥 Список групп</h2>
+                <p class="admin-card-description">Управляйте группами обучающихся</p>
             </a>
 
-            <a href="{{ route('admin.users.index') }}"
-                class="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
-                <h2 class="text-lg font-bold mb-2">👤 Список пользователей</h2>
-                <p class="text-sm opacity-90">Управляйте всеми пользователями</p>
+            <a href="{{ route('admin.users.index') }}" class="admin-card accent">
+                <h2 class="admin-card-title">👤 Список пользователей</h2>
+                <p class="admin-card-description">Управляйте всеми пользователями</p>
             </a>
 
-            <a href="{{ route('courses.archived') }}"
-                class="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
-                <h2 class="text-lg font-bold mb-2">Архивированные курсы</h2>
+            <a href="{{ route('courses.archived') }}" class="admin-card sky">
+                <h2 class="admin-card-title">📦 Архивированные курсы</h2>
+                <p class="admin-card-description">Просмотрите архивированные курсы</p>
             </a>
 
-            <a href="{{ route('admin.reports.index') }}"
-                class="p-6 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
-                <h2 class="text-lg font-bold mb-2">📊 Отчёты</h2>
-                <p class="text-sm opacity-90">Просмотрите различные статистические отчёты</p>
+            <a href="{{ route('admin.reports.index') }}" class="admin-card red">
+                <h2 class="admin-card-title">📊 Отчёты</h2>
+                <p class="admin-card-description">Просмотрите различные статистические отчёты</p>
             </a>
 
-            <a href="{{ route('admin.teacher-permissions.index') }}"
-                class="p-6 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-lg shadow hover:shadow-lg transform hover:scale-105 transition">
-                <h2 class="text-lg font-bold mb-2">🔐 Права учителей</h2>
-                <p class="text-sm opacity-90">Управляйте доступом учителей к курсам</p>
+            <a href="{{ route('admin.teacher-permissions.index') }}" class="admin-card accent">
+                <h2 class="admin-card-title">🔐 Права учителей</h2>
+                <p class="admin-card-description">Управляйте доступом учителей к курсам</p>
             </a>
+        </div>
     </div>
 
+    @livewireScripts
 </body>
 
 </html>

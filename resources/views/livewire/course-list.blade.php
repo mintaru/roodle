@@ -51,27 +51,27 @@
       </div>
     </div>
 
-    <div class="courses-grid">
+    <div class="courses-grid" x-data="{ openMenuId: null }">
       @forelse($courses as $course)
         @php
-          $canEdit = auth()->user()->hasRole('admin') || 
-                     $course->user_id === auth()->id() || 
+          $canEdit = auth()->user()->hasRole('admin') ||
+                     $course->user_id === auth()->id() ||
                      $course->teacherPermissions()
                          ->where('user_id', auth()->id())
                          ->where('can_edit', true)
                          ->exists();
-          
-          $canDelete = auth()->user()->hasRole('admin') || 
-                      $course->user_id === auth()->id() || 
+
+          $canDelete = auth()->user()->hasRole('admin') ||
+                      $course->user_id === auth()->id() ||
                       $course->teacherPermissions()
                           ->where('user_id', auth()->id())
                           ->where('can_delete', true)
                           ->exists();
         @endphp
 
-        <div class="course-card" x-data="{ open: false }">
+        <div class="course-card" @click="window.location.href = '{{ route('courses.show', $course) }}';" style="cursor: pointer;">
           @if(auth()->user()->hasRole('admin') || $course->user_id === auth()->id())
-            <button @click="open = !open" class="course-card-menu-btn" title="Меню">
+            <button @click.stop="openMenuId = openMenuId === {{ $course->id }} ? null : {{ $course->id }}" class="course-card-menu-btn" title="Меню">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="12" cy="5" r="2" />
                 <circle cx="12" cy="12" r="2" />
@@ -79,13 +79,22 @@
               </svg>
             </button>
 
-            <div x-show="open" @click.away="open = false" x-transition class="course-card-menu">
+            <div x-show="openMenuId === {{ $course->id }}" @click.away="openMenuId = null" x-transition class="course-card-menu" style="display:none">
               <form action="{{ route('courses.archive', $course) }}" method="POST" style="display: inline;">
                 @csrf
                 @method('PATCH')
-                <button type="submit" class="course-card-menu-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <button type="submit" class="btn course-card-menu-item">
                   Архивировать
+                </button>
+              </form>
+              <a href="{{ route('courses.edit', $course) }}" @click.stop class="btn course-card-menu-item" title="Редактировать">
+                Редактировать
+              </a>
+              <form action="{{ route('courses.destroy', $course) }}" method="POST" style="display: inline;" @click.stop>
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn course-card-menu-item" title="Удалить" onclick="return confirm('Вы уверены, что хотите удалить этот курс?')">
+                  Удалить
                 </button>
               </form>
             </div>
@@ -99,30 +108,6 @@
 
           <div class="course-card__body">
             <h2 class="course-card__title">{{ $course->title }}</h2>
-            
-
-
-            <div class="course-card__actions">
-              <a href="{{ route('courses.show', $course) }}" class="btn btn-primary btn-block">
-                Перейти в курс
-              </a>
-              
-              @if($canEdit)
-                <a href="{{ route('courses.edit', $course) }}" class="btn btn-secondary" title="Редактировать">
-                  ✏️
-                </a>
-              @endif
-              
-              @if($canDelete)
-                <form action="{{ route('courses.destroy', $course) }}" method="POST" style="display: inline;">
-                  @csrf
-                  @method('DELETE')
-                  <button type="submit" class="btn btn-danger" title="Удалить" onclick="return confirm('Вы уверены, что хотите удалить этот курс?')">
-                    🗑️
-                  </button>
-                </form>
-              @endif
-            </div>
           </div>
         </div>
       @empty

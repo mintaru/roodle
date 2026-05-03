@@ -13,37 +13,14 @@ class CourseController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-    {
+    {   
         $user = Auth::user();
-
-        // Для главной страницы студентам и учителям показываем Livewire компонент
-        if (! $user->hasRole('admin')) {
+        if ($user->hasRole('admin')) {
+            return view('admin.courses.index');
+        }
+        else {
             return view('courses');
         }
-
-        // Search parameters
-        $searchColumn = $request->input('search_column', 'title');
-        $searchValue = $request->input('search_value', '');
-
-        // Админ видит все курсы
-        $query = Course::with('groups', 'author');
-
-        // Apply search filter
-        if ($searchValue) {
-            if ($searchColumn === 'title') {
-                $query->where('title', 'like', '%'.$searchValue.'%');
-            } elseif ($searchColumn === 'id') {
-                $query->where('id', 'like', '%'.$searchValue.'%');
-            } elseif ($searchColumn === 'author') {
-                $query->whereHas('author', function ($q) use ($searchValue) {
-                    $q->where('name', 'like', '%'.$searchValue.'%');
-                });
-            }
-        }
-
-        $courses = $query->get();
-
-        return view('courses.index', compact('courses', 'searchColumn', 'searchValue'));
     }
 
     /**
