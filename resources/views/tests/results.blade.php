@@ -236,7 +236,12 @@
             overflow: visible !important;
         }
     </style>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
+        <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+        <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
 </head>
 <body>
 @include('components.menu')
@@ -326,7 +331,7 @@
                                     <strong>Все попытки:</strong>
                                     @foreach($data['completed_attempts'] as $attempt)
                                         <div class="result-item {{ $attempt->score >= 70 ? 'correct' : 'incorrect' }}">
-                                            Попытка {{ $attempt->attempt_number }}: 
+                                            Попытка {{ $attempt->attempt_number }}:
                                             <strong>{{ $attempt->score }}%</strong>
                                             <br>
                                             <small>{{ $attempt->ended_at->format('d.m.Y H:i') }}</small>
@@ -352,20 +357,20 @@
                                 style="position: absolute; right: 0; z-index: 50; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); min-width: 300px; white-space: nowrap;">
                                 <div style="padding: 20px;">
                                     <h3 style="margin-bottom: 15px; color: #2c3e50; font-size: 14px; font-weight: 600;">Выдать дополнительные попытки</h3>
-                                    
+
                                     @if(session('success'))
                                         <div style="padding: 10px; margin-bottom: 15px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724; font-size: 12px;">
                                             {{ session('success') }}
                                         </div>
                                     @endif
-                            
+
                                     <form action="{{ route('test-attempts.grant-attempts', ['test' => $test, 'user' => $data['user']]) }}" method="POST">
                                         @csrf
                                         <div style="margin-bottom: 15px;">
                                             <label for="extra_attempts_{{ $loop->index }}" style="display: block; margin-bottom: 5px; font-size: 13px; color: #333; font-weight: 500;">
                                                 Количество попыток
                                             </label>
-                                            <input type="number" id="extra_attempts_{{ $loop->index }}" name="extra_attempts" value="1" min="1" max="100" 
+                                            <input type="number" id="extra_attempts_{{ $loop->index }}" name="extra_attempts" value="1" min="1" max="100"
                                                    style="width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 4px; font-size: 13px;">
                                             @error('extra_attempts')
                                                 <div style="color: #e74c3c; font-size: 11px; margin-top: 4px;">{{ $message }}</div>
