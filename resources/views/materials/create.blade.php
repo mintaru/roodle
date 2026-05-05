@@ -49,7 +49,6 @@
 
         {{-- Page header --}}
         <div class="page-header">
-            <p class="page-header__greeting">Загрузка файла</p>
             <h1 class="page-header__title">Добавить материал</h1>
         </div>
 
