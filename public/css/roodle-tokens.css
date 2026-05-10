@@ -1086,7 +1086,7 @@
   }
 
   .search-input {
-    width: 100%;
+    width: 32%;
     padding: 10px 14px 10px 36px;
     border: 1px solid var(--color-border);
     border-radius: var(--r-lg);
@@ -1243,6 +1243,13 @@
   /* PROFILE MENU */
   .profile-menu {
     position: relative;
+    z-index: 101;
+
+  }
+
+  .profile-menu {
+    position: relative;
+    z-index: 101;
   }
 
   .profile-btn {
@@ -1255,10 +1262,14 @@
     justify-content: center;
     color: var(--color-text-secondary);
     transition: var(--transition);
+    z-index: 101;
+
   }
 
   .profile-btn:hover {
     color: var(--gray-800);
+    z-index: 101;
+
   }
 
   .profile-dropdown {
@@ -1271,7 +1282,7 @@
     border-radius: var(--r-md);
     box-shadow: var(--shadow-md);
     min-width: 180px;
-    z-index: 1000;
+    z-index: 1001;
   }
 
   .profile-dropdown-item {
@@ -1288,16 +1299,22 @@
     width: 100%;
     text-align: left;
     transition: var(--transition);
+    z-index: 101;
+
   }
 
   .profile-dropdown-item:hover {
     background: var(--gray-100);
     color: var(--gray-800);
+    z-index: 101;
+
   }
 
   .profile-dropdown-item svg {
     flex-shrink: 0;
     opacity: 0.7;
+    z-index: 101;
+
   }
 
   /* RESPONSIVE */

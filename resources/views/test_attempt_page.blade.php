@@ -57,13 +57,13 @@
                                 'text' => $data['text'],
                             ];
                         }
-                        
+
                         foreach ($dropdownsByBlank as $blankId => $options) {
                             $savedValue = '';
                             if (isset($savedAnswers[$question->id]) && is_array($savedAnswers[$question->id])) {
                                 $savedValue = $savedAnswers[$question->id][$blankId] ?? '';
                             }
-                            
+
                             $selectHTML = '<select class="fill-in-dropdown-select-inline" data-question-id="' . $question->id . '" data-blank-id="' . $blankId . '" style="display: inline-block; padding: 4px 8px; margin: 0 4px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">';
                             $selectHTML .= '<option value="">--</option>';
                             foreach ($options as $option) {
@@ -71,7 +71,7 @@
                                 $selectHTML .= '<option value="' . $option['id'] . '" ' . $selectedAttr . '>' . htmlspecialchars($option['text'], ENT_QUOTES, 'UTF-8') . '</option>';
                             }
                             $selectHTML .= '</select>';
-                            
+
                             $questionDisplay = str_replace('{' . $blankId . '}', $selectHTML, $questionDisplay);
                         }
                     }
@@ -274,7 +274,7 @@
             select.addEventListener('change', async function() {
                 try {
                     const questionId = this.dataset.questionId;
-                    
+
                     // Собираем все выбранные ответы для всех пропусков в этом вопросе
                     const filledAnswers = {};
                     document.querySelectorAll(`.fill-in-dropdown-select-inline[data-question-id="${questionId}"]`).forEach(sel => {
@@ -374,7 +374,7 @@
 
                 updateTimer(); // сразу показать стартовое время
                 timerInterval = setInterval(updateTimer, 1000);
-                
+
                 // Синхронизируемся с сервером каждые 30 секунд
                 setInterval(syncWithServer, 30000);
             @endif

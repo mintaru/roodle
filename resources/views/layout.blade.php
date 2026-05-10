@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Система Тестирования</title>
+    <title>Прохождение теста</title>
+    <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     @yield('head')
     <style>
@@ -26,9 +31,11 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-gray-100">
-    <div class="p-4 sm:p-6 md:p-8">
+<body>
+    <div>
         @if(isset($content))
+        @include("components.menu")
+
             {!! $content !!}
         @else
             @yield('content')

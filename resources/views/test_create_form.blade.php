@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Создание нового теста</title>
     {{-- Меню: ПРАВИЛЬНОЕ МЕСТО (сразу после открытия <body>) --}}
-    @include('components.menu')
     <!-- Подключение CSS -->
     <link rel="stylesheet" href="{{ asset('css/test-create-form.css') }}">
 </head>
@@ -22,11 +21,7 @@
                 <label for="title" class="block text-gray-700 font-semibold mb-2">Название теста</label>
                 <input type="text" id="title" name="title" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
             </div>
-            
-            <div class="mb-4">
-                <label for="description" class="block text-gray-700 font-semibold mb-2">Описание</label>
-                <textarea id="description" name="description" rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-            </div>
+
 
 
             <div class="mb-6">
@@ -42,15 +37,18 @@
 
             <div class="mb-4">
                 <label class="block text-gray-700 font-semibold mb-2">Порядок вопросов</label>
-                <label class="inline-flex items-center">
-                    <input type="checkbox" name="randomize_questions" value="1" class="mr-2">
-                    Случайно перемешивать вопросы для студента
-                </label>
+
+                <div id="randomize_questions_block">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="randomize_questions" value="1" class="mr-2">
+                        Случайно перемешивать вопросы для студента
+                    </label>
+                </div>
             </div>
 
             <div class="mb-4">
                 <label class="block text-gray-700 font-semibold mb-2">Режим отображения вопросов</label>
-                <select name="display_mode" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="display_mode" name="display_mode" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="single_page">Все вопросы на одной странице</option>
                     <option value="per_question">Каждый вопрос на отдельной странице (с навигацией)</option>
                     <option value="paged">Несколько вопросов на странице (по страницам)</option>
@@ -59,14 +57,16 @@
             <div class="form-group">
                 <label for="time_limit">Ограничение по времени (минуты, 0 = без ограничения)</label>
                 <input type="number" name="time_limit" id="time_limit" value="{{ old('time_limit', $test->time_limit ?? 0) }}" min="0" class="form-control">
-            </div>   
-            
+            </div>
+
             <div>
                 <label class="block font-medium">Доступен с:</label>
-                <input type="datetime-local" name="period_start"
-                       class="w-full border rounded p-2">
+                <input type="datetime-local"
+                name="period_start"
+                value="{{ now()->format('Y-m-d\TH:i') }}"
+                class="w-full border rounded p-2">
             </div>
-    
+
             <div>
                 <label class="block font-medium">Доступен до:</label>
                 <input type="datetime-local" name="period_end"
@@ -75,7 +75,7 @@
             <script>
                 const checkbox = document.getElementById('unlimited_attempts');
                 const numberInput = document.getElementById('max_attempts');
-            
+
                 checkbox.addEventListener('change', function() {
                     if (this.checked) {
                         numberInput.disabled = true;
@@ -92,5 +92,24 @@
         </form>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const displayMode = document.getElementById('display_mode');
+        const randomizeBlock = document.getElementById('randomize_questions_block');
+        const randomizeCheckbox = randomizeBlock.querySelector('input[type="checkbox"]');
+
+        function toggleRandomize() {
+            if (displayMode.value === 'paged') {
+                randomizeBlock.style.display = 'none';
+                randomizeCheckbox.checked = false;
+            } else {
+                randomizeBlock.style.display = '';
+            }
+        }
+
+        displayMode.addEventListener('change', toggleRandomize);
+        toggleRandomize();
+    });
+    </script>
 </body>
 </html>

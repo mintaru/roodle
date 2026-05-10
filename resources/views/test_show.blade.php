@@ -523,7 +523,6 @@
     </style>
 </head>
 <body>
-    @include('components.menu')
     <header class="header">
         <div class="header__inner">
             <a href="/" class="logo">

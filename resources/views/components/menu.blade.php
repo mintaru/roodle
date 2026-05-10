@@ -6,10 +6,15 @@
     </a>
 
     <nav class="header__nav">
+        <a class="sidebar-link" href="{{ route('home') }}">
+            Все курсы
+          </a>
       @role('admin')
         <a class="nav-link" href="{{ route('admin.dashboard') }}" id="nav-admin" style="color: #e74c3c;">Админ-панель</a>
       @endrole
+
     </nav>
+
 
     <div class="header__actions">
 
