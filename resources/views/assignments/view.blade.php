@@ -165,7 +165,7 @@
         <div class="assignment-section">
             <h3>Информация</h3>
             <p>
-                <strong>Срок сдачи:</strong> 
+                <strong>Срок сдачи:</strong>
                 {{ $assignment->due_date->format('d.m.Y H:i') }}
                 @if($assignment->isOverdue())
                     <strong style="color: #dc3545;">(Сроки истекли)</strong>
@@ -212,7 +212,6 @@
                                     <tr>
                                         <td style="padding: 10px; border: 1px solid #ddd;">
                                             <strong>{{ $submission->user->name }}</strong><br>
-                                            <small>{{ $submission->user->email }}</small>
                                         </td>
                                         <td style="padding: 10px; border: 1px solid #ddd;">
                                             @if($submission->submitted_at)

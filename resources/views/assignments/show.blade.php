@@ -149,7 +149,6 @@
                     <tr>
                         <td>
                             <strong>{{ $submission->user->name }}</strong><br>
-                            <small>{{ $submission->user->email }}</small>
                         </td>
                         <td>
                             @if($submission->submitted_at)
@@ -175,7 +174,7 @@
                     <tr id="submission-details-{{ $submission->id }}" style="display: none;">
                         <td colspan="4" class="submission-details">
                             <h4>Ответ от {{ $submission->user->name }}</h4>
-                            
+
                             @if($submission->answer_text)
                                 <div style="background-color: white; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
                                     <strong>Текст ответа:</strong><br>

@@ -885,7 +885,7 @@
                         <div class="question-card__header">
                             <div class="question-badge">{{ $i + 1 }}</div>
                             <p class="question-text">{!! $questionDisplay !!}</p>
-                            <button type="button" class="nav-btn" id="clearCurrentBtn" title="Очистить ответ на текущий вопрос">
+                            <button type="button" class="nav-btn clearCurrentBtn" title="Очистить ответ на текущий вопрос">
                                 <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
@@ -1292,37 +1292,51 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('trix-attachment-add', e => { if (e.attachment) e.attachment.remove(); });
 
     // ── Clear current answer ──
-    document.getElementById('clearCurrentBtn').addEventListener('click', function () {
-        const currentCard = cards[currentQ];
-        const questionId = currentCard.querySelector('.answer-input, .text-answer-input, .rich-text-answer-input, .fill-in-dropdown-select-inline')?.dataset.questionId;
+    document.querySelectorAll('.clearCurrentBtn').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const currentCard = cards[currentQ];
+            const questionId = currentCard.querySelector('.answer-input, .text-answer-input, .rich-text-answer-input, .fill-in-dropdown-select-inline')?.dataset.questionId;
 
-        // Clear radio buttons and checkboxes for current question
-        currentCard.querySelectorAll('.answer-input').forEach(input => {
-            input.checked = false;
+            // Clear radio buttons and checkboxes for current question
+            currentCard.querySelectorAll('.answer-input').forEach(input => {
+                input.checked = false;
+            });
+
+            // Clear text input for current question
+            const textInput = currentCard.querySelector('.text-answer-input');
+            if (textInput) textInput.value = '';
+
+            // Clear Trix editor for current question
+            const richEditor = currentCard.querySelector('.rich-text-answer-input');
+            if (richEditor) {
+                const inputId = richEditor.getAttribute('input');
+                document.getElementById(inputId).value = '';
+                richEditor.editor.setSelectedRange([0, richEditor.editor.getDocument().getLength()]);
+                richEditor.editor.deleteInDirection('forward');
+            }
+
+            // Clear dropdowns for current question
+            currentCard.querySelectorAll('.fill-in-dropdown-select-inline').forEach(select => {
+                select.value = '';
+            });
+
+            // Remove current question from answered set
+            answeredSet.delete(currentQ);
+            updateProgress();
+            renderNavBtns();
+
+            // Сохраняем очищение на сервер
+            try {
+                await fetch(`/tests/{{ $test->id }}/clear-answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ question_id: questionId })
+                });
+            } catch (e) { console.error(e); }
         });
-
-        // Clear text input for current question
-        const textInput = currentCard.querySelector('.text-answer-input');
-        if (textInput) textInput.value = '';
-
-        // Clear Trix editor for current question
-        const richEditor = currentCard.querySelector('.rich-text-answer-input');
-        if (richEditor) {
-            const inputId = richEditor.getAttribute('input');
-            document.getElementById(inputId).value = '';
-            richEditor.editor.setSelectedRange([0, richEditor.editor.getDocument().getLength()]);
-            richEditor.editor.deleteInDirection('forward');
-        }
-
-        // Clear dropdowns for current question
-        currentCard.querySelectorAll('.fill-in-dropdown-select-inline').forEach(select => {
-            select.value = '';
-        });
-
-        // Remove current question from answered set
-        answeredSet.delete(currentQ);
-        updateProgress();
-        renderNavBtns();
     });
 
     // ── Submit modal ──

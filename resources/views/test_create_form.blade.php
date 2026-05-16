@@ -49,8 +49,7 @@
             <div class="mb-4">
                 <label class="block text-gray-700 font-semibold mb-2">Режим отображения вопросов</label>
                 <select id="display_mode" name="display_mode" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="single_page">Все вопросы на одной странице</option>
-                    <option value="per_question">Каждый вопрос на отдельной странице (с навигацией)</option>
+                    <option value="single_page">Каждый вопрос на новой странице</option>
                     <option value="paged">Несколько вопросов на странице (по страницам)</option>
                 </select>
             </div>

@@ -1302,4 +1302,50 @@ class TestController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function clearAnswer(Request $request, Test $test)
+    {
+        $questionId = $request->input('question_id');
+
+        if (!$questionId) {
+            return response()->json(['error' => 'Question ID is required'], 400);
+        }
+
+        // Удаляем из сессии
+        $answers = session("test_{$test->id}_answers", []);
+        unset($answers[$questionId]);
+        session(["test_{$test->id}_answers" => $answers]);
+
+        if (Auth::check()) {
+            $userId = Auth::id();
+
+            // Получаем текущую попытку
+            $attempt = TestAttempt::where('test_id', $test->id)
+                ->where('user_id', $userId)
+                ->whereNull('ended_at')
+                ->first();
+
+            if (!$attempt) {
+                return response()->json(['error' => 'Test not started'], 403);
+            }
+
+            // Проверка лимита времени
+            if ($test->time_limit && $attempt->started_at) {
+                $elapsed = now()->diffInSeconds($attempt->started_at);
+                $timeLimitSeconds = $test->time_limit * 60;
+
+                if ($elapsed > $timeLimitSeconds) {
+                    return response()->json(['error' => 'Time is up. Answer not cleared.'], 403);
+                }
+            }
+
+            // Удаляем ответ из БД
+            TemporaryAnswer::where('user_id', $userId)
+                ->where('test_id', $test->id)
+                ->where('question_id', $questionId)
+                ->delete();
+        }
+
+        return response()->json(['success' => true]);
+    }
 }

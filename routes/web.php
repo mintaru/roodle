@@ -119,6 +119,10 @@ Route::get('/tests/{test}/attempt/{questionIndex?}', [TestController::class, 'at
 Route::post('/tests/{test}/save-answer', [TestController::class, 'saveAnswer'])
     ->name('tests.save_answer');
 
+// Обработка очищения ответа (AJAX)
+Route::post('/tests/{test}/clear-answer', [TestController::class, 'clearAnswer'])
+    ->name('tests.clear_answer');
+
 // Синхронизация таймера между устройствами
 Route::get('/tests/{test}/timer-sync', [TestController::class, 'timerSync'])
     ->middleware('auth')
@@ -230,13 +234,13 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::post('/courses/{course}/sections/{section}/items', [CourseSectionController::class, 'attachItem'])->name('courses.sections.items.attach');
     Route::post('/courses/{course}/sections/{section}/items/{item}/move', [CourseSectionController::class, 'moveItem'])->name('courses.sections.items.move');
     Route::delete('/courses/{course}/sections/{section}/items/{item}', [CourseSectionController::class, 'detachItem'])->name('courses.sections.items.detach');
-    
+
     // Маршруты для банка вопросов
     Route::get('/question-bank', [QuestionBankController::class, 'index'])->name('admin.question-bank.index');
     Route::get('/question-bank/{question}/edit', [QuestionBankController::class, 'edit'])->name('admin.question-bank.edit');
     Route::put('/question-bank/{question}', [QuestionBankController::class, 'update'])->name('admin.question-bank.update');
     Route::delete('/question-bank/{question}', [QuestionBankController::class, 'destroy'])->name('admin.question-bank.destroy');
-    
+
     // Маршруты для управления тестами
     Route::get('/tests', [TestManagementController::class, 'index'])->name('admin.tests.index');
     Route::get('/tests/{test}/edit', [TestManagementController::class, 'edit'])->name('admin.tests.edit');
@@ -252,7 +256,7 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
-    
+
     // Маршруты для отчётов
     Route::get('/reports', function () {
         return view('admin.reports.index');
@@ -260,7 +264,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/reports/user-activity', [ReportController::class, 'userActivity'])->name('admin.reports.user-activity');
     Route::get('/reports/groups', [ReportController::class, 'groupsReport'])->name('admin.reports.groups');
     Route::get('/reports/courses', [ReportController::class, 'coursesReport'])->name('admin.reports.courses');
-    
+
 
 
 
