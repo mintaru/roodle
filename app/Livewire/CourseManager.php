@@ -10,6 +10,7 @@ use App\Models\Test;
 use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use App\Models\Assignment;
 
 class CourseManager extends Component
 {
@@ -35,7 +36,7 @@ class CourseManager extends Component
     public function mount(Course $course)
     {
         $this->course = $course;
-        $this->course->load(['sections.items', 'tests', 'lectures', 'materials']);
+        $this->course->load(['sections.items', 'tests', 'lectures', 'materials', 'assignments']);
     }
 
     public function addSection()
@@ -45,14 +46,17 @@ class CourseManager extends Component
         try {
             $maxPosition = $this->course->sections()->max('position') ?? 0;
 
-            $this->course->sections()->create([
+            $section = $this->course->sections()->create([
                 'title' => $this->newSectionTitle,
                 'position' => $maxPosition + 1,
             ]);
+            $section->visibleGroups()->sync(
+                $this->course->groups->pluck('id')->toArray()
+            );
 
             $this->newSectionTitle = '';
             $this->successMessage = 'Секция добавлена';
-            $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials']);
+            $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials','assignments']);
 
             $this->dispatch('flash-success', message: 'Секция добавлена');
         } catch (\Exception $e) {
@@ -80,7 +84,7 @@ class CourseManager extends Component
                 $this->editingSectionId = null;
                 $this->editingSectionTitle = '';
                 $this->successMessage = 'Секция обновлена';
-                $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials']);
+                $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials','assignments']);
             }
         } catch (\Exception $e) {
             $this->errorMessage = 'Ошибка при обновлении секции';
@@ -100,7 +104,7 @@ class CourseManager extends Component
             if ($section) {
                 $section->delete();
                 $this->successMessage = 'Секция удалена';
-                $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials']);
+                $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials','assignments']);
             }
         } catch (\Exception $e) {
             $this->errorMessage = 'Ошибка при удалении секции';
@@ -110,15 +114,15 @@ class CourseManager extends Component
     #[Renderless]
     public function getAttachData(int $sectionId): array
     {
-
         $sec = $this->course->sections->find($sectionId);
         if (! $sec) {
-            return ['tests' => [], 'lectures' => [], 'materials' => []];
+            return ['tests' => [], 'lectures' => [], 'materials' => [], 'assignments' => []];
         }
 
         $addedTestIds = $sec->items()->where('item_type', \App\Models\Test::class)->pluck('item_id')->toArray();
         $addedLectureIds = $sec->items()->where('item_type', \App\Models\Lecture::class)->pluck('item_id')->toArray();
         $addedMaterialIds = $sec->items()->where('item_type', \App\Models\Material::class)->pluck('item_id')->toArray();
+        $addedAssignmentIds = $sec->items()->where('item_type', \App\Models\Assignment::class)->pluck('item_id')->toArray();
 
         return [
             'tests' => $this->course->tests->where('status', \App\Models\Test::STATUS_ACTIVE)
@@ -127,6 +131,8 @@ class CourseManager extends Component
                 ->whereNotIn('id', $addedLectureIds)->map(fn ($l) => ['id' => $l->id, 'title' => $l->title])->values()->toArray(),
             'materials' => $this->course->materials->where('status', \App\Models\Material::STATUS_ACTIVE)
                 ->whereNotIn('id', $addedMaterialIds)->map(fn ($m) => ['id' => $m->id, 'title' => $m->title])->values()->toArray(),
+            'assignments' => $this->course->assignments->where('status', \App\Models\Assignment::STATUS_ACTIVE)
+                ->whereNotIn('id', $addedAssignmentIds)->map(fn ($a) => ['id' => $a->id, 'title' => $a->title])->values()->toArray(),
         ];
     }
 
@@ -154,7 +160,7 @@ class CourseManager extends Component
                 $currentPos = $section->position;
                 $section->update(['position' => $swapWith->position]);
                 $swapWith->update(['position' => $currentPos]);
-                $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials']);
+                $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials','assignments']);
             }
         } catch (\Exception $e) {
             $this->errorMessage = 'Ошибка при перемещении секции';
@@ -183,6 +189,11 @@ class CourseManager extends Component
                 if (($item->status ?? 'active') === Lecture::STATUS_ARCHIVED) {
                     throw new \Exception('Нельзя добавить архивную лекцию в секцию');
                 }
+            } elseif ($itemType === 'assignment') {
+                $item = \App\Models\Assignment::where('course_id', $this->course->id)->findOrFail($itemId);
+                if (($item->status ?? 'active') === \App\Models\Assignment::STATUS_ARCHIVED) {
+                    throw new \Exception('Нельзя добавить архивное задание в секцию');
+                }
             } else {
                 $item = Material::where('course_id', $this->course->id)->findOrFail($itemId);
                 if (($item->status ?? 'active') === Material::STATUS_ARCHIVED) {
@@ -204,15 +215,18 @@ class CourseManager extends Component
 
             $maxPosition = $section->items()->max('position') ?? 0;
 
-            CourseSectionItem::create([
+            $courseSectionItem = CourseSectionItem::create([
                 'course_section_id' => $section->id,
                 'item_type' => get_class($item),
                 'item_id' => $item->id,
                 'position' => $maxPosition + 1,
             ]);
+            $courseSectionItem->visibleGroups()->sync(
+                $this->course->groups->pluck('id')->toArray()
+            );
 
             $this->successMessage = 'Элемент добавлен в секцию';
-            $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials']);
+            $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials','assignments']);
         } catch (\Exception $e) {
             $this->errorMessage = $e->getMessage();
         }
@@ -244,7 +258,7 @@ class CourseManager extends Component
                 $currentPos = $item->position;
                 $item->update(['position' => $swapWith->position]);
                 $swapWith->update(['position' => $currentPos]);
-                $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials']);
+                $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials','assignments']);
             }
         } catch (\Exception $e) {
             $this->errorMessage = 'Ошибка при перемещении элемента';
@@ -258,7 +272,7 @@ class CourseManager extends Component
             if ($item) {
                 $item->delete();
                 $this->successMessage = 'Элемент удалён из секции';
-                $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials']);
+                $this->course->load(['sections.items.item', 'tests', 'lectures', 'materials','assignments']);
             }
         } catch (\Exception $e) {
             $this->errorMessage = 'Ошибка при удалении элемента';
@@ -278,6 +292,7 @@ class CourseManager extends Component
             'isTeacherOrAdmin' => auth()->user()?->hasAnyRole(['teacher', 'admin']) ?? false,
         ]);
     }
+
     /**
      * Открыть модалку видимости для секции.
      * Вызывается из JS: @this.openSectionVisibility(id)

@@ -195,7 +195,34 @@
                                     <a href="{{ route('materials.download', ['course' => $course, 'material' => $item]) }}"
                                         style="display: inline-block; margin-top: 6px; font-size: 12px; color: var(--green-600); text-decoration: none;">⬇
                                         Скачать</a>
+                                @elseif($item instanceof \App\Models\Assignment)
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                        <strong
+                                            style="color: var(--amber-600); font-size: 12px; text-transform: uppercase;">📋
+                                            Задание</strong>
+                                        @if (($item->status ?? 'active') === \App\Models\Assignment::STATUS_ARCHIVED)
+                                            <span
+                                                style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивировано]</span>
+                                        @endif
+                                    </div>
+                                    <a href="{{ route('assignments.view', ['course' => $course, 'assignment' => $item]) }}"
+                                        style="color: var(--amber-600); text-decoration: none; font-weight: 600; font-size: 14px;">{{ $item->title }}</a>
+                                    @if ($item->due_date)
+                                        <p style="font-size: 12px; color: var(--color-text-muted); margin: 4px 0;">
+                                            Срок сдачи: {{ $item->due_date->format('d.m.Y H:i') }}
+                                        </p>
+                                    @endif
+                                    @can('edit courses')
+                                        <div style="margin-top: 6px;">
+                                            <a href="{{ route('assignments.edit', ['course' => $course, 'assignment' => $item]) }}"
+                                                style="font-size: 12px; color: var(--amber-600); text-decoration: none; margin-right: 12px;">Редактировать</a>
+                                            <a href="{{ route('assignments.view', ['course' => $course, 'assignment' => $item]) }}"
+                                                style="font-size: 12px; color: var(--amber-600); text-decoration: none;">Обзор</a>
+                                        </div>
+                                    @endcan
                                 @endif
+
+
                             </div>
                             @hasanyrole('teacher|admin')
                                 <div style="display: flex; gap: 4px; flex-shrink: 0; margin-left: 12px;">
@@ -432,6 +459,11 @@
                     ->where('item_type', \App\Models\Material::class)
                     ->pluck('item_id')
                     ->toArray();
+                $addedAssignmentIds = $sec
+                    ->items()
+                    ->where('item_type', \App\Models\Assignment::class)
+                    ->pluck('item_id')
+                    ->toArray();
                 $attachData[$sec->id] = [
                     'tests' => $course->tests
                         ->where('status', \App\Models\Test::STATUS_ACTIVE)
@@ -447,6 +479,11 @@
                         ->where('status', \App\Models\Material::STATUS_ACTIVE)
                         ->whereNotIn('id', $addedMaterialIds)
                         ->map(fn($m) => ['id' => $m->id, 'title' => $m->title])
+                        ->values(),
+                    'assignments' => $course->assignments
+                        ->where('status', \App\Models\Assignment::STATUS_ACTIVE)
+                        ->whereNotIn('id', $addedAssignmentIds)
+                        ->map(fn($a) => ['id' => $a->id, 'title' => $a->title])
                         ->values(),
                 ];
             }
@@ -470,7 +507,7 @@
                     </div>
                     <div style="padding:1.25rem 1.5rem;">
                         <div id="attach-step-type">
-                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:1.25rem;">
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:1.25rem;">
                                 <button type="button" onclick="selectAttachType('test')"
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
@@ -491,6 +528,13 @@
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--green-50); color:var(--green-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
                                         📎</div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Материал</div>
+                                </button>
+                                <button type="button" onclick="selectAttachType('assignment')"
+                                    style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
+                                    <div
+                                        style="width:36px; height:36px; border-radius:var(--r-md); background:var(--amber-50); color:var(--amber-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        📋</div>
+                                    <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Задание</div>
                                 </button>
                             </div>
                         </div>
@@ -559,7 +603,11 @@
                         material: {
                             key: 'materials',
                             sub: 'Выберите материал'
-                        }
+                        },
+                        assignment: {
+                            key: 'assignments',
+                            sub: 'Выберите задание'
+                        },
                     };
                     _aItems = (ATTACH_DATA[_aSectionId] || {})[map[type].key] || [];
                     document.getElementById('attach-modal-subtitle').textContent = map[type].sub;

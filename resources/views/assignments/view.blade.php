@@ -179,14 +179,20 @@
             <h3>📎 Файлы задания</h3>
             <ul class="file-list">
                 @foreach($assignment->files as $file)
-                    <li class="file-item">
+                <li class="file-item" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <div>
                             <strong>{{ $file->title }}</strong><br>
                             <small>{{ number_format($file->file_size / 1024, 2) }} KB</small>
                         </div>
-                        <a href="{{ route('assignments.download-file', [$course, $assignment, $file]) }}" class="btn-primary" style="margin: 0;">Скачать</a>
-                    </li>
-                @endforeach
+                    </div>
+                    @if(strtolower(pathinfo($file->file_name ?? $file->title, PATHINFO_EXTENSION)) === 'mp3')
+                        <audio controls style="width: 100%;">
+                            <source src="{{ route('assignments.download-file', [$course, $assignment, $file]) }}" type="audio/mpeg">
+                        </audio>
+                    @endif
+                </li>
+            @endforeach
             </ul>
         </div>
     @endif
