@@ -162,7 +162,7 @@ class TestController extends Controller
     {
         // Валидация
         $validatedData = $request->validate([
-            'question_text' => 'required_unless:question_type,fill_in_dropdown|string',
+            'question_text' => 'nullable|required_unless:question_type,fill_in_dropdown|string',
             'question_type' => 'required|in:single_choice,multiple_choice,short_answer,rich_text_answer,fill_in_dropdown',
             'options' => [
                 'required_if:question_type,single_choice',
@@ -183,10 +183,10 @@ class TestController extends Controller
             'correct_answers' => 'required_if:question_type,short_answer|array|min:1',
             'correct_answers.*' => 'required_if:question_type,short_answer|string|min:1',
             'case_insensitive' => 'nullable|in:0,1',
-            'fill_text' => 'required_if:question_type,fill_in_dropdown|string',
-            'dropdown_options' => 'required_if:question_type,fill_in_dropdown|array',
-            'dropdown_options.*' => 'array',
-            'dropdown_correct' => 'required_if:question_type,fill_in_dropdown|array',
+            'fill_text' => 'nullable|required_if:question_type,fill_in_dropdown|string',
+            'dropdown_options' => 'nullable|required_if:question_type,fill_in_dropdown|array',
+            'dropdown_options.*' => 'nullable|array',
+            'dropdown_correct' => 'nullable|required_if:question_type,fill_in_dropdown|array',
         ]);
 
         // Создаём вопрос
@@ -267,6 +267,21 @@ class TestController extends Controller
         $test->questions()->attach($validatedData['question_id']);
 
         return back()->with('success', 'Вопрос добавлен из банка!');
+    }
+
+    public function saveProgress(Request $request, Test $test)
+    {
+        $attempt = TestAttempt::where('test_id', $test->id)
+            ->where('user_id', $request->user()->id)
+            ->whereNull('ended_at')   // ← было finished_at
+            ->latest()
+            ->first();
+
+        if ($attempt) {
+            $attempt->update(['last_question_index' => $request->input('question_index')]);
+        }
+
+        return response()->json(['ok' => true]);
     }
 
     /**
@@ -897,6 +912,7 @@ class TestController extends Controller
                 'test' => $test,
                 'savedAnswers' => $savedAnswers,
                 'attempt' => $activeAttempt,
+                'lastQuestionIndex' => $activeAttempt->last_question_index ?? 0,  // ← добавить
             ]),
         ]);
     }
@@ -1307,7 +1323,7 @@ class TestController extends Controller
     {
         $questionId = $request->input('question_id');
 
-        if (!$questionId) {
+        if (! $questionId) {
             return response()->json(['error' => 'Question ID is required'], 400);
         }
 
@@ -1325,7 +1341,7 @@ class TestController extends Controller
                 ->whereNull('ended_at')
                 ->first();
 
-            if (!$attempt) {
+            if (! $attempt) {
                 return response()->json(['error' => 'Test not started'], 403);
             }
 

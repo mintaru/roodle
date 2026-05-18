@@ -3,25 +3,33 @@
 namespace App\Livewire;
 
 use App\Models\Course;
-use App\Models\CourseSection;
 use App\Models\CourseSectionItem;
 use App\Models\Lecture;
 use App\Models\Material;
 use App\Models\Test;
-use Livewire\Component;
+use Livewire\Attributes\Renderless;
 use Livewire\Attributes\Validate;
+use Livewire\Component;
 
 class CourseManager extends Component
 {
     public Course $course;
 
+    public array $visibilityGroupIds = [];
+
+    public string $visibilityType = '';
+
+    public ?int $visibilityTargetId = null;
+
     #[Validate('required|string|max:255')]
     public string $newSectionTitle = '';
 
     public $editingSectionId = null;
+
     public $editingSectionTitle = '';
 
     public $successMessage = '';
+
     public $errorMessage = '';
 
     public function mount(Course $course)
@@ -99,15 +107,38 @@ class CourseManager extends Component
         }
     }
 
+    #[Renderless]
+    public function getAttachData(int $sectionId): array
+    {
+
+        $sec = $this->course->sections->find($sectionId);
+        if (! $sec) {
+            return ['tests' => [], 'lectures' => [], 'materials' => []];
+        }
+
+        $addedTestIds = $sec->items()->where('item_type', \App\Models\Test::class)->pluck('item_id')->toArray();
+        $addedLectureIds = $sec->items()->where('item_type', \App\Models\Lecture::class)->pluck('item_id')->toArray();
+        $addedMaterialIds = $sec->items()->where('item_type', \App\Models\Material::class)->pluck('item_id')->toArray();
+
+        return [
+            'tests' => $this->course->tests->where('status', \App\Models\Test::STATUS_ACTIVE)
+                ->whereNotIn('id', $addedTestIds)->map(fn ($t) => ['id' => $t->id, 'title' => $t->title])->values()->toArray(),
+            'lectures' => $this->course->lectures->where('status', \App\Models\Lecture::STATUS_ACTIVE)
+                ->whereNotIn('id', $addedLectureIds)->map(fn ($l) => ['id' => $l->id, 'title' => $l->title])->values()->toArray(),
+            'materials' => $this->course->materials->where('status', \App\Models\Material::STATUS_ACTIVE)
+                ->whereNotIn('id', $addedMaterialIds)->map(fn ($m) => ['id' => $m->id, 'title' => $m->title])->values()->toArray(),
+        ];
+    }
+
     public function moveSection($sectionId, $direction)
     {
-        if (!in_array($direction, ['up', 'down'], true)) {
+        if (! in_array($direction, ['up', 'down'], true)) {
             return;
         }
 
         try {
             $section = $this->course->sections()->find($sectionId);
-            if (!$section) {
+            if (! $section) {
                 return;
             }
 
@@ -132,13 +163,13 @@ class CourseManager extends Component
 
     public function attachItem($sectionId, $itemType, $itemId)
     {
-        if (!$itemId) {
+        if (! $itemId) {
             return; // Пользователь выбрал пустой вариант
         }
 
         try {
             $section = $this->course->sections()->find($sectionId);
-            if (!$section) {
+            if (! $section) {
                 throw new \Exception('Секция не найдена');
             }
 
@@ -189,13 +220,13 @@ class CourseManager extends Component
 
     public function moveItem($itemId, $direction)
     {
-        if (!in_array($direction, ['up', 'down'], true)) {
+        if (! in_array($direction, ['up', 'down'], true)) {
             return;
         }
 
         try {
             $item = CourseSectionItem::with('section')->find($itemId);
-            if (!$item) {
+            if (! $item) {
                 return;
             }
 
@@ -236,8 +267,75 @@ class CourseManager extends Component
 
     public function render()
     {
+        $sections = $this->course->sections()
+            ->orderBy('position')
+            ->with(['items.item', 'visibleGroups', 'items.visibleGroups'])
+            ->get();
+
         return view('livewire.course-manager', [
-            'sections' => $this->course->sections()->orderBy('position')->get(),
+            'sections' => $sections,
+            'userGroupIds' => auth()->user()?->groups->pluck('id')->toArray() ?? [],
+            'isTeacherOrAdmin' => auth()->user()?->hasAnyRole(['teacher', 'admin']) ?? false,
         ]);
+    }
+    /**
+     * Открыть модалку видимости для секции.
+     * Вызывается из JS: @this.openSectionVisibility(id)
+     */
+    public function openSectionVisibility(int $sectionId): void
+    {
+        $section = \App\Models\CourseSection::findOrFail($sectionId);
+        abort_unless($section->course_id === $this->course->id, 403);
+
+        $this->visibilityType = 'section';
+        $this->visibilityTargetId = $sectionId;
+        $this->visibilityGroupIds = $section->visibleGroups()->pluck('groups.id')->map(fn ($id) => (string) $id)->toArray();
+
+        $this->dispatch('open-visibility-modal');
+    }
+
+    /**
+     * Открыть модалку видимости для элемента секции.
+     * Вызывается из JS: @this.openItemVisibility(id)
+     */
+    public function openItemVisibility(int $sectionItemId): void
+    {
+        $item = \App\Models\CourseSectionItem::findOrFail($sectionItemId);
+        abort_unless($item->section->course_id === $this->course->id, 403);
+
+        $this->visibilityType = 'item';
+        $this->visibilityTargetId = $sectionItemId;
+        $this->visibilityGroupIds = $item->visibleGroups()->pluck('groups.id')->map(fn ($id) => (string) $id)->toArray();
+
+        $this->dispatch('open-visibility-modal');
+    }
+
+    /**
+     * Сохранить настройки видимости.
+     */
+    public function saveVisibility(): void
+    {
+        $groupIds = array_map('intval', $this->visibilityGroupIds);
+
+        // Валидируем: все group_id должны принадлежать курсу
+        $allowedGroupIds = $this->course->groups()->pluck('groups.id')->toArray();
+        $groupIds = array_intersect($groupIds, $allowedGroupIds);
+
+        if ($this->visibilityType === 'section') {
+            $section = \App\Models\CourseSection::findOrFail($this->visibilityTargetId);
+            abort_unless($section->course_id === $this->course->id, 403);
+            $section->visibleGroups()->sync($groupIds);
+        } elseif ($this->visibilityType === 'item') {
+            $item = \App\Models\CourseSectionItem::findOrFail($this->visibilityTargetId);
+            abort_unless($item->section->course_id === $this->course->id, 403);
+            $item->visibleGroups()->sync($groupIds);
+        }
+
+        $this->visibilityGroupIds = [];
+        $this->visibilityTargetId = null;
+        $this->visibilityType = '';
+        $this->successMessage = 'Настройки видимости сохранены';
+
+        $this->dispatch('close-visibility-modal');
     }
 }

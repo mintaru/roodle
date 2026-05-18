@@ -119,6 +119,8 @@ Route::get('/tests/{test}/attempt/{questionIndex?}', [TestController::class, 'at
 Route::post('/tests/{test}/save-answer', [TestController::class, 'saveAnswer'])
     ->name('tests.save_answer');
 
+// Сохранение последнего вопроса при навигации между страницами теста
+Route::post('/tests/{test}/save-progress', [TestController::class, 'saveProgress']);
 // Обработка очищения ответа (AJAX)
 Route::post('/tests/{test}/clear-answer', [TestController::class, 'clearAnswer'])
     ->name('tests.clear_answer');
