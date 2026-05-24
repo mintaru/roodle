@@ -920,35 +920,10 @@
             <div>
                 <h1 class="section-title">{{ $course->title }}</h1>
             </div>
-            @hasanyrole('teacher|admin')
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <a href="{{ route('tests.create', $course) }}" class="btn btn-primary"
-                        style="font-size: 13px; padding: 6px 14px;">
-                        ➕ Тест
-                    </a>
-                    <a href="{{ route('lectures.create', $course) }}" class="btn btn-primary"
-                        style="font-size: 13px; padding: 6px 14px;">
-                        ➕ Лекция
-                    </a>
-                    <a href="{{ route('materials.create', $course) }}" class="btn btn-primary"
-                        style="font-size: 13px; padding: 6px 14px;">
-                        ➕ Материал
-                    </a>
-                    <a href="{{ route('assignments.create', $course) }}" class="btn btn-primary"
-                        style="font-size: 13px; padding: 6px 14px;">
-                        ➕ Задание
-                    </a>
-                    <a href="{{ route('courses.grades', $course) }}" class="btn btn-primary"
-                        style="font-size: 13px; padding: 6px 14px;">
-                        📊 Оценки
-                    </a>
-                </div>
-            @endhasanyrole
         </div>
 
         <livewire:course-manager :course="$course" />
     </main>
-    </div>
 </body>
 
 </html>

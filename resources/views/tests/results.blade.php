@@ -99,10 +99,92 @@
             padding: 3rem;
             text-align: center;
         }
+
+        .action-btn {
+            background: var(--teal-600);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: var(--r-md);
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--teal-700);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--r-xl);
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--r-md);
+            font-size: 14px;
+            margin-bottom: 1.5rem;
+            box-sizing: border-box;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            border-radius: var(--r-md);
+            border: 1px solid var(--color-border);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn-primary {
+            background: var(--teal-600);
+            color: white;
+            border: none;
+        }
+
+        .modal-btn-primary:hover {
+            background: var(--teal-700);
+        }
+
+        .modal-btn-secondary:hover {
+            background: var(--gray-100);
+        }
     </style>
 </head>
 
-<body>
+<body x-data="{ showModal: false, selectedUserId: null, selectedUserName: '', extraAttempts: '' }">
 
 @include('components.menu')
 
@@ -162,47 +244,104 @@
                             <th>Студент</th>
                             <th>Статус</th>
                             <th>Попытка</th>
-                            <th>Время</th>
+                            <th>Вопрос</th>
                             <th>Результат</th>
+                            <th>Действия</th>
                         </tr>
                         </thead>
 
                         <tbody>
-                        @foreach($studentsData as $data)
-                            <tr>
-                                <td>
-                                    <div class="student-name">{{ $data['user']->name }}</div>
-                                    <div class="student-username">{{ $data['user']->username }}</div>
-                                </td>
+                            @foreach($studentsData as $data)
+                            <tbody x-data="{ expanded: false }">
+                                <tr>
+                                    <td>
+                                        <div style="display:flex; gap:10px; align-items:center;">
+                                            <button type="button" @click="expanded = !expanded" style="background:transparent;border:none;cursor:pointer;font-size:16px;padding:0;margin:0;">
+                                                <svg x-show="!expanded" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg>
+                                                <svg x-show="expanded" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l7 7 7-7"/></svg>
+                                            </button>
+                                            <div>
+                                                <div class="student-name">{{ $data['user']->name }}</div>
+                                                <div class="student-username">{{ $data['user']->username }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
 
-                                <td>
-                                    <span class="status-badge">
-                                        {{ $data['status'] }}
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <span class="attempt-pill">
-                                        {{ $data['current_attempt_number'] ?? '—' }}
-                                    </span>
-                                </td>
-
-                                <td>
-                                    {{ $data['minutes_spent'] ?? '—' }}
-                                </td>
-
-                                <td>
-                                    @if($data['active_attempt'] && $data['active_attempt']->ended_at)
-                                        <span class="score">
-                                            {{ $data['active_attempt']->score }}%
+                                    <td>
+                                        <span class="status-badge {{ strtolower(str_replace(' ', '-', $data['status'])) }}">
+                                            {{ $data['status'] }}
                                         </span>
-                                    @else
-                                        <span class="dash">—</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                        </tbody>
+                                    </td>
+
+                                    <td>
+                                        <span class="attempt-pill">
+                                            {{ $data['current_attempt_number'] ?? '—' }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @if($data['status'] === 'в процессе')
+                                            <span class="attempt-pill">
+                                                {{ $data['current_question'] ?? 1 }}/{{ $data['totalQuestions'] }}
+                                            </span>
+                                        @else
+                                            <span class="dash">—</span>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        @if($data['lastCompletedAttempt'])
+                                            <span class="score">
+                                                {{ round($data['lastCompletedAttempt']->score) }}%
+                                            </span>
+                                        @else
+                                            <span class="dash">—</span>
+                                        @endif
+                                    </td>
+
+                                    <td style="white-space:nowrap;">
+                                        <button
+                                            type="button"
+                                            class="action-btn"
+                                            @click="showModal = true; selectedUserId = {{ $data['user']->id }}; selectedUserName = '{{ $data['user']->name }}'; extraAttempts = '';"
+                                        >
+                                            + Попытка
+                                        </button>
+                                        <button type="button" class="action-btn" @click="expanded = !expanded" style="background:#4a5568;padding:6px 10px;">Просмотр попыток</button>
+                                    </td>
+                                </tr>
+
+                                <tr x-show="expanded" x-cloak>
+                                    <td colspan="6" style="background: #fbfcfd; padding: 12px 16px;">
+                                        <div style="display:flex;flex-direction:column;gap:10px;">
+                                            @if($data['attempts']->isEmpty())
+                                                <div class="dash">У студента ещё нет попыток</div>
+                                            @else
+                                                @foreach($data['attempts'] as $attempt)
+                                                    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid var(--color-border);border-radius:8px;background:white;">
+                                                        <div style="min-width:0;">
+                                                            <div style="font-weight:600;">Попытка #{{ $attempt->attempt_number }} — {{ $attempt->ended_at ? 'Завершена' : 'В процессе' }}</div>
+                                                            <div style="font-size:13px;color:var(--color-text-muted);">
+                                                                {{ $attempt->started_at ? $attempt->started_at->format('d.m.Y H:i') : '—' }}
+                                                                @if($attempt->ended_at)
+                                                                    — {{ $attempt->ended_at->format('d.m.Y H:i') }}
+                                                                @endif
+                                                            </div>
+                                                        </div>
+
+                                                        <div style="display:flex;gap:8px;align-items:center;">
+                                                            <div style="font-weight:700;">{{ $attempt->score !== null ? round($attempt->score) . '%' : '—' }}</div>
+                                                            <a href="{{ route('test-attempts.details', $attempt) }}" class="action-btn" style="background:#2b6cb0;">Открыть</a>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            @endforeach
+                            </tbody>
                     </table>
                 </div>
             @else
@@ -215,6 +354,47 @@
 
     </main>
 </div>
+{{-- Модалка выдачи дополнительных попыток --}}
+<div
+    x-show="showModal"
+    x-cloak
+    class="modal-overlay"
+    @click.self="showModal = false"
+>
+    <div class="modal-content">
+        <div class="modal-title">Дополнительные попытки</div>
+        <p style="font-size: 14px; color: var(--color-text-secondary); margin-bottom: 1rem;">
+            Студент: <strong x-text="selectedUserName"></strong>
+        </p>
 
+        <form
+            :action="`{{ route('test-attempts.grant-attempts', ['test' => $test->id, 'user' => '__USER_ID__']) }}`.replace('__USER_ID__', selectedUserId)"
+            method="POST"
+        >
+            @csrf
+            <label style="font-size: 13px; color: var(--color-text-secondary); display: block; margin-bottom: 6px;">
+                Количество попыток
+            </label>
+            <input
+                type="number"
+                name="extra_attempts"
+                class="modal-input"
+                min="1"
+                max="100"
+                x-model="extraAttempts"
+                placeholder="Например: 1"
+                required
+            >
+            <div class="modal-buttons">
+                <button type="button" class="modal-btn modal-btn-secondary" @click="showModal = false">
+                    Отмена
+                </button>
+                <button type="submit" class="modal-btn modal-btn-primary">
+                    Выдать
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 </body>
 </html>

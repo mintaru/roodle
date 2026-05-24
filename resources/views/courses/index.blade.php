@@ -29,9 +29,9 @@
             </h1>
         </div>
         @if(auth()->user()->hasRole('teacher') || auth()->user()->hasRole('admin'))
-            <a href="{{ route('courses.create') }}" 
+            <a href="{{ route('courses.create') }}"
                 class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-semibold">
-                ➕ Создать курс
+                Создать курс
             </a>
         @endif
     </div>
@@ -74,46 +74,46 @@
                             <span class="text-gray-500">Нет изображения</span>
                         </div>
                     @endif
-                    
+
                     <div class="p-4">
                         <h3 class="text-lg font-bold text-gray-800 mb-2">{{ $course->title }}</h3>
                         <p class="text-xs text-gray-500 mb-4">Автор: <strong>{{ $course->author->name ?? 'Неизвестен' }}</strong></p>
-                        
+
                         <div class="flex gap-2 flex-wrap">
-                            <a href="{{ route('courses.show', $course) }}" 
+                            <a href="{{ route('courses.show', $course) }}"
                                 class="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 text-center">
                                 Открыть
                             </a>
-                            
+
                             @php
                                 // Проверяем права редактирования
-                                $canEdit = auth()->user()->hasRole('admin') || 
-                                           $course->user_id === auth()->id() || 
+                                $canEdit = auth()->user()->hasRole('admin') ||
+                                           $course->user_id === auth()->id() ||
                                            $course->teacherPermissions()
                                                ->where('user_id', auth()->id())
                                                ->where('can_edit', true)
                                                ->exists();
-                                
-                                $canDelete = auth()->user()->hasRole('admin') || 
-                                            $course->user_id === auth()->id() || 
+
+                                $canDelete = auth()->user()->hasRole('admin') ||
+                                            $course->user_id === auth()->id() ||
                                             $course->teacherPermissions()
                                                 ->where('user_id', auth()->id())
                                                 ->where('can_delete', true)
                                                 ->exists();
                             @endphp
-                            
+
                             @if($canEdit)
-                                <a href="{{ route('courses.edit', $course) }}" 
+                                <a href="{{ route('courses.edit', $course) }}"
                                     class="px-3 py-2 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700">
                                     ✏️
                                 </a>
                             @endif
-                            
+
                             @if($canDelete)
                                 <form action="{{ route('courses.destroy', $course) }}" method="POST" style="display: inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700" 
+                                    <button type="submit" class="px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700"
                                         onclick="return confirm('Вы уверены?')">
                                         🗑️
                                     </button>

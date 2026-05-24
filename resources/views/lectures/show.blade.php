@@ -124,12 +124,43 @@
             <h1 class="course-hero__title">{{ $lecture->title }}</h1>
 
             @if ($lecture->pdf_path)
-                <div style="margin-top: 1.5rem;">
-                    <a href="{{ Storage::url($lecture->pdf_path) }}" target="_blank" class="btn btn-white">
-                        📥 Скачать материалы (PDF)
+            {{-- Определяем тип файла --}}
+            @php
+                $ext = strtolower(pathinfo($lecture->pdf_path, PATHINFO_EXTENSION));
+                $fileUrl = route('lectures.file', [$lecture->course, $lecture]);
+            @endphp
+
+            <div class="panel" style="margin-bottom: 2rem;">
+                <div class="panel__header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 class="panel__title">
+                        {{ $ext === 'pdf' ? '📄 PDF материал' : '📝 Word документ' }}
+                    </h2>
+                    <a href="{{ $fileUrl }}" download class="btn btn-white" style="font-size: 13px;">
+                        ⬇️ Скачать
                     </a>
                 </div>
-            @endif
+
+                @if ($ext === 'pdf')
+                    {{-- PDF: нативный браузерный рендер --}}
+                    <iframe
+                        src="{{ $fileUrl }}"
+                        width="100%"
+                        height="800px"
+                        style="border: none; border-radius: var(--r-lg);"
+                        loading="lazy"
+                    ></iframe>
+                @else
+                    {{-- Word: показываем сконвертированный HTML (уже есть в content) --}}
+                    {{-- Файл доступен для скачивания кнопкой выше --}}
+                    <div class="panel" style="background: var(--gray-50); padding: 1rem; border-radius: var(--r-md);">
+                        <span style="color: var(--color-text-muted); font-size: 14px;">
+                            💡 Word документ отображается как форматированный текст ниже.
+                            Для просмотра оригинала — скачайте файл.
+                        </span>
+                    </div>
+                @endif
+            </div>
+        @endif
         </div>
 
         <!-- LECTURE INFO PANEL -->

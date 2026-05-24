@@ -44,7 +44,7 @@
             border: 1px solid var(--color-border);
             border-radius: var(--r-xl);
             padding: 2rem;
-            max-width: 560px;
+            max-width: 720px;
             box-shadow: var(--shadow-sm);
         }
         .form-section-label {
@@ -54,6 +54,10 @@
             letter-spacing: .8px;
             color: var(--color-text-muted);
             margin-bottom: 1rem;
+            margin-top: 1.75rem;
+        }
+        .form-section-label:first-child {
+            margin-top: 0;
         }
         .field {
             margin-bottom: 1.25rem;
@@ -119,6 +123,11 @@
             background: var(--color-border);
             margin: 1.75rem 0;
         }
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
         .checkbox-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -149,6 +158,39 @@
             flex-shrink: 0;
             cursor: pointer;
         }
+        .course-permissions-container {
+            margin-top: 1rem;
+            margin-left: 24px;
+            padding: 12px;
+            background: var(--color-surface-2);
+            border-radius: var(--r-sm);
+            border-left: 3px solid var(--teal-400);
+        }
+        .permission-checkboxes {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .permission-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            padding: 6px 10px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--r-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .permission-checkbox:hover {
+            border-color: var(--teal-400);
+            background: var(--color-surface-2);
+        }
+        .permission-checkbox input {
+            accent-color: var(--teal-500);
+            cursor: pointer;
+        }
         .form-actions {
             display: flex;
             align-items: center;
@@ -157,6 +199,7 @@
             padding-top: 1.5rem;
             border-top: 1px solid var(--color-border);
         }
+        [x-cloak] { display: none; }
     </style>
 </head>
 <body>
@@ -171,7 +214,25 @@
     <div class="page-subtitle">Заполните данные нового участника системы</div>
 
     <div class="form-card">
-        <form action="{{ route('admin.users.store') }}" method="POST">
+        <form action="{{ route('admin.users.store') }}" method="POST" x-data="{
+            selectedRole: '{{ old('role') }}',
+            isTeacher: {{ old('role') === 'teacher' ? 'true' : 'false' }},
+            isStudent: {{ old('role') === 'student' ? 'true' : 'false' }},
+            coursePermissions: {},
+            init() {
+                @if(old('teacher_courses'))
+                    const oldCourses = {!! json_encode(old('teacher_courses')) !!};
+                    oldCourses.forEach(courseId => {
+                        this.coursePermissions[courseId] = {
+                            checked: true,
+                            can_edit: {{ old('course_permissions.' . courseId . '.can_edit') ? 'true' : 'false' }},
+                            can_delete: {{ old('course_permissions.' . courseId . '.can_delete') ? 'true' : 'false' }},
+                            can_manage_students: {{ old('course_permissions.' . courseId . '.can_manage_students') ? 'true' : 'false' }}
+                        };
+                    });
+                @endif
+            }
+        }">
             @csrf
 
             {{-- Личные данные --}}
@@ -230,7 +291,12 @@
 
             <div class="field">
                 <label for="role">Роль</label>
-                <select id="role" name="role" required>
+                <select id="role" name="role" required
+                @change="
+                selectedRole = $event.target.value;
+                isTeacher = selectedRole === 'teacher';
+                isStudent = selectedRole === 'student';
+            ">
                     <option value="" disabled selected>Выберите роль...</option>
                     @foreach($roles as $role)
                         <option value="{{ $role->name }}"
@@ -244,21 +310,73 @@
                 @enderror
             </div>
 
-            <div class="form-divider"></div>
+            <!-- Курсы и права доступа для учителей -->
+            <div x-show="isTeacher" x-cloak class="form-divider"></div>
+            <div x-show="isTeacher" x-cloak>
+                <div class="form-section-label">Доступ к курсам</div>
 
-            {{-- Группы --}}
-            <div class="form-section-label">Группы</div>
+                <template x-if="isTeacher">
+                    <div class="checkbox-group">
+                        @foreach($courses as $course)
+                            <div class="checkbox-item" @click="$el.querySelector('input[type=checkbox]').checked = !$el.querySelector('input[type=checkbox]').checked; if ($el.querySelector('input[type=checkbox]').checked) { coursePermissions[{{ $course->id }}] = {checked: true, can_edit: true, can_delete: false, can_manage_students: false}; } else { delete coursePermissions[{{ $course->id }}]; }">
+                                <input type="checkbox"
+                                       name="teacher_courses[]"
+                                       value="{{ $course->id }}"
+                                       @change="
+                                           if ($event.target.checked) {
+                                               coursePermissions[{{ $course->id }}] = {checked: true, can_edit: true, can_delete: false, can_manage_students: false};
+                                           } else {
+                                               delete coursePermissions[{{ $course->id }}];
+                                           }
+                                       "
+                                       :checked="coursePermissions[{{ $course->id }}]?.checked || false">
+                                <span>{{ $course->title }}</span>
+                            </div>
 
-            <div class="checkbox-grid">
-                @foreach($groups as $group)
-                    <label class="checkbox-item">
-                        <input type="checkbox"
-                               name="groups[]"
-                               value="{{ $group->id }}"
-                               {{ in_array($group->id, old('groups', [])) ? 'checked' : '' }}>
-                        {{ $group->name }}
-                    </label>
-                @endforeach
+                            <!-- Права доступа для курса -->
+                            <template x-if="coursePermissions[{{ $course->id }}]?.checked">
+                                <div class="course-permissions-container">
+                                    <div class="permission-checkboxes">
+                                        <label class="permission-checkbox">
+                                            <input type="checkbox"
+                                                   name="course_permissions[{{ $course->id }}][can_edit]"
+                                                   :checked="coursePermissions[{{ $course->id }}]?.can_edit || false"
+                                                   @change="coursePermissions[{{ $course->id }}].can_edit = $event.target.checked">
+                                            <span>Редактирование</span>
+                                        </label>
+                                        <label class="permission-checkbox">
+                                            <input type="checkbox"
+                                                   name="course_permissions[{{ $course->id }}][can_delete]"
+                                                   :checked="coursePermissions[{{ $course->id }}]?.can_delete || false"
+                                                   @change="coursePermissions[{{ $course->id }}].can_delete = $event.target.checked">
+                                            <span>Удаление</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </template>
+                        @endforeach
+                    </div>
+                </template>
+            </div>
+
+
+
+            {{-- Группа для студента --}}
+            <div x-show="isStudent" x-cloak>
+                <div class="form-divider"></div>
+                <div class="form-section-label">Группа</div>
+                <div class="checkbox-group">
+                    @foreach($groups as $group)
+                        <label class="checkbox-item">
+                            <input type="radio"
+                                   name="group_id"
+                                   value="{{ $group->id }}"
+                                   {{ old('group_id') == $group->id ? 'checked' : '' }}
+                                   style="width:15px;height:15px;accent-color:var(--teal-500);flex-shrink:0;cursor:pointer;">
+                            {{ $group->name }}
+                        </label>
+                    @endforeach
+                </div>
             </div>
 
             <div class="form-actions">

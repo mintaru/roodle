@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Lecture;
-use App\Models\Course;
 use App\Helpers\WordToHtmlConverter;
+use App\Models\Course;
+use App\Models\Lecture;
 use Illuminate\Http\Request;
-use Smalot\PdfParser\Parser;
 use Illuminate\Support\Facades\Storage;
+use Smalot\PdfParser\Parser;
 
 class LectureController extends Controller
 {
@@ -21,15 +21,15 @@ class LectureController extends Controller
         // Apply search filter
         if ($searchValue) {
             if ($searchColumn === 'title') {
-                $query->where('title', 'like', '%' . $searchValue . '%');
+                $query->where('title', 'like', '%'.$searchValue.'%');
             } elseif ($searchColumn === 'id') {
-                $query->where('id', 'like', '%' . $searchValue . '%');
+                $query->where('id', 'like', '%'.$searchValue.'%');
             } elseif ($searchColumn === 'course') {
                 $query->whereHas('course', function ($q) use ($searchValue) {
-                    $q->where('title', 'like', '%' . $searchValue . '%');
+                    $q->where('title', 'like', '%'.$searchValue.'%');
                 });
             } elseif ($searchColumn === 'content') {
-                $query->where('content', 'like', '%' . $searchValue . '%');
+                $query->where('content', 'like', '%'.$searchValue.'%');
             }
         }
 
@@ -42,7 +42,8 @@ class LectureController extends Controller
     {
         return view('lectures.create', compact('course'));
     }
-//
+
+    //
     public function store(Request $request, Course $course)
     {
         $contentSource = $request->input('content_source', 'manual');
@@ -50,26 +51,26 @@ class LectureController extends Controller
         if ($contentSource === 'pdf') {
             $request->validate([
                 'title' => 'required|string|max:255',
-                'pdf'   => 'required|file|mimes:pdf',
+                'pdf' => 'required|file|mimes:pdf',
                 'from_page' => 'nullable|integer|min:1',
-                'to_page'   => 'nullable|integer|min:1',
+                'to_page' => 'nullable|integer|min:1',
             ]);
 
             $file = $request->file('pdf');
             $path = $file->store('lectures', 'public');
 
-            $parser = new Parser();
+            $parser = new Parser;
             $pdf = $parser->parseFile(Storage::disk('public')->path($path));
             $pages = $pdf->getPages();
 
             $from = $request->from_page ?: 1;
-            $to   = $request->to_page ?: count($pages);
-            $to   = min($to, count($pages));
+            $to = $request->to_page ?: count($pages);
+            $to = min($to, count($pages));
             $from = max(1, $from);
 
             $text = '';
             for ($i = $from - 1; $i < $to; $i++) {
-                $text .= $pages[$i]->getText() . "\n\n";
+                $text .= $pages[$i]->getText()."\n\n";
             }
 
             $lecture = $course->lectures()->create([
@@ -81,26 +82,27 @@ class LectureController extends Controller
         } elseif ($contentSource === 'word') {
             $request->validate([
                 'title' => 'required|string|max:255',
-                'word'  => 'required|file|mimes:doc,docx',
+                'word' => 'required|file|mimes:doc,docx',
             ]);
 
             $file = $request->file('word');
-            $filePath = $file->store('lectures/temp', 'local');
-            $fullPath = Storage::disk('local')->path($filePath);
 
-            // Конвертируем Word в HTML
+            // Сохраняем оригинальный файл в storage/app/lectures (приватно)
+            $path = $file->store('lectures', 'local');
+
+            // Конвертируем в HTML для content
+            $fullPath = Storage::disk('local')->path($path);
             $content = WordToHtmlConverter::convert($fullPath);
 
-            // Удаляем временный файл
-            Storage::disk('local')->delete($filePath);
-
             if (trim(strip_tags($content)) === '') {
+                Storage::disk('local')->delete($path);
+
                 return back()->withErrors(['word' => 'Документ Word пуст или не содержит текста.'])->withInput();
             }
 
             $lecture = $course->lectures()->create([
                 'title' => $request->title,
-                'pdf_path' => null,
+                'pdf_path' => $path,          // храним путь к .docx
                 'content' => $content,
                 'content_type' => Lecture::CONTENT_TYPE_HTML,
             ]);
@@ -129,15 +131,17 @@ class LectureController extends Controller
     public function show(Course $course, Lecture $lecture)
     {
         $user = \Illuminate\Support\Facades\Auth::user();
-        if (!$user?->hasAnyRole(['admin', 'teacher']) && ($lecture->status ?? 'active') === Lecture::STATUS_ARCHIVED) {
+        if (! $user?->hasAnyRole(['admin', 'teacher']) && ($lecture->status ?? 'active') === Lecture::STATUS_ARCHIVED) {
             abort(404);
         }
+
         return view('lectures.show', compact('course', 'lecture'));
     }
 
     public function edit(Lecture $lecture)
     {
         $lecture->load('course');
+
         return view('lectures.edit', compact('lecture'));
     }
 
@@ -147,10 +151,10 @@ class LectureController extends Controller
 
         $request->validate([
             'title' => 'required|string|max:255',
-            'pdf'   => 'nullable|file|mimes:pdf',
-            'word'  => 'nullable|file|mimes:doc,docx',
+            'pdf' => 'nullable|file|mimes:pdf',
+            'word' => 'nullable|file|mimes:doc,docx',
             'from_page' => 'nullable|integer|min:1',
-            'to_page'   => 'nullable|integer|min:1',
+            'to_page' => 'nullable|integer|min:1',
             'content' => 'nullable|string',
         ]);
 
@@ -162,18 +166,18 @@ class LectureController extends Controller
             $file = $request->file('pdf');
             $path = $file->store('lectures', 'public');
 
-            $parser = new Parser();
+            $parser = new Parser;
             $pdf = $parser->parseFile(Storage::disk('public')->path($path));
             $pages = $pdf->getPages();
 
             $from = $request->from_page ?: 1;
-            $to   = $request->to_page ?: count($pages);
-            $to   = min($to, count($pages));
+            $to = $request->to_page ?: count($pages);
+            $to = min($to, count($pages));
             $from = max(1, $from);
 
             $text = '';
             for ($i = $from - 1; $i < $to; $i++) {
-                $text .= $pages[$i]->getText() . "\n\n";
+                $text .= $pages[$i]->getText()."\n\n";
             }
 
             $lecture->update([
@@ -183,27 +187,28 @@ class LectureController extends Controller
                 'content_type' => Lecture::CONTENT_TYPE_TEXT,
             ]);
         } elseif ($contentSource === 'word' && $request->hasFile('word')) {
+            // Удаляем старый файл
             if ($lecture->pdf_path) {
-                Storage::disk('public')->delete($lecture->pdf_path);
+                // Пробуем оба диска
+                Storage::disk('local')->exists($lecture->pdf_path)
+                    ? Storage::disk('local')->delete($lecture->pdf_path)
+                    : Storage::disk('public')->delete($lecture->pdf_path);
             }
 
             $file = $request->file('word');
-            $filePath = $file->store('lectures/temp', 'local');
-            $fullPath = Storage::disk('local')->path($filePath);
-
-            // Конвертируем Word в HTML
+            $path = $file->store('lectures', 'local');
+            $fullPath = Storage::disk('local')->path($path);
             $content = WordToHtmlConverter::convert($fullPath);
 
-            // Удаляем временный файл
-            Storage::disk('local')->delete($filePath);
-
             if (trim(strip_tags($content)) === '') {
+                Storage::disk('local')->delete($path);
+
                 return back()->withErrors(['word' => 'Документ Word пуст или не содержит текста.'])->withInput();
             }
 
             $lecture->update([
                 'title' => $request->title,
-                'pdf_path' => null,
+                'pdf_path' => $path,
                 'content' => $content,
                 'content_type' => Lecture::CONTENT_TYPE_HTML,
             ]);
@@ -270,7 +275,7 @@ class LectureController extends Controller
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
             $path = $file->store('lecture-images', 'public');
-            $url = asset('storage/' . $path);
+            $url = asset('storage/'.$path);
 
             return response()->json([
                 'url' => $url,
@@ -280,4 +285,37 @@ class LectureController extends Controller
 
         return response()->json(['error' => 'No file uploaded'], 400);
     }
+
+    public function serveFile(Course $course, Lecture $lecture)
+{
+    if (!$lecture->pdf_path) {
+        abort(404);
+    }
+
+    // Авторизация — только залогиненные
+    if (!\Illuminate\Support\Facades\Auth::check()) {
+        abort(403);
+    }
+
+    // Файл может быть на local или public диске
+    if (Storage::disk('local')->exists($lecture->pdf_path)) {
+        $fullPath = Storage::disk('local')->path($lecture->pdf_path);
+    } elseif (Storage::disk('public')->exists($lecture->pdf_path)) {
+        $fullPath = Storage::disk('public')->path($lecture->pdf_path);
+    } else {
+        abort(404);
+    }
+
+    $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+    $mimeTypes = [
+        'pdf'  => 'application/pdf',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'doc'  => 'application/msword',
+    ];
+    $mime = $mimeTypes[$extension] ?? 'application/octet-stream';
+
+    return response()->file($fullPath, [
+        'Content-Type' => $mime,
+    ]);
+}
 }

@@ -22,28 +22,23 @@
     @endif
 
     {{-- Search --}}
-    <div style="margin-bottom: 16px; position: relative;">
-        <span
-            style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); font-size: 14px; pointer-events: none;">🔍</span>
-        <input x-model="search" type="text" placeholder="Поиск по тестам, лекциям, материалам..."
-            style="width: 100%; padding: 8px 36px 8px 32px; border: 1px solid var(--color-border); border-radius: var(--r-sm); font-size: 13px; box-sizing: border-box; background: var(--color-surface);">
-        <button x-show="search !== ''" @click="search = ''"
-            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 14px; color: var(--color-text-muted); line-height: 1;">✕</button>
+    <div style="margin-bottom: 16px; position: relative; display: flex; gap: 8px; align-items: center;">
+        <div style="position: relative; flex: 1;">
+            <span
+                style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); font-size: 14px; pointer-events: none;">🔍</span>
+            <input x-model="search" type="text" placeholder="Поиск по тестам, лекциям, материалам..."
+                style="width: 100%; padding: 8px 36px 8px 32px; border: 1px solid var(--color-border); border-radius: var(--r-sm); font-size: 13px; box-sizing: border-box; background: var(--color-surface);">
+            <button x-show="search !== ''" @click="search = ''"
+                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 14px; color: var(--color-text-muted); line-height: 1;">✕</button>
+        </div>
+        @if ($canManage)
+            <button type="button" onclick="openCreateModal()"
+                style="width: 36px; height: 36px; flex-shrink: 0; background: var(--teal-500); color: #fff; border: none; border-radius: var(--r-sm); font-size: 20px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-accent);"
+                title="Создать">+</button>
+        @endif
     </div>
 
-    {{-- Add New Section --}}
-    @hasanyrole('teacher|admin')
-        <div
-            style="margin: 24px 0; padding: 16px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--r-lg);">
-            <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--gray-800);">Добавить новую
-                секцию</h2>
-            <form @submit.prevent="$wire.addSection()" style="display: flex; gap: 8px;">
-                <input type="text" wire:model="newSectionTitle" placeholder="Название секции" required
-                    style="flex: 1; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--r-sm); font-size: 13px;">
-                <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Создать</button>
-            </form>
-        </div>
-    @endhasanyrole
+
 
     {{-- Sections List --}}
     @forelse($sections as $section)
@@ -64,7 +59,7 @@
 
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                 <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-                    @hasanyrole('teacher|admin')
+                    @if ($canManage)
                         @if ($editingSectionId === $section->id)
                             <form @submit.prevent="$wire.updateSection()" style="display: flex; gap: 8px; flex: 1;">
                                 <input type="text" wire:model="editingSectionTitle"
@@ -81,14 +76,14 @@
                     @else
                         <h2 style="font-size: 16px; font-weight: 700; color: var(--gray-800);">{{ $section->title }}
                         </h2>
-                    @endhasanyrole
+                    @endif
                 </div>
                 <div style="display: flex; gap: 6px; align-items: center;">
                     <button @click="open = !open" class="btn btn-ghost" style="padding: 6px 10px; font-size: 12px;"
                         :title="open ? 'Свернуть' : 'Развернуть'">
                         <span x-text="open ? '▲' : '▼'"></span>
                     </button>
-                    @hasanyrole('teacher|admin')
+                    @if ($canManage)
                         <button wire:click="moveSection({{ $section->id }}, 'up')" class="btn btn-ghost"
                             style="padding: 6px 10px; font-size: 12px;" title="Сдвинуть вверх">↑</button>
                         <button wire:click="moveSection({{ $section->id }}, 'down')" class="btn btn-ghost"
@@ -110,7 +105,7 @@
                         <button type="button" x-data
                             @click="$dispatch('open-delete-section-modal', { id: {{ $section->id }} })"
                             class="btn btn-danger" style="padding: 6px 10px; font-size: 12px;">Удалить</button>
-                    @endhasanyrole
+                    @endif
                 </div>
             </div>
 
@@ -144,109 +139,122 @@
                         <div wire:key="section-item-{{ $sectionItem->id }}"
                             data-search-title="{{ strtolower($item->title) }}"
                             x-show="search === '' || '{{ strtolower(addslashes($item->title)) }}'.includes(search.toLowerCase().trim())"
-                            style="padding: 12px; background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--r-md); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: start;">
-                            <div style="flex: 1;">
-                                @if ($item instanceof \App\Models\Test)
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                        <strong
-                                            style="color: var(--teal-600); font-size: 12px; text-transform: uppercase;">Тест</strong>
-                                        @if (($item->status ?? 'active') === \App\Models\Test::STATUS_ARCHIVED)
-                                            <span
-                                                style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивирован]</span>
-                                        @endif
+                            style="padding: 12px; background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--r-md); margin-bottom: 8px;">
+
+                            @if ($canManage)
+                                @php $menuId = 'menu-' . $sectionItem->id; @endphp
+                            @endif
+
+                            @if ($item instanceof \App\Models\Test)
+                                <div x-data="{ open: false }" @click.outside="open = false"
+                                    style="display: flex; align-items: center; gap: 14px; position: relative;">
+                                    <div style="display: flex; align-items: center; flex-shrink: 0;">
+                                        <img src="{{ asset('storage/icons/test.png') }}" alt="Тест" style="width: 36px; height: 36px;">
                                     </div>
-                                    <a href="{{ route('tests.view', $item) }}"
-                                        style="color: var(--teal-600); text-decoration: none; font-weight: 600; font-size: 14px;">{{ $item->title }}</a>
-                                    <p style="font-size: 12px; color: var(--color-text-muted); margin: 4px 0;">
-                                        Доступен
-                                        с {{ $item->formattedPeriodStart() ?? '—' }} до
-                                        {{ $item->formattedPeriodEnd() ?? '—' }}</p>
-                                    @can('edit courses')
-                                        <div style="margin-top: 6px;">
-                                            <a href="{{ route('tests.show', $item) }}"
-                                                style="font-size: 12px; color: var(--teal-600); text-decoration: none; margin-right: 12px;">Редактировать</a>
-                                            <a href="{{ route('tests.results', $item) }}"
-                                                style="font-size: 12px; color: var(--teal-600); text-decoration: none;">Обзор</a>
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                            <strong style="color: var(--teal-600); font-size: 12px; text-transform: uppercase;">Тест</strong>
+                                            @if (($item->status ?? 'active') === \App\Models\Test::STATUS_ARCHIVED)
+                                                <span style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивирован]</span>
+                                            @endif
                                         </div>
-                                    @endcan
-                                @elseif($item instanceof \App\Models\Lecture)
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                        <strong
-                                            style="color: var(--sky-600); font-size: 12px; text-transform: uppercase;">Лекция</strong>
-                                        @if (($item->status ?? 'active') === \App\Models\Lecture::STATUS_ARCHIVED)
-                                            <span
-                                                style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивирована]</span>
-                                        @endif
-                                    </div>
-                                    <a href="{{ route('lectures.show', ['course' => $course, 'lecture' => $item]) }}"
-                                        style="color: var(--sky-600); text-decoration: none; font-weight: 600; font-size: 14px;">{{ $item->title }}</a>
-                                @elseif($item instanceof \App\Models\Material)
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                        <strong
-                                            style="color: var(--green-600); font-size: 12px; text-transform: uppercase;">📎
-                                            Материал</strong>
-                                        @if (($item->status ?? 'active') === \App\Models\Material::STATUS_ARCHIVED)
-                                            <span
-                                                style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивирован]</span>
-                                        @endif
-                                    </div>
-                                    <p style="font-weight: 600; font-size: 14px; color: var(--gray-800); margin: 0;">
-                                        {{ $item->title }}</p>
-                                    <a href="{{ route('materials.download', ['course' => $course, 'material' => $item]) }}"
-                                        style="display: inline-block; margin-top: 6px; font-size: 12px; color: var(--green-600); text-decoration: none;">⬇
-                                        Скачать</a>
-                                @elseif($item instanceof \App\Models\Assignment)
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                        <strong
-                                            style="color: var(--amber-600); font-size: 12px; text-transform: uppercase;">📋
-                                            Задание</strong>
-                                        @if (($item->status ?? 'active') === \App\Models\Assignment::STATUS_ARCHIVED)
-                                            <span
-                                                style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивировано]</span>
-                                        @endif
-                                    </div>
-                                    <a href="{{ route('assignments.view', ['course' => $course, 'assignment' => $item]) }}"
-                                        style="color: var(--amber-600); text-decoration: none; font-weight: 600; font-size: 14px;">{{ $item->title }}</a>
-                                    @if ($item->due_date)
+                                        <a href="{{ route('tests.view', $item) }}"
+                                            style="color: var(--teal-600); text-decoration: none; font-weight: 600; font-size: 14px;">{{ $item->title }}</a>
                                         <p style="font-size: 12px; color: var(--color-text-muted); margin: 4px 0;">
-                                            Срок сдачи: {{ $item->due_date->format('d.m.Y H:i') }}
+                                            Доступен с {{ $item->formattedPeriodStart() ?? '—' }} до {{ $item->formattedPeriodEnd() ?? '—' }}
                                         </p>
-                                    @endif
-                                    @can('edit courses')
-                                        <div style="margin-top: 6px;">
-                                            <a href="{{ route('assignments.edit', ['course' => $course, 'assignment' => $item]) }}"
-                                                style="font-size: 12px; color: var(--amber-600); text-decoration: none; margin-right: 12px;">Редактировать</a>
-                                            <a href="{{ route('assignments.view', ['course' => $course, 'assignment' => $item]) }}"
-                                                style="font-size: 12px; color: var(--amber-600); text-decoration: none;">Обзор</a>
+                                    </div>
+                                    @if ($canManage)
+                                        <div style="flex-shrink: 0; position: relative;">
+                                            <button type="button" @click="open = !open" class="btn btn-ghost"
+                                                style="padding: 4px 10px; font-size: 18px; line-height: 1; color: var(--color-text-muted); border-color: transparent;">⋯</button>
+                                            @include('livewire.partials.item-menu', ['item' => $item, 'sectionItem' => $sectionItem, 'course' => $course, 'type' => 'test'])
                                         </div>
-                                    @endcan
-                                @endif
-
-
-                            </div>
-                            @hasanyrole('teacher|admin')
-                                <div style="display: flex; gap: 4px; flex-shrink: 0; margin-left: 12px;">
-                                    <button wire:click="moveItem({{ $sectionItem->id }}, 'up')" class="btn btn-ghost"
-                                        style="padding: 4px 8px; font-size: 11px;">↑</button>
-                                    <button wire:click="moveItem({{ $sectionItem->id }}, 'down')" class="btn btn-ghost"
-                                        style="padding: 4px 8px; font-size: 11px;">↓</button>
-                                    {{-- ★ НОВАЯ КНОПКА: настройки видимости элемента --}}
-                                    <button type="button" wire:click="openItemVisibility({{ $sectionItem->id }})"
-                                        class="btn btn-ghost"
-                                        style="padding: 4px 8px; font-size: 11px; color: var(--sky-600); border-color: var(--sky-200);"
-                                        title="Настройки видимости">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                            <circle cx="12" cy="12" r="3" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" x-data
-                                        @click="$dispatch('open-detach-item-modal', { id: {{ $sectionItem->id }} })"
-                                        class="btn btn-danger" style="padding: 4px 8px; font-size: 11px;">Убрать</button>
+                                    @endif
                                 </div>
-                            @endhasanyrole
+
+                            @elseif($item instanceof \App\Models\Lecture)
+                                <div x-data="{ open: false }" @click.outside="open = false"
+                                    style="display: flex; align-items: center; gap: 14px; position: relative;">
+                                    <div style="display: flex; align-items: center; flex-shrink: 0;">
+                                        <img src="{{ asset('storage/icons/lecture.svg') }}" alt="Лекция" style="width: 36px; height: 36px;">
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                            <strong style="color: var(--sky-600); font-size: 12px; text-transform: uppercase;">Лекция</strong>
+                                            @if (($item->status ?? 'active') === \App\Models\Lecture::STATUS_ARCHIVED)
+                                                <span style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивирована]</span>
+                                            @endif
+                                        </div>
+                                        <a href="{{ route('lectures.show', ['course' => $course, 'lecture' => $item]) }}"
+                                            style="color: var(--sky-600); text-decoration: none; font-weight: 600; font-size: 14px;">{{ $item->title }}</a>
+                                    </div>
+                                    @if ($canManage)
+                                        <div style="flex-shrink: 0; position: relative;">
+                                            <button type="button" @click="open = !open" class="btn btn-ghost"
+                                                style="padding: 4px 10px; font-size: 18px; line-height: 1; color: var(--color-text-muted); border-color: transparent;">⋯</button>
+                                            @include('livewire.partials.item-menu', ['item' => $item, 'sectionItem' => $sectionItem, 'course' => $course, 'type' => 'lecture'])
+                                        </div>
+                                    @endif
+                                </div>
+
+                            @elseif($item instanceof \App\Models\Material)
+                                <div x-data="{ open: false }" @click.outside="open = false"
+                                    style="display: flex; align-items: center; gap: 14px; position: relative;">
+                                    <div style="display: flex; align-items: center; flex-shrink: 0;">
+                                        <img src="{{ asset('storage/icons/material.svg') }}" alt="Материал" style="width: 36px; height: 36px;">
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                            <strong style="color: var(--green-600); font-size: 12px; text-transform: uppercase;">Материал</strong>
+                                            @if (($item->status ?? 'active') === \App\Models\Material::STATUS_ARCHIVED)
+                                                <span style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивирован]</span>
+                                            @endif
+                                        </div>
+                                        <a href="{{ route('materials.download', ['course' => $course, 'material' => $item]) }}"
+                                           style="font-weight: 600; font-size: 14px; color: var(--gray-800); text-decoration: none; margin: 0; display: block;">
+                                            {{ $item->title }}
+                                        </a>
+                                    </div>
+                                    @if ($canManage)
+                                        <div style="flex-shrink: 0; position: relative;">
+                                            <button type="button" @click="open = !open" class="btn btn-ghost"
+                                                style="padding: 4px 10px; font-size: 18px; line-height: 1; color: var(--color-text-muted); border-color: transparent;">⋯</button>
+                                            @include('livewire.partials.item-menu', ['item' => $item, 'sectionItem' => $sectionItem, 'course' => $course, 'type' => 'material'])
+                                        </div>
+                                    @endif
+                                </div>
+
+                            @elseif($item instanceof \App\Models\Assignment)
+                                <div x-data="{ open: false }" @click.outside="open = false"
+                                    style="display: flex; align-items: center; gap: 14px; position: relative;">
+                                    <div style="display: flex; align-items: center; flex-shrink: 0;">
+                                        <img src="{{ asset('storage/icons/assignment.svg') }}" alt="Задание" style="width: 36px; height: 36px;">
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                            <strong style="color: var(--amber-600); font-size: 12px; text-transform: uppercase;">Задание</strong>
+                                            @if (($item->status ?? 'active') === \App\Models\Assignment::STATUS_ARCHIVED)
+                                                <span style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивировано]</span>
+                                            @endif
+                                        </div>
+                                        <a href="{{ route('assignments.view', ['course' => $course, 'assignment' => $item]) }}"
+                                            style="color: var(--amber-600); text-decoration: none; font-weight: 600; font-size: 14px;">{{ $item->title }}</a>
+                                        @if ($item->due_date)
+                                            <p style="font-size: 12px; color: var(--color-text-muted); margin: 4px 0;">
+                                                Срок сдачи: {{ $item->due_date->format('d.m.Y H:i') }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                    @if ($canManage)
+                                        <div style="flex-shrink: 0; position: relative;">
+                                            <button type="button" @click="open = !open" class="btn btn-ghost"
+                                                style="padding: 4px 10px; font-size: 18px; line-height: 1; color: var(--color-text-muted); border-color: transparent;">⋯</button>
+                                            @include('livewire.partials.item-menu', ['item' => $item, 'sectionItem' => $sectionItem, 'course' => $course, 'type' => 'assignment'])
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     @empty
                         <div
@@ -348,7 +356,7 @@
          Открывается через wire:click="openSectionVisibility(id)"
          или wire:click="openItemVisibility(id)"
          ============================================================ --}}
-    @hasanyrole('teacher|admin')
+    @if ($canManage)
         <div x-data="{ open: false, label: '' }"
             @open-visibility-modal.window="
                 open = true;
@@ -441,10 +449,174 @@
                 </div>
             </div>
         </div>
-    @endhasanyrole
+    @endif
 
-    {{-- MODAL: добавить элемент — только для учителей --}}
-    @hasanyrole('teacher|admin')
+    {{-- MODAL: добавить элемент — только для учителей с правом редактирования --}}
+    @if ($canManage)
+        <div>
+            <div id="create-modal-overlay" onclick="if(event.target===this) closeCreateModal()"
+                style="display:none; position:fixed; inset:0; background:rgba(17,23,32,.45); backdrop-filter:blur(2px); z-index:1000; align-items:center; justify-content:center; padding:1.5rem;">
+                <div
+                    style="background:var(--color-surface); border-radius:var(--r-xl); box-shadow:var(--shadow-lg); width:100%; max-width:480px; max-height:calc(100vh - 3rem); overflow-y:auto; animation: modal-in .16s ease;">
+
+                    {{-- Заголовок --}}
+                    <div
+                        style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; padding:1.25rem 1.5rem 1rem; border-bottom:1px solid var(--color-border);">
+                        <div>
+                            <div style="font-size:16px; font-weight:700; color:var(--gray-800);"
+                                id="create-modal-title">
+                                Создать</div>
+                            <div style="font-size:13px; color:var(--color-text-muted); margin-top:2px;"
+                                id="create-modal-subtitle">Выберите тип</div>
+                        </div>
+                        <button onclick="closeCreateModal()"
+                            style="width:28px; height:28px; border:none; background:var(--gray-100); color:var(--gray-500); border-radius:var(--r-sm); cursor:pointer; font-size:17px; line-height:1; display:flex; align-items:center; justify-content:center;">×</button>
+                    </div>
+
+                    <div style="padding:1.25rem 1.5rem;">
+
+                        {{-- ШАГ 1: выбор типа --}}
+                        <div id="create-step-type">
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:1.25rem;">
+
+                                <button type="button" onclick="selectCreateType('section')"
+                                    style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
+                                    <div
+                                        style="width:36px; height:36px; border-radius:var(--r-md); background:var(--gray-100); color:var(--gray-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        📁</div>
+                                    <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Секция</div>
+                                    <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">
+                                        Группировка контента</div>
+                                </button>
+
+                                <a href="{{ route('tests.create', $course) }}"
+                                    style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
+                                    <div
+                                        style="width:36px; height:36px; border-radius:var(--r-md); background:var(--teal-50); color:var(--teal-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        📝</div>
+                                    <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Тест</div>
+                                    <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Создать
+                                        новый тест</div>
+                                </a>
+
+                                <a href="{{ route('lectures.create', $course) }}"
+                                    style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
+                                    <div
+                                        style="width:36px; height:36px; border-radius:var(--r-md); background:var(--sky-50); color:var(--sky-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        📖</div>
+                                    <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Лекция</div>
+                                    <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Создать
+                                        новую лекцию</div>
+                                </a>
+
+                                <a href="{{ route('materials.create', $course) }}"
+                                    style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
+                                    <div
+                                        style="width:36px; height:36px; border-radius:var(--r-md); background:var(--green-50); color:var(--green-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        📎</div>
+                                    <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Материал</div>
+                                    <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">
+                                        Загрузить файл</div>
+                                </a>
+
+                                <a href="{{ route('assignments.create', $course) }}"
+                                    style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
+                                    <div
+                                        style="width:36px; height:36px; border-radius:var(--r-md); background:var(--amber-50); color:var(--amber-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        📋</div>
+                                    <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Задание</div>
+                                    <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Создать
+                                        задание</div>
+                                </a>
+
+
+
+                            </div>
+                        </div>
+
+                        {{-- ШАГ 2: создать секцию --}}
+                        <div id="create-step-section" style="display:none;">
+                            <button type="button" onclick="backToCreateType()"
+                                style="background:none; border:none; cursor:pointer; font-size:12px; font-weight:600; color:var(--color-text-muted); padding:0; margin-bottom:14px; display:flex; align-items:center; gap:4px;">←
+                                Назад</button>
+                            <div style="margin-bottom:12px;">
+                                <label
+                                    style="display:block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--gray-500); margin-bottom:5px;">Название
+                                    секции</label>
+                                <input type="text" id="create-section-input" placeholder="Введите название секции"
+                                    style="width:100%; box-sizing:border-box; padding:8px 12px; border:1px solid var(--color-border); border-radius:var(--r-md); font-size:14px; font-family:var(--font-body); background:var(--color-surface);"
+                                    onkeydown="if(event.key==='Enter'){event.preventDefault();doCreateSection();}">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    {{-- Футер --}}
+                    <div style="padding:1rem 1.5rem; border-top:1px solid var(--color-border); display:flex; align-items:center; justify-content:flex-end; gap:8px;"
+                        id="create-modal-footer">
+                        <button type="button" onclick="closeCreateModal()"
+                            style="display:inline-flex; align-items:center; padding:8px 16px; background:transparent; color:var(--color-text-secondary); border:1px solid var(--color-border); border-radius:var(--r-full); font-family:var(--font-body); font-size:14px; font-weight:600; cursor:pointer;">Отмена</button>
+                        <button type="button" id="create-section-confirm-btn" onclick="doCreateSection()"
+                            style="display:none; padding:9px 20px; background:var(--teal-500); color:#fff; border:none; border-radius:var(--r-full); font-family:var(--font-body); font-size:14px; font-weight:600; cursor:pointer;">Создать
+                            секцию</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <script>
+
+
+                function openCreateModal() {
+                    backToCreateType();
+                    document.getElementById('create-modal-overlay').style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                }
+
+                function closeCreateModal() {
+                    document.getElementById('create-modal-overlay').style.display = 'none';
+                    document.body.style.overflow = '';
+                    document.getElementById('create-section-input').value = '';
+                }
+
+                function selectCreateType(type) {
+                    if (type === 'section') {
+                        document.getElementById('create-step-type').style.display = 'none';
+                        document.getElementById('create-step-section').style.display = '';
+                        document.getElementById('create-modal-title').textContent = 'Новая секция';
+                        document.getElementById('create-modal-subtitle').textContent = 'Введите название';
+                        document.getElementById('create-section-confirm-btn').style.display = '';
+                        setTimeout(() => document.getElementById('create-section-input').focus(), 50);
+                    }
+                }
+
+                function backToCreateType() {
+                    document.getElementById('create-step-type').style.display = '';
+                    document.getElementById('create-step-section').style.display = 'none';
+                    document.getElementById('create-modal-title').textContent = 'Создать';
+                    document.getElementById('create-modal-subtitle').textContent = 'Выберите тип';
+                    document.getElementById('create-section-confirm-btn').style.display = 'none';
+                    document.getElementById('create-section-input').value = '';
+                }
+
+                function doCreateSection() {
+                    const val = document.getElementById('create-section-input').value.trim();
+                    if (!val) return;
+                    @this.set('newSectionTitle', val);
+                    @this.call('addSection');
+                    closeCreateModal();
+                }
+
+                document.addEventListener('keydown', e => {
+                    if (e.key === 'Escape' && document.getElementById('create-modal-overlay').style.display === 'flex') {
+                        closeCreateModal();
+                    }
+                });
+            </script>
+        </div>
+
+
+
         @php
             $attachData = [];
             foreach ($sections as $sec) {
@@ -677,6 +849,5 @@
                 }
             </script>
         </div>
-    @endhasanyrole
-
+    @endif
 </div>

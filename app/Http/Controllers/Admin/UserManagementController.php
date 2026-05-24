@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\Group;
+use App\Models\TeacherCoursePermission;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
@@ -14,11 +16,11 @@ class UserManagementController extends Controller
     public function index(Request $request)
     {
         $query = User::with('roles', 'groups');
-        
+
         // Search by column
         $searchColumn = $request->input('search_column', 'name');
         $searchValue = $request->input('search_value', '');
-        
+
         if ($searchValue) {
             if ($searchColumn === 'name') {
                 $query->where('name', 'like', '%' . $searchValue . '%');
@@ -31,7 +33,7 @@ class UserManagementController extends Controller
                 });
             }
         }
-        
+
         $users = $query->get();
         $roles = Role::all();
 
@@ -42,8 +44,9 @@ class UserManagementController extends Controller
     {
         $roles = Role::all();
         $groups = Group::all();
+        $courses = Course::active()->orderBy('title')->get();
 
-        return view('admin.users.create', compact('roles', 'groups'));
+        return view('admin.users.create', compact('roles', 'groups', 'courses'));
     }
 
     public function store(Request $request)
@@ -53,31 +56,38 @@ class UserManagementController extends Controller
             'username' => 'required|string|max:255|unique:users',
             'password' => 'required|min:6',
             'role' => 'required|exists:roles,name',
+            'teacher_courses' => 'nullable|array',
+            'teacher_courses.*' => 'exists:courses,id',
+            'group_id' => 'nullable|exists:groups,id',
         ]);
-    
+
         $user = User::create([
             'name' => $validated['name'],
             'username' => $validated['username'],
             'password' => bcrypt($validated['password']),
         ]);
-    
+
         $user->assignRole($validated['role']);
-    
-        if ($request->has('groups')) {
-            $user->groups()->sync($request->groups);
+
+        // Группа только для студентов
+        if ($validated['role'] === 'student' && $request->filled('group_id')) {
+            $user->groups()->sync([$request->group_id]);
         }
-    
+
+        // Курсы только для учителей
+        if ($validated['role'] === 'teacher' && $request->has('teacher_courses')) {
+            foreach ($request->teacher_courses as $courseId) {
+                TeacherCoursePermission::create([
+                    'user_id' => $user->id,
+                    'course_id' => (int) $courseId,
+                    'can_edit' => $request->boolean("course_permissions.{$courseId}.can_edit"),
+                    'can_delete' => $request->boolean("course_permissions.{$courseId}.can_delete"),
+                    'can_manage_students' => $request->boolean("course_permissions.{$courseId}.can_manage_students"),
+                ]);
+            }
+        }
+
         return redirect()->route('admin.users.index')->with('success', 'Пользователь создан');
-    }
-    
-
-    public function edit(User $user)
-    {
-        $roles = Role::all();
-        $groups = Group::all();
-        $permissions = Permission::all();
-
-        return view('admin.users.edit', compact('user', 'roles', 'groups', 'permissions'));
     }
 
     public function update(Request $request, User $user)
@@ -87,25 +97,57 @@ class UserManagementController extends Controller
             'username' => "required|string|max:255|unique:users,username,{$user->id}",
             'password' => 'nullable|min:6',
             'role' => 'required|exists:roles,name',
+            'teacher_courses' => 'nullable|array',
+            'teacher_courses.*' => 'exists:courses,id',
+            'group_id' => 'nullable|exists:groups,id',
         ]);
-    
+
         $user->name = $validated['name'];
         $user->username = $validated['username'];
-    
+
         if (!empty($validated['password'])) {
             $user->password = bcrypt($validated['password']);
         }
-    
+
         $user->save();
-    
+
         $user->syncRoles([$validated['role']]);
-    
-        $user->groups()->sync($request->groups ?? []);
-        $user->syncPermissions($request->permissions ?? []);
-    
+
+        // Группа только для студентов, иначе очищаем
+        if ($validated['role'] === 'student' && $request->filled('group_id')) {
+            $user->groups()->sync([$request->group_id]);
+        } else {
+            $user->groups()->sync([]);
+        }
+
+        // Курсы только для учителей
+        $user->coursePermissions()->delete();
+
+        if ($validated['role'] === 'teacher' && $request->has('teacher_courses')) {
+            foreach ($request->teacher_courses as $courseId) {
+                TeacherCoursePermission::create([
+                    'user_id' => $user->id,
+                    'course_id' => (int) $courseId,
+                    'can_edit' => $request->boolean("course_permissions.{$courseId}.can_edit"),
+                    'can_delete' => $request->boolean("course_permissions.{$courseId}.can_delete"),
+                    'can_manage_students' => $request->boolean("course_permissions.{$courseId}.can_manage_students"),
+                ]);
+            }
+        }
+
         return redirect()->route('admin.users.index')->with('success', 'Пользователь обновлён');
     }
-    
+
+    public function edit(User $user)
+    {
+        $roles = Role::all();
+        $groups = Group::all();
+        $permissions = Permission::all();
+        $courses = Course::active()->orderBy('title')->get();
+
+        return view('admin.users.edit', compact('user', 'roles', 'groups', 'permissions', 'courses'));
+    }
+
 
     public function destroy(User $user)
     {

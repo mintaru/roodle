@@ -45,16 +45,12 @@ Route::middleware('auth')->group(function () {
 
 
 
-
 Route::get('/', [CourseController::class, 'index'])->middleware('auth')->name("home");
 Route::get('/courses/archived', [CourseController::class, 'archived'])->name('courses.archived');
 
 Route::get('/courses/create', [CourseController::class, 'create'])->middleware('auth')->name('courses.create');
-Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
+Route::get('/courses/{course}', [CourseController::class, 'show'])->middleware('auth')->name('courses.show');
 
-Route::get('/newview', function () {
-    return view('newview');
-})->name('newview');
 // Маршрут для настройки базы данных
 
 // --- Маршруты для управления тестами (используя TestController) ---
@@ -71,6 +67,7 @@ Route::get('/courses/{course}/tests/create', [TestController::class, 'create'])-
 Route::post('/courses/{course}/tests', [TestController::class, 'store'])->name('tests.store');
 
 Route::get('/tests/{test}/view', [TestController::class, 'view'])->middleware('auth')->name('tests.view');
+
 
 // Страница просмотра одного теста (включая вопросы)
 // Eloquent автоматически найдет тест по ID благодаря Route Model Binding
@@ -94,6 +91,8 @@ Route::get('/tests/{test}/results', [TestController::class, 'results'])->middlew
 
 // Просмотр деталей попытки ученика
 Route::get('/test-attempts/{attempt}/details', [TestController::class, 'viewAttemptDetails'])->middleware('auth')->name('test-attempts.details');
+
+Route::post('/tests/generate-question', [QuestionController::class, 'generate'])->name('questions.generate');
 
 // Ручная проверка развёрнутых ответов в попытке
 Route::post('/test-attempts/{attempt}/grade-rich-text', [TestController::class, 'gradeRichTextAnswers'])
@@ -138,7 +137,9 @@ Route::post('/tests/{test}/result', [TestController::class, 'result'])
 Route::get('/courses/{course}/lectures/create', [LectureController::class, 'create'])->middleware('auth')->name('lectures.create');
 Route::post('/courses/{course}/lectures', [LectureController::class, 'store'])->middleware('auth')->name('lectures.store');
 Route::post('/lectures/upload-attachment', [LectureController::class, 'uploadAttachment'])->middleware('auth')->name('lectures.upload-attachment');
-
+Route::get('/courses/{course}/lectures/{lecture}/file', [LectureController::class, 'serveFile'])
+    ->name('lectures.file')
+    ->middleware('auth');
 
 // Новый маршрут для просмотра лекции через курс
 Route::get('/courses/{course}/lectures/{lecture}', [LectureController::class, 'show'])->middleware('auth')->name('lectures.show');
@@ -146,6 +147,8 @@ Route::get('/courses/{course}/lectures/{lecture}', [LectureController::class, 's
 // Маршруты для материалов
 Route::get('/courses/{course}/materials/create', [MaterialController::class, 'create'])->middleware('auth')->name('materials.create');
 Route::post('/courses/{course}/materials', [MaterialController::class, 'store'])->middleware('auth')->name('materials.store');
+Route::get('/courses/{course}/materials/{material}/edit', [MaterialController::class, 'edit'])->middleware('auth')->name('materials.edit');
+Route::put('/courses/{course}/materials/{material}', [MaterialController::class, 'update'])->middleware('auth')->name('materials.update');
 Route::get('/courses/{course}/materials/{material}/download', [MaterialController::class, 'download'])->middleware('auth')->name('materials.download');
 Route::delete('/courses/{course}/materials/{material}', [MaterialController::class, 'destroy'])->middleware('auth')->name('materials.destroy');
 Route::patch('/courses/{course}/materials/{material}/toggle-status', [MaterialController::class, 'toggleStatus'])->middleware('auth')->name('materials.toggle-status');
@@ -275,6 +278,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 Route::get('/profile-update', function () {
     return view('profile.edit');
 })->middleware(['auth'])->name('profile.update-profile-information-form');
+
+// Редактирование полей теста (не вопросов) - ДОЛЖНЫ БЫТЬ ПЕРЕД /tests/{test}
+Route::get('/tests/{test}/edit', [TestController::class, 'edit'])->middleware('auth')->name('tests.edit-settings');
+Route::put('/tests/{test}', [TestController::class, 'update'])->middleware('auth')->name('tests.update-settings');
 
 
 require __DIR__.'/auth.php';

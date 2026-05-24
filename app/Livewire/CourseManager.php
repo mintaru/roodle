@@ -33,14 +33,24 @@ class CourseManager extends Component
 
     public $errorMessage = '';
 
+    public bool $canManage = false;
+
     public function mount(Course $course)
     {
+        $user = auth()->user();
+        $this->canManage = $user->hasRole('admin') ||
+                           $course->user_id === $user->id ||
+                           $course->teacherPermissions()
+                               ->where('user_id', $user->id)
+                               ->where('can_edit', true)
+                               ->exists();
         $this->course = $course;
         $this->course->load(['sections.items', 'tests', 'lectures', 'materials', 'assignments']);
     }
 
     public function addSection()
     {
+        abort_unless($this->canManage, 403);
         $this->validate();
 
         try {
@@ -66,6 +76,7 @@ class CourseManager extends Component
 
     public function editSection($sectionId)
     {
+        abort_unless($this->canManage, 403);
         $section = $this->course->sections()->find($sectionId);
         if ($section) {
             $this->editingSectionId = $sectionId;
@@ -75,6 +86,7 @@ class CourseManager extends Component
 
     public function updateSection()
     {
+        abort_unless($this->canManage, 403);
         $this->validate(['editingSectionTitle' => 'required|string|max:255']);
 
         try {
@@ -99,6 +111,7 @@ class CourseManager extends Component
 
     public function deleteSection($sectionId)
     {
+        abort_unless($this->canManage, 403);
         try {
             $section = $this->course->sections()->find($sectionId);
             if ($section) {
@@ -114,6 +127,7 @@ class CourseManager extends Component
     #[Renderless]
     public function getAttachData(int $sectionId): array
     {
+        abort_unless($this->canManage, 403);
         $sec = $this->course->sections->find($sectionId);
         if (! $sec) {
             return ['tests' => [], 'lectures' => [], 'materials' => [], 'assignments' => []];
@@ -138,6 +152,7 @@ class CourseManager extends Component
 
     public function moveSection($sectionId, $direction)
     {
+        abort_unless($this->canManage, 403);
         if (! in_array($direction, ['up', 'down'], true)) {
             return;
         }
@@ -151,9 +166,10 @@ class CourseManager extends Component
             $operator = $direction === 'up' ? '<' : '>';
             $orderBy = $direction === 'up' ? 'desc' : 'asc';
 
+            // Clear relation's default ordering to correctly select the nearest neighbor
             $swapWith = $this->course->sections()
                 ->where('position', $operator, $section->position)
-                ->orderBy('position', $orderBy)
+                ->reorder('position', $orderBy)
                 ->first();
 
             if ($swapWith) {
@@ -169,6 +185,7 @@ class CourseManager extends Component
 
     public function attachItem($sectionId, $itemType, $itemId)
     {
+        abort_unless($this->canManage, 403);
         if (! $itemId) {
             return; // Пользователь выбрал пустой вариант
         }
@@ -234,6 +251,7 @@ class CourseManager extends Component
 
     public function moveItem($itemId, $direction)
     {
+        abort_unless($this->canManage, 403);
         if (! in_array($direction, ['up', 'down'], true)) {
             return;
         }
@@ -249,9 +267,12 @@ class CourseManager extends Component
             $operator = $direction === 'up' ? '<' : '>';
             $orderBy = $direction === 'up' ? 'desc' : 'asc';
 
+            // Use reorder() to clear the default ordering from the relation
+            // (relation defines ->orderBy('position')) so we must reset it
+            // to correctly pick the nearest neighbor in the requested direction.
             $swapWith = $section->items()
                 ->where('position', $operator, $item->position)
-                ->orderBy('position', $orderBy)
+                ->reorder('position', $orderBy)
                 ->first();
 
             if ($swapWith) {
@@ -267,6 +288,7 @@ class CourseManager extends Component
 
     public function detachItem($itemId)
     {
+        abort_unless($this->canManage, 403);
         try {
             $item = CourseSectionItem::with('section')->find($itemId);
             if ($item) {
@@ -315,6 +337,7 @@ class CourseManager extends Component
      */
     public function openItemVisibility(int $sectionItemId): void
     {
+        abort_unless($this->canManage, 403);
         $item = \App\Models\CourseSectionItem::findOrFail($sectionItemId);
         abort_unless($item->section->course_id === $this->course->id, 403);
 

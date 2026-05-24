@@ -5,9 +5,9 @@
       <div>
         <h1 class="section-title">Наши курсы</h1>
       </div>
-      @if(auth()->user()->hasRole('teacher'))
+      @if(auth()->user()->hasRole('teacher') || auth()->user()->hasRole('admin'))
         <a href="{{ route('courses.create') }}" class="btn btn-primary">
-          ➕ Создать курс
+           Создать курс
         </a>
       @endif
     </div>
@@ -18,7 +18,7 @@
         <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-        <input type="text" wire:model.live.debounce-300ms="search" placeholder="Введите название курса..." class="search-input">
+        <input type="text" wire:model.live.debounce-300ms="search" placeholder="Введите название курса или имя автора..." class="search-input">
       </div>
     </div>
 
@@ -41,7 +41,7 @@
         @endphp
 
         <div class="course-card" @click="window.location.href = '{{ route('courses.show', $course) }}';" style="cursor: pointer;">
-          @if(auth()->user()->hasRole('admin') || $course->user_id === auth()->id())
+          @if(auth()->user()->hasRole('admin') || $course->user_id === auth()->id() || $canEdit || $canDelete)
             <button @click.stop="openMenuId = openMenuId === {{ $course->id }} ? null : {{ $course->id }}" class="course-card-menu-btn" title="Меню">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="12" cy="5" r="2" />
@@ -51,23 +51,31 @@
             </button>
 
             <div x-show="openMenuId === {{ $course->id }}" @click.away="openMenuId = null" x-transition class="course-card-menu" style="display:none">
-              <form action="{{ route('courses.archive', $course) }}" method="POST" style="display: inline;">
-                @csrf
-                @method('PATCH')
-                <button type="submit" class="btn course-card-menu-item">
-                  Архивировать
-                </button>
-              </form>
-              <a href="{{ route('courses.edit', $course) }}" @click.stop class="btn course-card-menu-item" title="Редактировать">
-                Редактировать
-              </a>
-              <form action="{{ route('courses.destroy', $course) }}" method="POST" style="display: inline;" @click.stop>
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn course-card-menu-item" title="Удалить" onclick="return confirm('Вы уверены, что хотите удалить этот курс?')">
-                  Удалить
-                </button>
-              </form>
+              @if(auth()->user()->hasRole('admin') || $course->user_id === auth()->id())
+                <form action="{{ route('courses.archive', $course) }}" method="POST" style="display: inline;">
+                  @csrf
+                  @method('PATCH')
+                  <button type="submit" class="btn course-card-menu-item">
+                    Архивировать
+                  </button>
+                </form>
+              @endif
+
+              @if($canEdit)
+                <a href="{{ route('courses.edit', $course) }}" @click.stop class="btn course-card-menu-item" title="Редактировать">
+                  Редактировать
+                </a>
+              @endif
+
+              @if($canDelete)
+                <form action="{{ route('courses.destroy', $course) }}" method="POST" style="display: inline;" @click.stop>
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="btn course-card-menu-item" title="Удалить" onclick="return confirm('Вы уверены, что хотите удалить этот курс?')">
+                    Удалить
+                  </button>
+                </form>
+              @endif
             </div>
           @endif
 
@@ -79,6 +87,9 @@
 
           <div class="course-card__body">
             <h2 class="course-card__title">{{ $course->title }}</h2>
+            @if($course->author)
+              <p class="course-card__teacher" style="font-size:0.9rem;color:var(--muted-color);margin-top:6px;">{{ $course->author->name }}</p>
+            @endif
           </div>
         </div>
       @empty

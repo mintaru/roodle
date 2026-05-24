@@ -834,18 +834,16 @@
             background: var(--gray-200);
             border-radius: 3px;
         }
+
+        body {
+    margin: 0;
+    padding: 0;
+}
     </style>
 </head>
 
 <body>
-    <header class="header">
-        <div class="header__inner">
-            <a href="/" class="logo">
-                <img src="{{ asset('images/logo.png') }}" alt="Логотип" style="height:36px;">
-            </a>
-        </div>
-    </header>
-
+    @include("components.menu")
     <div class="tq-wrap">
 
         <a href="{{ route('courses.show', $test->course) }}" class="tq-back">
@@ -1024,7 +1022,19 @@
             <form action="/tests/{{ $test->id }}/questions" method="POST" id="question-form">
                 @csrf
                 <div class="modal__body">
-
+                    {{-- ── AI-генерация ── --}}
+                    <div class="ff" style="background:var(--teal-50);border:1px solid var(--teal-100);border-radius:var(--r-md);padding:12px 14px;margin-bottom:1.2rem;">
+                        <label style="color:var(--teal-700);">✨ Сгенерировать с помощью AI</label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="text" id="ai-prompt" placeholder="Например: вопрос про ООП в Python"
+                                style="flex:1;padding:8px 11px;border:1px solid var(--teal-200);border-radius:var(--r-md);font-size:14px;font-family:var(--font-body);">
+                            <button type="button" id="ai-gen-btn" onclick="generateQuestion()"
+                                style="padding:8px 16px;background:var(--teal-500);color:#fff;border:none;border-radius:var(--r-full);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--font-body);transition:var(--transition);">
+                                Сгенерировать
+                            </button>
+                        </div>
+                        <div id="ai-status" style="font-size:12px;color:var(--teal-700);margin-top:6px;display:none;"></div>
+                    </div>
                     @if ($errors->any())
                         <div class="alert-error">
                             <strong>Ошибки:</strong>
@@ -1221,6 +1231,78 @@
 
     <script src="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.umd.min.js"></script>
     <script>
+
+async function generateQuestion() {
+    const prompt = document.getElementById('ai-prompt').value.trim();
+    if (!prompt) { alert('Введите промпт'); return; }
+
+    const btn = document.getElementById('ai-gen-btn');
+    const status = document.getElementById('ai-status');
+    btn.disabled = true;
+    btn.textContent = '…';
+    status.style.display = 'block';
+    status.textContent = 'Генерирую вопрос…';
+
+    try {
+        const res = await fetch("{{ route('questions.generate') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({
+                prompt: prompt,
+                question_type: qType.value,
+            }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+            status.textContent = '❌ Ошибка: ' + (data.error || 'неизвестная');
+            return;
+        }
+
+        // Вставляем текст вопроса в Trix
+        const trixEl = document.querySelector('trix-editor');
+        if (trixEl) {
+            trixEl.editor.loadHTML(data.question_text);
+        }
+
+        // Заполняем варианты ответов
+        const t = qType.value;
+        if (t === 'single_choice' || t === 'multiple_choice') {
+            // Очищаем существующие варианты
+            optCont.innerHTML = '';
+            data.options.forEach((opt, i) => {
+                const it = t === 'single_choice' ? 'radio' : 'checkbox';
+                const na = t === 'single_choice' ? 'correct_option' : 'correct_options[]';
+                const row = document.createElement('div');
+                row.className = 'opt-row';
+                row.innerHTML = `<input type="${it}" name="${na}" value="${i}" ${opt.is_correct ? 'checked' : ''}>` +
+                    `<input type="text" name="options[${i}]" value="${opt.text.replace(/"/g,'&quot;')}" placeholder="Вариант ${i+1}" required>`;
+                optCont.appendChild(row);
+            });
+        } else if (t === 'short_answer') {
+            ansCont.innerHTML = '';
+            const correct = data.options.filter(o => o.is_correct);
+            correct.forEach((opt, i) => {
+                const row = document.createElement('div');
+                row.className = 'opt-row';
+                row.innerHTML = `<input type="text" name="correct_answers[${i}]" value="${opt.text.replace(/"/g,'&quot;')}" placeholder="Правильный ответ" required>`;
+                ansCont.appendChild(row);
+            });
+        }
+
+        status.textContent = '✅ Готово! Проверьте и отредактируйте если нужно.';
+
+    } catch (e) {
+        status.textContent = '❌ Ошибка сети: ' + e.message;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Сгенерировать';
+    }
+}
         /* ── MODAL UTILS ── */
         function openModal(id) {
             document.getElementById(id).classList.add('open');

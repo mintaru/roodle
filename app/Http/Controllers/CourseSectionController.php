@@ -63,9 +63,10 @@ class CourseSectionController extends Controller
         $operator = $direction === 'up' ? '<' : '>';
         $orderBy = $direction === 'up' ? 'desc' : 'asc';
 
+        // Clear relation's default ordering to correctly select the nearest neighbor
         $swapWith = $course->sections()
             ->where('position', $operator, $section->position)
-            ->orderBy('position', $orderBy)
+            ->reorder('position', $orderBy)
             ->first();
 
         if ($swapWith) {
@@ -141,9 +142,10 @@ class CourseSectionController extends Controller
         $operator = $direction === 'up' ? '<' : '>';
         $orderBy = $direction === 'up' ? 'desc' : 'asc';
 
+        // Clear relation's default ordering to correctly select the nearest neighbor
         $swapWith = $section->items()
             ->where('position', $operator, $item->position)
-            ->orderBy('position', $orderBy)
+            ->reorder('position', $orderBy)
             ->first();
 
         if ($swapWith) {

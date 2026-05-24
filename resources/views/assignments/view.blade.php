@@ -1,395 +1,865 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $assignment->title }}</title>
-    <link rel="stylesheet" href="{{ asset('css/courses-show.css') }}">
+
+    <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap"
+        rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
+
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <style>
-        .assignment-header {
-            background-color: #f9f9f9;
-            padding: 20px;
-            border-radius: 4px;
-            margin-bottom: 20px;
+
+        .assignment-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 1.5rem;
+            align-items: start;
         }
-        .assignment-meta {
+
+        .assignment-main {
             display: flex;
-            gap: 20px;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .assignment-sidebar {
+            position: sticky;
+            top: 90px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .hero-card {
+            background: linear-gradient(
+                135deg,
+                var(--teal-600) 0%,
+                var(--sky-600) 100%
+            );
+
+            border-radius: var(--r-2xl);
+
+            padding: 2.5rem;
+
+            color: white;
+
+            position: relative;
+
+            overflow: hidden;
+        }
+
+        .hero-card::before {
+            content: "";
+
+            position: absolute;
+
+            top: -90px;
+            right: -90px;
+
+            width: 260px;
+            height: 260px;
+
+            border-radius: 999px;
+
+            background: rgba(255,255,255,.08);
+        }
+
+        .hero-label {
+            position: relative;
+            z-index: 1;
+
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: .8;
+            font-weight: 700;
+
+            margin-bottom: .75rem;
+        }
+
+        .hero-title {
+            position: relative;
+            z-index: 1;
+
+            font-family: var(--font-display);
+
+            font-size: 40px;
+
+            line-height: 1.1;
+
+            margin-bottom: 1rem;
+        }
+
+        .hero-meta {
+            position: relative;
+            z-index: 1;
+
+            display: flex;
             flex-wrap: wrap;
-            margin-top: 10px;
-            font-size: 14px;
+            gap: .75rem;
         }
-        .assignment-section {
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            border-left: 4px solid #007bff;
+
+        .content-card {
+            background: var(--color-surface);
+
+            border: 1px solid var(--color-border);
+
+            border-radius: var(--r-xl);
+
+            padding: 1.75rem;
+
+            box-shadow: var(--shadow-sm);
         }
-        .assignment-section h3 {
-            margin-top: 0;
-            color: #333;
+
+        .content-card__title {
+            font-size: 20px;
+
+            font-weight: 700;
+
+            color: var(--gray-800);
+
+            margin-bottom: 1rem;
         }
-        .file-list {
-            list-style: none;
-            padding: 0;
+
+        .content-text {
+            color: var(--color-text-secondary);
+
+            line-height: 1.8;
+
+            font-size: 15px;
         }
-        .file-item {
+
+        .info-list {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: .25rem;
+        }
+
+        .info-label {
+            font-size: 12px;
+
+            font-weight: 700;
+
+            text-transform: uppercase;
+
+            letter-spacing: .5px;
+
+            color: var(--color-text-muted);
+        }
+
+        .info-value {
+            font-size: 14px;
+
+            font-weight: 600;
+
+            color: var(--gray-800);
+        }
+
+        .status-badge {
+            display: inline-flex;
             align-items: center;
-            padding: 10px;
-            background-color: white;
-            margin-bottom: 5px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
+            justify-content: center;
+
+            width: fit-content;
+
+            padding: 6px 12px;
+
+            border-radius: var(--r-full);
+
+            font-size: 12px;
+
+            font-weight: 700;
         }
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 15px;
+
+        .status-submitted {
+            background: var(--green-50);
+            color: var(--green-700);
+        }
+
+        .status-graded {
+            background: var(--sky-50);
+            color: var(--sky-700);
+        }
+
+        .status-overdue {
+            background: #ffebee;
+            color: var(--red-500);
+        }
+
+        .success-message {
+            background: var(--green-50);
+
+            color: var(--green-700);
+
+            border: 1px solid var(--green-100);
+
+            border-radius: var(--r-lg);
+
+            padding: 14px 16px;
+
+            font-size: 14px;
+
+            font-weight: 600;
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: .75rem;
+
+            list-style: none;
+
+            padding: 0;
+            margin: 0;
+        }
+
+        .file-item {
+            background: var(--gray-50);
+
+            border: 1px solid var(--color-border);
+
+            border-radius: var(--r-lg);
+
+            padding: 1rem;
+        }
+
+        .file-item__top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .file-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+
+        .file-meta {
+            font-size: 12px;
+            color: var(--color-text-muted);
+            margin-top: 4px;
+        }
+
+        .audio-player {
+            width: 100%;
+            margin-top: .75rem;
+        }
+
+        .submission-answer {
+            background: white;
+
+            border: 1px solid var(--color-border);
+
+            border-radius: var(--r-lg);
+
+            padding: 1rem;
+
+            line-height: 1.7;
+
+            color: var(--gray-700);
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--color-border);
+            margin: 1.5rem 0;
+        }
+
+        .teacher-comment {
+            margin-top: 1rem;
+
+            background: #fff8e1;
+
+            border: 1px solid #ffe082;
+
+            border-radius: var(--r-lg);
+
+            padding: 1rem;
+
+            color: var(--gray-700);
+
+            line-height: 1.6;
+        }
+
+        .grade-display {
+            font-size: 40px;
+            font-weight: 800;
+            color: var(--green-600);
+            line-height: 1;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+
+            margin-bottom: .5rem;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            color: var(--gray-700);
+        }
+
+        .form-control {
+            width: 100%;
+
+            padding: 12px 14px;
+
+            border: 1px solid var(--color-border);
+
+            border-radius: var(--r-lg);
+
+            background: var(--color-surface);
+
+            font-size: 14px;
+
+            font-family: var(--font-body);
+
+            transition: .2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+
+            border-color: var(--teal-400);
+
+            box-shadow: 0 0 0 3px rgba(0,181,165,.1);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 160px;
+        }
+
+        .submission-table-wrap {
+            overflow-x: auto;
+        }
+
+        .submission-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .submission-table th {
+            text-align: left;
+
+            padding: 1rem;
+
+            font-size: 12px;
+
+            text-transform: uppercase;
+
+            letter-spacing: .5px;
+
+            color: var(--color-text-muted);
+
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .submission-table td {
+            padding: 1rem;
+
+            border-bottom: 1px solid var(--color-border);
+
+            vertical-align: top;
+        }
+
+        .submission-row:hover {
+            background: var(--gray-50);
+        }
+
+        .submission-details {
+            background: var(--gray-50);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+
+            padding: 10px 18px;
+
+            border-radius: var(--r-full);
+
+            font-size: 14px;
+
+            font-weight: 700;
+
             border: none;
-            border-radius: 4px;
+
             cursor: pointer;
+
             text-decoration: none;
-            display: inline-block;
+
+            transition: .2s;
+
+            font-family: var(--font-body);
         }
-        .btn-primary:hover {
-            background-color: #0056b3;
+
+        .btn:hover {
+            transform: translateY(-1px);
         }
-        .btn-danger {
-            background-color: #dc3545;
+
+        .btn-primary {
+            background: var(--teal-500);
+
             color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+
+            box-shadow: var(--shadow-accent);
+        }
+
+        .btn-secondary {
+            background: var(--gray-100);
+
+            color: var(--gray-700);
+
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-danger {
+            background: var(--red-500);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 8px 14px;
             font-size: 12px;
         }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .form-group textarea,
-        .form-group input[type="file"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+
+        .empty-state {
+            color: var(--color-text-muted);
             font-size: 14px;
         }
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
+
+        @media (max-width: 960px) {
+
+            .assignment-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .assignment-sidebar {
+                position: static;
+            }
+
+            .hero-card {
+                padding: 2rem;
+            }
+
+            .hero-title {
+                font-size: 30px;
+            }
         }
-        .status-badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-top: 10px;
+
+        @media (max-width: 768px) {
+
+            .hero-card {
+                padding: 1.5rem;
+            }
+
+            .content-card {
+                padding: 1.25rem;
+            }
+
+            .submission-table {
+                min-width: 720px;
+            }
         }
-        .status-submitted {
-            background-color: #28a745;
-            color: white;
-        }
-        .status-graded {
-            background-color: #17a2b8;
-            color: white;
-        }
-        .status-overdue {
-            background-color: #ffc107;
-            color: black;
-        }
-        .grade-display {
-            font-size: 18px;
-            font-weight: bold;
-            color: #28a745;
-        }
-        .teacher-comment {
-            background-color: #fff3cd;
-            padding: 10px;
-            border-left: 4px solid #ffc107;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
-        .success-message {
-            padding: 15px;
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
+
     </style>
 </head>
 <body>
+
 @include('components.menu')
 
-<div class="container" style="max-width: 900px; margin: 40px auto;">
-    <div class="mb-4">
-        <x-back-button :url="route('courses.show', $course)" text="К курсу" />
-    </div>
+<div class="layout">
 
-    @if(session('success'))
-        <div class="success-message">{{ session('success') }}</div>
-    @endif
+    {{-- Sidebar --}}
+    <aside class="sidebar">
 
-    <div class="assignment-header">
-        <h1 style="margin: 0;">{{ $assignment->title }}</h1>
-        @if($assignment->isOverdue())
-            <span class="status-badge status-overdue">Сроки истекли</span>
-        @endif
-    </div>
+        <p class="sidebar-section-title">
+            Навигация
+        </p>
 
-    @if($assignment->description)
-        <div class="assignment-section">
-            <h3>Описание</h3>
-            <p>{{ $assignment->description }}</p>
-        </div>
-    @endif
+        <a href="{{ route('courses.show', $course) }}"
+           class="sidebar-link">
 
-    @if($assignment->instructions)
-        <div class="assignment-section">
-            <h3>Инструкции</h3>
-            <p>{!! nl2br(e($assignment->instructions)) !!}</p>
-        </div>
-    @endif
+            <svg width="16"
+                 height="16"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 viewBox="0 0 24 24">
 
-    @if($assignment->due_date)
-        <div class="assignment-section">
-            <h3>Информация</h3>
-            <p>
-                <strong>Срок сдачи:</strong>
-                {{ $assignment->due_date->format('d.m.Y H:i') }}
-                @if($assignment->isOverdue())
-                    <strong style="color: #dc3545;">(Сроки истекли)</strong>
-                @endif
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+
+            </svg>
+
+            К курсу
+
+        </a>
+
+        <a href="{{ route('home') }}"
+           class="sidebar-link">
+
+            <svg width="16"
+                 height="16"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 viewBox="0 0 24 24">
+
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+
+            </svg>
+
+            Все курсы
+
+        </a>
+
+        <p class="sidebar-section-title"
+           style="margin-top:2rem;">
+
+            Курс
+
+        </p>
+
+        <div style="padding:0 .75rem;">
+
+            <p style="
+                font-size:13px;
+                font-weight:600;
+                color:var(--gray-800);
+                line-height:1.4;
+            ">
+                {{ $course->title }}
             </p>
+
         </div>
-    @endif
 
-    @if($assignment->files->count())
-        <div class="assignment-section">
-            <h3>📎 Файлы задания</h3>
-            <ul class="file-list">
-                @foreach($assignment->files as $file)
-                <li class="file-item" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                        <div>
-                            <strong>{{ $file->title }}</strong><br>
-                            <small>{{ number_format($file->file_size / 1024, 2) }} KB</small>
-                        </div>
-                    </div>
-                    @if(strtolower(pathinfo($file->file_name ?? $file->title, PATHINFO_EXTENSION)) === 'mp3')
-                        <audio controls style="width: 100%;">
-                            <source src="{{ route('assignments.download-file', [$course, $assignment, $file]) }}" type="audio/mpeg">
-                        </audio>
-                    @endif
-                </li>
-            @endforeach
-            </ul>
-        </div>
-    @endif
+    </aside>
 
-    @auth
-        @if(Auth::user()->hasAnyRole(['teacher', 'admin']))
-            <!-- Teacher view - show submissions -->
-            <div class="assignment-section" style="border-left-color: #28a745;">
-                <h3>Ответы учеников</h3>
-                @if($submissions->count() > 0)
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="background-color: #f0f0f0;">
-                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Ученик</th>
-                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Статус</th>
-                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Оценка</th>
-                                    <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Действие</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($submissions as $submission)
-                                    <tr>
-                                        <td style="padding: 10px; border: 1px solid #ddd;">
-                                            <strong>{{ $submission->user->name }}</strong><br>
-                                        </td>
-                                        <td style="padding: 10px; border: 1px solid #ddd;">
-                                            @if($submission->submitted_at)
-                                                <span class="status-badge status-submitted">Сдано</span>
-                                                <br><small>{{ $submission->submitted_at->format('d.m.Y H:i') }}</small>
-                                            @else
-                                                <span style="color: #999;">Не сдано</span>
-                                            @endif
-                                        </td>
-                                        <td style="padding: 10px; border: 1px solid #ddd;">
-                                            @if($submission->isGraded())
-                                                <span class="grade-display">{{ $submission->score }}</span>
-                                            @elseif($submission->submitted_at)
-                                                <span style="color: #ff6b6b;">Ожидает оценки</span>
-                                            @else
-                                                <span style="color: #999;">—</span>
-                                            @endif
-                                        </td>
-                                        <td style="padding: 10px; border: 1px solid #ddd;">
-                                            <button onclick="toggleSubmissionDetails({{ $submission->id }})" class="btn-primary" style="margin: 0;">Просмотр</button>
-                                        </td>
-                                    </tr>
-                                    <tr id="submission-details-{{ $submission->id }}" style="display: none;">
-                                        <td colspan="4" style="padding: 15px; background-color: #f9f9f9;">
-                                            <h4>Ответ ученика</h4>
-                                            @if($submission->answer_text)
-                                                <div style="background-color: white; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
-                                                    {!! nl2br(e($submission->answer_text)) !!}
-                                                </div>
-                                            @else
-                                                <p style="color: #999;">Текст ответа не предоставлен</p>
-                                            @endif
+    {{-- Main --}}
+    <main class="main">
 
-                                            @if($submission->files->count())
-                                                <h5>Загруженные файлы:</h5>
-                                                <ul class="file-list">
-                                                    @foreach($submission->files as $file)
-                                                        <li class="file-item">
-                                                            <div>
-                                                                <strong>{{ $file->file_name }}</strong><br>
-                                                                <small>{{ number_format($file->file_size / 1024, 2) }} KB • Загружено: {{ $file->created_at->format('d.m.Y H:i') }}</small>
-                                                            </div>
-                                                            <a href="{{ route('assignments.download-submission-file', [$course, $assignment, $submission, $file]) }}" class="btn-primary" style="margin: 0;">Скачать</a>
-                                                        </li>
-                                                    @endforeach
-                                                </ul>
-                                            @endif
+        {{-- Breadcrumb --}}
+        <nav style="
+            display:flex;
+            align-items:center;
+            gap:8px;
+            margin-bottom:1.75rem;
+            font-size:13px;
+            color:var(--color-text-muted);
+        ">
 
-                                            @if($submission->submitted_at)
-                                                <hr style="margin: 15px 0;">
-                                                <h4>Выставить оценку</h4>
-                                                <form action="{{ route('assignments.grade', [$course, $assignment, $submission]) }}" method="POST">
-                                                    @csrf
-                                                    <div class="form-group">
-                                                        <label for="score-{{ $submission->id }}">Оценка</label>
-                                                        <input type="number" id="score-{{ $submission->id }}" name="score" step="0.01" min="0" value="{{ $submission->score ?? '' }}" required>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="comment-{{ $submission->id }}">Комментарий</label>
-                                                        <textarea id="comment-{{ $submission->id }}" name="teacher_comment">{{ $submission->teacher_comment ?? '' }}</textarea>
-                                                    </div>
-                                                    <button type="submit" class="btn-primary">Выставить оценку</button>
-                                                </form>
+            <a href="{{ route('home') }}"
+               style="color:var(--color-text-muted); text-decoration:none;"
+               onmouseover="this.style.color='var(--teal-600)'"
+               onmouseout="this.style.color='var(--color-text-muted)'">
 
-                                                @if($submission->isGraded())
-                                                    <hr style="margin: 15px 0;">
-                                                    <h4>Выставленная оценка</h4>
-                                                    <p style="font-size: 18px; font-weight: bold; color: #28a745;">{{ $submission->score }}</p>
-                                                    @if($submission->teacher_comment)
-                                                        <div class="teacher-comment">
-                                                            <strong>Комментарий:</strong><br>
-                                                            {!! nl2br(e($submission->teacher_comment)) !!}
-                                                        </div>
-                                                    @endif
-                                                    <small style="color: #666;">Оценено: {{ $submission->graded_at->format('d.m.Y H:i') }}</small>
-                                                @endif
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <p style="color: #999;">На данный момент нет ответов от учеников</p>
-                @endif
+                Курсы
+
+            </a>
+
+            <svg width="14"
+                 height="14"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 viewBox="0 0 24 24">
+
+                <path d="M9 18l6-6-6-6"/>
+
+            </svg>
+
+            <a href="{{ route('courses.show', $course) }}"
+               style="color:var(--color-text-muted); text-decoration:none;"
+               onmouseover="this.style.color='var(--teal-600)'"
+               onmouseout="this.style.color='var(--color-text-muted)'">
+
+                {{ $course->title }}
+
+            </a>
+
+            <svg width="14"
+                 height="14"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 viewBox="0 0 24 24">
+
+                <path d="M9 18l6-6-6-6"/>
+
+            </svg>
+
+            <span style="
+                color:var(--gray-600);
+                font-weight:500;
+            ">
+                {{ $assignment->title }}
+            </span>
+
+        </nav>
+
+        @if(session('success'))
+
+            <div class="success-message"
+                 style="margin-bottom:1.5rem;">
+
+                {{ session('success') }}
+
             </div>
-        @elseif(Auth::user()->hasRole('student'))
-            <!-- Student view - submit answer -->
-            <div class="assignment-section" style="border-left-color: #28a745;">
-                <h3>Ваш ответ</h3>
 
-                @if($submission && $submission->submitted_at)
-                    <div class="status-badge status-submitted">Сдано</div>
-                    <p style="margin-top: 10px;"><strong>Дата отправки:</strong> {{ $submission->submitted_at->format('d.m.Y H:i') }}</p>
-                @endif
-
-                @if($submission && $submission->isGraded())
-                    <div style="margin: 15px 0;">
-                        <h4>Ваша оценка</h4>
-                        <p style="font-size: 24px; font-weight: bold; color: #28a745;">{{ $submission->score }}</p>
-                        @if($submission->teacher_comment)
-                            <div class="teacher-comment">
-                                <strong>Комментарий учителя:</strong><br>
-                                {!! nl2br(e($submission->teacher_comment)) !!}
-                            </div>
-                        @endif
-                    </div>
-                @endif
-
-                <form action="{{ route('assignments.submit', [$course, $assignment]) }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-
-                    <div class="form-group">
-                        <label for="answer_text">Ваш ответ</label>
-                        <textarea id="answer_text" name="answer_text" placeholder="Напишите ваш ответ здесь...">{{ old('answer_text', $submission->answer_text ?? '') }}</textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="files">Загрузить файлы (максимум 100MB каждый)</label>
-                        <input type="file" id="files" name="files[]" multiple>
-                        <small>Вы можете загрузить несколько файлов одновременно</small>
-                    </div>
-
-                    @if($submission && $submission->files->count())
-                        <div style="margin-bottom: 15px;">
-                            <h4>Ваши загруженные файлы</h4>
-                            <ul class="file-list">
-                                @foreach($submission->files as $file)
-                                    <li class="file-item">
-                                        <div>
-                                            <strong>{{ $file->file_name }}</strong><br>
-                                            <small>{{ number_format($file->file_size / 1024, 2) }} KB</small>
-                                        </div>
-                                        <div>
-                                            <a href="{{ route('assignments.download-submission-file', [$course, $assignment, $submission, $file]) }}" class="btn-primary" style="margin: 0; margin-right: 5px;">Скачать</a>
-                                            <form action="{{ route('assignments.delete-submission-file', [$course, $assignment, $submission, $file]) }}" method="POST" style="display: inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn-danger" onclick="return confirm('Удалить файл?')">Удалить</button>
-                                            </form>
-                                        </div>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    <button type="submit" class="btn-primary">Отправить ответ</button>
-                </form>
-            </div>
-        @else
-            <div class="assignment-section">
-                <p style="color: #dc3545;">⛔ У вас нет доступа к этому заданию. Доступ есть только у студентов и преподавателей.</p>
-            </div>
         @endif
-    @else
-        <div class="assignment-section">
-            <p><a href="{{ route('login') }}">Войдите</a>, чтобы отправить ответ на это задание</p>
+
+        <div class="assignment-layout">
+
+            {{-- Main content --}}
+            <div class="assignment-main">
+
+                {{-- Hero --}}
+                <section class="hero-card">
+
+                    <div class="hero-label">
+                        Задание
+                    </div>
+
+                    <h1 class="hero-title">
+                        {{ $assignment->title }}
+                    </h1>
+
+                    <div class="hero-meta">
+
+                        @if($assignment->isOverdue())
+
+                            <span class="status-badge status-overdue">
+                                Срок истёк
+                            </span>
+
+                        @endif
+
+                        @if($assignment->due_date)
+
+                            <span class="status-badge status-graded">
+                                До {{ $assignment->due_date->format('d.m.Y H:i') }}
+                            </span>
+
+                        @endif
+
+                    </div>
+
+                </section>
+
+                {{-- Description --}}
+                @if($assignment->description)
+
+                    <div class="content-card">
+
+                        <h2 class="content-card__title">
+                            Описание
+                        </h2>
+
+                        <div class="content-text">
+                            {{ $assignment->description }}
+                        </div>
+
+                    </div>
+
+                @endif
+
+                {{-- Instructions --}}
+                @if($assignment->instructions)
+
+                    <div class="content-card">
+
+                        <h2 class="content-card__title">
+                            Инструкции
+                        </h2>
+
+                        <div class="content-text">
+                            {!! nl2br(e($assignment->instructions)) !!}
+                        </div>
+
+                    </div>
+
+                @endif
+
+                {{-- Files --}}
+                @if($assignment->files->count())
+
+                    <div class="content-card">
+
+                        <h2 class="content-card__title">
+                            📎 Файлы задания
+                        </h2>
+
+                        <ul class="file-list">
+
+                            @foreach($assignment->files as $file)
+
+                                <li class="file-item">
+
+                                    <div class="file-item__top">
+
+                                        <div>
+
+                                            <div class="file-title">
+                                                {{ $file->title }}
+                                            </div>
+
+                                            <div class="file-meta">
+                                                {{ number_format($file->file_size / 1024, 2) }} KB
+                                            </div>
+
+                                        </div>
+
+                                        <a href="{{ route('assignments.download-file', [$course, $assignment, $file]) }}"
+                                           class="btn btn-secondary btn-sm">
+
+                                            Скачать
+
+                                        </a>
+
+                                    </div>
+
+                                    @if(strtolower(pathinfo($file->file_name ?? $file->title, PATHINFO_EXTENSION)) === 'mp3')
+
+                                        <audio controls
+                                               class="audio-player">
+
+                                            <source
+                                                src="{{ route('assignments.download-file', [$course, $assignment, $file]) }}"
+                                                type="audio/mpeg">
+
+                                        </audio>
+
+                                    @endif
+
+                                </li>
+
+                            @endforeach
+
+                        </ul>
+
+                    </div>
+
+                @endif
+
+            </div>
+
+            {{-- Sidebar --}}
+            <aside class="assignment-sidebar">
+
+                <div class="content-card">
+
+                    <h3 class="content-card__title">
+                        Информация
+                    </h3>
+
+                    <div class="info-list">
+
+                        <div class="info-item">
+
+                            <span class="info-label">
+                                Курс
+                            </span>
+
+                            <span class="info-value">
+                                {{ $course->title }}
+                            </span>
+
+                        </div>
+
+                        @if($assignment->due_date)
+
+                            <div class="info-item">
+
+                                <span class="info-label">
+                                    Срок сдачи
+                                </span>
+
+                                <span class="info-value">
+                                    {{ $assignment->due_date->format('d.m.Y H:i') }}
+                                </span>
+
+                            </div>
+
+                        @endif
+
+                        <div class="info-item">
+
+                            <span class="info-label">
+                                Статус
+                            </span>
+
+                            @if($assignment->isOverdue())
+
+                                <span class="status-badge status-overdue">
+                                    Просрочено
+                                </span>
+
+                            @else
+
+                                <span class="status-badge status-graded">
+                                    Активно
+                                </span>
+
+                            @endif
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </aside>
+
         </div>
-    @endauth
+
+    </main>
+
 </div>
 
 <script>
-function toggleSubmissionDetails(submissionId) {
-    const details = document.getElementById('submission-details-' + submissionId);
-    if (details.style.display === 'none') {
-        details.style.display = 'table-row';
-    } else {
-        details.style.display = 'none';
+    function toggleSubmissionDetails(submissionId) {
+
+        const details = document.getElementById(
+            'submission-details-' + submissionId
+        );
+
+        if (
+            details.style.display === 'none' ||
+            details.style.display === ''
+        ) {
+
+            details.style.display = 'table-row';
+
+        } else {
+
+            details.style.display = 'none';
+        }
     }
-}
 </script>
+
 </body>
 </html>

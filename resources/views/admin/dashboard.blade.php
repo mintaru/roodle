@@ -121,10 +121,10 @@
 
 <body>
     @include('components.menu')
-    
+
     <div class="admin-container">
 
-        
+
         <div class="admin-header">
             <h1>Админ-панель</h1>
             <p>Добро пожаловать, <span style="font-weight: 600;">{{ auth()->user()->name }}</span>!</p>
@@ -167,7 +167,7 @@
             </a>
 
             <a href="{{ route('admin.reports.index') }}" class="admin-card red">
-                <h2 class="admin-card-title">📊 Отчёты</h2>
+                <h2 class="admin-card-title">Отчёты</h2>
                 <p class="admin-card-description">Просмотрите различные статистические отчёты</p>
             </a>
 

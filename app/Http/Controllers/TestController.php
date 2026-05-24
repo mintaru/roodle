@@ -99,11 +99,9 @@ class TestController extends Controller
         // Выбираем все вопросы из банка
         $allQuestions = \App\Models\Question::with('options')->get();
 
-        return view('layout', [
-            'content' => view('test_show', [
-                'test' => $test,
-                'allQuestions' => $allQuestions, // передаём в шаблон
-            ]),
+        return view('test_show', [
+            'test' => $test,
+            'allQuestions' => $allQuestions,
         ]);
     }
 
@@ -433,43 +431,52 @@ class TestController extends Controller
             // Определяем, есть ли активная попытка
             $activeAttempt = $attempts->where('ended_at', null)->first();
             $completedAttempts = $attempts->where('ended_at', '!=', null);
+            $lastCompletedAttempt = $completedAttempts->last();
 
             // Какой номер попытки сейчас/будет
             $currentAttemptNumber = $attempts->count() + 1;
 
             // Статус
             $status = 'не начинали';
-            $minutesSpent = null;
+            $timeSpent = null;
+            $currentQuestion = null;
+            $totalQuestions = $test->questions()->count();
 
             if ($activeAttempt) {
                 $status = 'в процессе';
-                // Считаем минуты, прошедшие с начала попытки
+                // Считаем секунды, прошедшие с начала попытки
                 if ($activeAttempt->started_at) {
-                    $minutesSpent = $activeAttempt->started_at->diffInMinutes(now());
+                    $timeSpent = now()->diffInSeconds($activeAttempt->started_at);
+                }
+
+                // Определяем текущий вопрос
+                $answeredQuestions = \App\Models\TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
+                    ->distinct()
+                    ->count('question_id');
+                $currentQuestion = $answeredQuestions + 1;
+                if ($currentQuestion > $totalQuestions) {
+                    $currentQuestion = $totalQuestions;
                 }
             } elseif ($completedAttempts->count() > 0) {
                 $status = 'завершили';
+                if ($lastCompletedAttempt && $lastCompletedAttempt->started_at && $lastCompletedAttempt->ended_at) {
+                    $timeSpent = $lastCompletedAttempt->started_at->diffInSeconds($lastCompletedAttempt->ended_at);
+                }
             }
 
             $studentsData[] = [
                 'user' => $user,
                 'status' => $status,
-                'current_attempt_number' => $currentAttemptNumber,
-                'minutes_spent' => $minutesSpent,
-                'active_attempt' => $activeAttempt,
-                'completed_attempts' => $completedAttempts,
+                'attempts' => $attempts,
+                'activeAttempt' => $activeAttempt,
+                'completedAttempts' => $completedAttempts,
+                'lastCompletedAttempt' => $lastCompletedAttempt,
+                'timeSpent' => $timeSpent,
+                'currentQuestion' => $currentQuestion,
+                'totalQuestions' => $totalQuestions,
+                'current_attempt_number' => $currentAttemptNumber,  // ← добавить
             ];
-        }
-
-        // Сортируем по статусу и имени
-        usort($studentsData, function ($a, $b) {
-            $statusOrder = ['в процессе' => 0, 'завершили' => 1, 'не начинали' => 2];
-            if ($statusOrder[$a['status']] !== $statusOrder[$b['status']]) {
-                return $statusOrder[$a['status']] <=> $statusOrder[$b['status']];
-            }
-
-            return $a['user']->name <=> $b['user']->name;
-        });
+        }  // closes foreach
 
         return view('tests.results', compact('test', 'studentsData', 'course'));
     }
@@ -479,11 +486,6 @@ class TestController extends Controller
      */
     public function viewAttemptDetails(TestAttempt $attempt)
     {
-        // Проверяем, что пользователь имеет право просматривать (учитель/админ)
-        if (! Auth::user()->can('edit courses')) {
-            abort(403, 'Unauthorized');
-        }
-
         $test = $attempt->test;
         $user = $attempt->user;
         $course = $test->course;
@@ -907,14 +909,12 @@ class TestController extends Controller
             }
         }
 
-        return view('layout', [
-            'content' => view('test_attempt', [
+        return view('test_attempt', [
                 'test' => $test,
                 'savedAnswers' => $savedAnswers,
                 'attempt' => $activeAttempt,
                 'lastQuestionIndex' => $activeAttempt->last_question_index ?? 0,  // ← добавить
-            ]),
-        ]);
+            ]);
     }
 
     /**
@@ -1095,17 +1095,6 @@ class TestController extends Controller
 
         $question = $questions[$questionIndex - 1];
 
-        return view('layout', [
-            'content' => view('test_attempt_page', [
-                'test' => $test,
-                'question' => $question,
-                'questionIndex' => $questionIndex,
-                'totalQuestions' => $questions->count(),
-                'savedAnswers' => $savedAnswers,
-                'activeAttempt' => $activeAttempt,
-                'serverTime' => now()->timestamp,
-            ]),
-        ]);
     }
 
     /**
@@ -1139,10 +1128,9 @@ class TestController extends Controller
                     }
                 }
                 // Удаляем предыдущие ответы на этот вопрос
-                TemporaryAnswer::where('user_id', $userId)
-                    ->where('test_id', $test->id)
-                    ->where('question_id', $questionId)
-                    ->delete();
+                TemporaryAnswer::where('test_attempt_id', $attempt->id)
+                ->where('question_id', $questionId)
+                ->delete();
                 // Сохраняем каждый пропуск как отдельный TemporaryAnswer
                 foreach ($answersArr as $blankId => $optionId) {
                     TemporaryAnswer::create([
@@ -1195,10 +1183,9 @@ class TestController extends Controller
                 }
 
                 // Удаляем предыдущие ответы на этот вопрос
-                TemporaryAnswer::where('user_id', $userId)
-                    ->where('test_id', $test->id)
-                    ->where('question_id', $questionId)
-                    ->delete();
+                TemporaryAnswer::where('test_attempt_id', $attempt->id)
+                ->where('question_id', $questionId)
+                ->delete();
 
                 // Вставляем новый текстовый ответ
                 TemporaryAnswer::create([
@@ -1245,10 +1232,9 @@ class TestController extends Controller
                 }
 
                 // Удаляем предыдущие ответы на этот вопрос
-                TemporaryAnswer::where('user_id', $userId)
-                    ->where('test_id', $test->id)
-                    ->where('question_id', $questionId)
-                    ->delete();
+                TemporaryAnswer::where('test_attempt_id', $attempt->id)
+                ->where('question_id', $questionId)
+                ->delete();
 
                 // Вставляем новый развёрнутый ответ
                 TemporaryAnswer::create([
@@ -1298,10 +1284,9 @@ class TestController extends Controller
                 }
 
                 // Удаляем предыдущие ответы на этот вопрос
-                TemporaryAnswer::where('user_id', $userId)
-                    ->where('test_id', $test->id)
-                    ->where('question_id', $questionId)
-                    ->delete();
+                TemporaryAnswer::where('test_attempt_id', $attempt->id)
+                ->where('question_id', $questionId)
+                ->delete();
 
                 // Вставляем новый(е) ответ(ы)
                 foreach ($optionIds as $optionId) {
@@ -1356,12 +1341,91 @@ class TestController extends Controller
             }
 
             // Удаляем ответ из БД
-            TemporaryAnswer::where('user_id', $userId)
-                ->where('test_id', $test->id)
-                ->where('question_id', $questionId)
-                ->delete();
+            TemporaryAnswer::where('test_attempt_id', $attempt->id)
+            ->where('question_id', $questionId)
+            ->delete();
         }
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Форма редактирования полей теста (не вопросов)
+     */
+    public function edit(Test $test)
+    {
+        // Проверяем права доступа
+        if (! Auth::user()->can('edit courses')) {
+            abort(403, 'Unauthorized');
+        }
+
+        $course = $test->course;
+
+        return view('layout', [
+            'content' => view('test_edit_form', [
+                'test' => $test,
+                'course' => $course,
+            ]),
+        ]);
+    }
+
+    /**
+     * Обновление полей теста (не вопросов)
+     */
+    public function update(Request $request, Test $test)
+    {
+        // Проверяем права доступа
+        if (! Auth::user()->can('edit courses')) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Валидируем данные
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'max_attempts' => 'nullable|integer|min:1',
+            'unlimited_attempts' => 'nullable|boolean',
+            'time_limit' => 'nullable|integer|min:0',
+            'period_start' => 'nullable|date',
+            'period_end' => 'nullable|date|after_or_equal:period_start',
+            'randomize_questions' => 'nullable|boolean',
+            'display_mode' => 'required|in:single_page,per_question,paged',
+        ]);
+
+        $validatedData['time_limit'] = $request->input('time_limit', 0);
+
+        // Преобразуем период доступности в UTC
+        $validatedData['period_start'] = $request->period_start
+            ? Carbon::createFromFormat(
+                'Y-m-d\TH:i',
+                $request->period_start,
+                'Asia/Krasnoyarsk'
+            )->utc()
+            : null;
+
+        $validatedData['period_end'] = $request->period_end
+            ? Carbon::createFromFormat(
+                'Y-m-d\TH:i',
+                $request->period_end,
+                'Asia/Krasnoyarsk'
+            )->utc()
+            : null;
+
+        // Определяем max_attempts
+        if ($request->has('unlimited_attempts')) {
+            $validatedData['max_attempts'] = 0; // 0 = неограниченно
+        } else {
+            $validatedData['max_attempts'] = $request->input('max_attempts', 1);
+        }
+
+        // Настройки отображения теста
+        $validatedData['randomize_questions'] = $request->has('randomize_questions');
+        $validatedData['display_mode'] = $request->input('display_mode', 'single_page');
+
+        // Обновляем тест
+        $test->update($validatedData);
+
+        return redirect()->route('courses.show', $test->course)
+            ->with('success', 'Параметры теста успешно обновлены!');
     }
 }

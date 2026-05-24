@@ -42,7 +42,30 @@
                     <img src="{{ asset('storage/' . $course->image_path) }}" alt=""
                         class="w-24 h-24 object-cover mb-2">
                 @endif
-                <input type="file" name="image_path" class="w-full">
+
+                <!-- Превью паттерна -->
+                <div id="pattern-preview"
+                    class="w-full h-32 rounded mb-2 overflow-hidden bg-gray-100 flex items-center justify-center">
+                    <canvas id="trianglify-canvas" class="w-full h-full" style="display:none"></canvas>
+                    <span id="preview-placeholder" class="text-gray-400 text-sm">Паттерн появится здесь</span>
+                </div>
+
+                <div class="flex gap-2 mb-2">
+                    <button type="button" id="generate-pattern"
+                        class="bg-indigo-500 text-white px-3 py-1 rounded text-sm hover:bg-indigo-600">
+                        🎲 Случайный паттерн
+                    </button>
+                    <button type="button" id="clear-pattern"
+                        class="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-400"
+                        style="display:none">
+                        ✕ Убрать
+                    </button>
+                </div>
+
+                <input type="file" name="image_path" id="image_input" class="w-full" accept="image/*">
+                <!-- Сюда будет подставлен паттерн как файл если юзер ничего не выбрал -->
+                <input type="file" name="generated_pattern" id="generated_pattern_input" style="display:none">
+                <input type="hidden" name="use_generated_pattern" id="use_generated_pattern" value="0">
             </div>
 
             <div>
@@ -105,16 +128,111 @@
 
 </body>
 <script>
-    function checkFutureDate(input) {
+    function checkPastDate(input) {
         if (!input.value) return;
-    
+
         const selected = new Date(input.value); // берём значение из datetime-local
-        const now      = new Date();
-    
+        const now = new Date();
+
         if (selected < now) {
             alert('Нельзя выбрать дату в прошлом');
             input.value = ''; // очищаем, если нужно
         }
     }
+    </script>
+
+    <script src="https://unpkg.com/trianglify@4/dist/trianglify.bundle.js"></script>
+    <script>
+        (function() {
+            const canvas = document.getElementById('trianglify-canvas');
+            const placeholder = document.getElementById('preview-placeholder');
+            const clearBtn = document.getElementById('clear-pattern');
+            const useGeneratedInput = document.getElementById('use_generated_pattern');
+            const imageInput = document.getElementById('image_input');
+            const form = document.querySelector('form');
+            let patternBlob = null;
+
+            function randomColor() {
+                const palettes = [
+                    ['#6366f1', '#8b5cf6', '#a78bfa'],
+                    ['#ec4899', '#f43f5e', '#fb7185'],
+                    ['#f59e0b', '#f97316', '#fbbf24'],
+                    ['#10b981', '#06b6d4', '#34d399'],
+                    ['#3b82f6', '#6366f1', '#93c5fd'],
+                    ['#14b8a6', '#06b6d4', '#67e8f9'],
+                    ['#e0e7ff', '#c7d2fe', '#a5b4fc'],
+                    ['#fce7f3', '#fbcfe8', '#f9a8d4'],
+                    ['#fef3c7', '#fde68a', '#fcd34d'],
+                    ['#d1fae5', '#a7f3d0', '#6ee7b7'],
+                    ['#e0f2fe', '#bae6fd', '#7dd3fc'],
+                    ['#ccfbf1', '#99f6e4', '#5eead4'],
+                    ['#f3e8ff', '#e9d5ff', '#d8b4fe'],
+                    ['#ffedd5', '#fed7aa', '#fdba74']
+                ];
+                return palettes[Math.floor(Math.random() * palettes.length)];
+            }
+
+            function drawPattern() {
+                const colors = randomColor();
+                const pattern = window.trianglify({
+                    width: 400,
+                    height: 200,
+                    cellSize: Math.floor(Math.random() * 60) + 100,
+                    xColors: colors,
+                    yColors: 'match',
+                });
+
+                const c = pattern.toCanvas();
+                c.style.width = '100%';
+                c.style.height = '100%';
+
+                const preview = document.getElementById('pattern-preview');
+                preview.innerHTML = '';
+                preview.appendChild(c);
+
+                placeholder.style.display = 'none';
+                clearBtn.style.display = 'inline';
+                useGeneratedInput.value = '1';
+
+                c.toBlob(blob => {
+                    patternBlob = blob;
+                }, 'image/png');
+            }
+
+            document.getElementById('generate-pattern').addEventListener('click', function() {
+                drawPattern();
+            });
+
+            clearBtn.addEventListener('click', function() {
+                const preview = document.getElementById('pattern-preview');
+                preview.innerHTML = '<span id="preview-placeholder" class="text-gray-400 text-sm">Паттерн появится здесь</span>';
+                clearBtn.style.display = 'none';
+                useGeneratedInput.value = '0';
+                patternBlob = null;
+            });
+
+            // Если выбрали файл вручную — убираем паттерн
+            imageInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    clearBtn.style.display = 'none';
+                    useGeneratedInput.value = '0';
+                    patternBlob = null;
+                }
+            });
+
+            // Перед отправкой формы — подставляем паттерн как файл
+            form.addEventListener('submit', function(e) {
+                if (useGeneratedInput.value === '1' && patternBlob && !imageInput.files.length) {
+                    e.preventDefault();
+                    const file = new File([patternBlob], 'pattern.png', {
+                        type: 'image/png'
+                    });
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    imageInput.files = dt.files;
+                    form.submit();
+                }
+            });
+        })();
     </script>
 </html>
