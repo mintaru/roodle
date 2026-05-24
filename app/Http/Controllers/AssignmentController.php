@@ -41,7 +41,7 @@ class AssignmentController extends Controller
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
                 $path = $file->store('assignments', 'public');
-                
+
                 AssignmentFile::create([
                     'assignment_id' => $assignment->id,
                     'title' => $file->getClientOriginalName(),
@@ -108,7 +108,7 @@ class AssignmentController extends Controller
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
                 $path = $file->store('assignments', 'public');
-                
+
                 AssignmentFile::create([
                     'assignment_id' => $assignment->id,
                     'title' => $file->getClientOriginalName(),

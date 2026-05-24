@@ -1,479 +1,702 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Детали попытки: {{ $user->name }}</title>
+@extends('layout')
+
+@section('head')
     <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f5f5;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1000px;
+        /* ── PAGE SHELL ── */
+        .attempt-shell {
+            max-width: 900px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 2rem 1.5rem 4rem;
         }
-
-        .header {
-            background: white;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .header h1 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        .header-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .info-box {
-            background: #f9f9f9;
-            padding: 12px;
-            border-radius: 6px;
-            border-left: 4px solid #2c3e50;
-        }
-
-        .info-label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
+        body {
+    margin: 0;
+    padding: 0;
+}
+        /* ── BACK BUTTON ── */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
             font-weight: 600;
-        }
-
-        .info-value {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-top: 4px;
-        }
-
-        .back-button {
-            display: inline-block;
-            margin-bottom: 20px;
-            padding: 8px 16px;
-            background: #ccc;
-            color: #333;
+            color: var(--color-text-secondary);
             text-decoration: none;
-            border-radius: 4px;
-            font-size: 14px;
-            transition: background 0.3s;
+            padding: 7px 14px;
+            border-radius: var(--r-full);
+            border: 1.5px solid var(--color-border);
+            background: var(--color-surface);
+            transition: var(--transition);
+            margin-bottom: 1.75rem;
         }
 
-        .back-button:hover {
-            background: #aaa;
+        .back-link:hover {
+            border-color: var(--teal-400);
+            color: var(--teal-700);
+            background: var(--teal-50);
         }
 
-        .question-card {
-            background: white;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        /* ── HERO HEADER ── */
+        .attempt-hero {
+            background: linear-gradient(135deg, var(--teal-700) 0%, var(--sky-700) 100%);
+            border-radius: var(--r-2xl);
+            padding: 2rem 2.25rem;
+            color: #fff;
+            margin-bottom: 1.75rem;
+            position: relative;
             overflow: hidden;
         }
 
-        .question-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+        .attempt-hero::before {
+            content: '';
+            position: absolute;
+            right: -50px;
+            top: -50px;
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.07);
+            pointer-events: none;
         }
 
-        .question-number {
-            font-size: 13px;
-            font-weight: 600;
-            color: #666;
-            text-transform: uppercase;
+        .attempt-hero::after {
+            content: '';
+            position: absolute;
+            right: 100px;
+            bottom: -70px;
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.04);
+            pointer-events: none;
         }
 
-        .question-text {
-            font-size: 16px;
-            font-weight: 500;
-            color: #333;
-            margin: 8px 0 0 0;
-        }
-
-        .question-type {
-            display: inline-block;
-            font-size: 11px;
-            padding: 4px 8px;
-            margin-top: 8px;
-            background: #e8f4f8;
-            color: #0891b2;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-
-        .correctness-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
+        .attempt-hero__eyebrow {
             font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: .7;
+            margin-bottom: 6px;
         }
 
-        .correctness-badge.correct {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .attempt-hero__title {
+            font-family: var(--font-display);
+            font-size: 26px;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
         }
 
-        .correctness-badge.incorrect {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        /* ── STATS ROW IN HERO ── */
+        .attempt-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            position: relative;
+            z-index: 1;
         }
 
-        .correctness-badge.empty {
-            background: #e2e3e5;
-            color: #383d41;
-            border: 1px solid #d6d8db;
+        .attempt-meta-item {
+            background: rgba(255,255,255,.12);
+            backdrop-filter: blur(6px);
+            border-radius: var(--r-lg);
+            padding: 12px 14px;
         }
 
-        .question-body {
-            padding: 20px;
+        .attempt-meta-item__label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            opacity: .7;
+            margin-bottom: 4px;
         }
 
-        .option {
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            border: 2px solid #eee;
-            border-radius: 6px;
-            background: #f9f9f9;
-            transition: all 0.2s;
+        .attempt-meta-item__value {
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.2;
         }
 
-        .option:last-child {
-            margin-bottom: 0;
+        .attempt-meta-item__value.score-high  { color: #a5f3ca; }
+        .attempt-meta-item__value.score-mid   { color: #fde68a; }
+        .attempt-meta-item__value.score-low   { color: #fca5a5; }
+
+        /* ── SECTION HEADING ── */
+        .answers-heading {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 1.25rem;
         }
 
-        .option.selected {
-            background: #fff9e6;
-            border-color: #ffc107;
+        /* ── QUESTION CARD ── */
+        .q-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--r-xl);
+            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+            overflow: hidden;
+            margin-bottom: 1rem;
+            transition: box-shadow var(--transition);
         }
 
-        .option.correct {
-            background: #e8f5e9;
-            border-color: #4caf50;
-            border-width: 2px;
+        .q-card:hover {
+            box-shadow: var(--shadow-md);
         }
 
-        .option.selected.correct {
-            background: #c8e6c9;
-            border-color: #2e7d32;
-        }
-
-        .option.selected.incorrect {
-            background: #ffebee;
-            border-color: #d32f2f;
-        }
-
-        .option-label {
+        /* ── CARD HEADER ── */
+        .q-card__header {
             display: flex;
             align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--color-border);
+            background: var(--gray-50);
         }
 
-        .option-radio {
-            margin-right: 12px;
+        .q-card__header-left {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .q-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--r-md);
+            background: linear-gradient(135deg, var(--teal-500), var(--sky-500));
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
             margin-top: 2px;
+        }
+
+        .q-card__meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .q-card__number {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--color-text-muted);
+            margin-bottom: 3px;
+        }
+
+        .q-card__text {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--gray-800);
+            line-height: 1.5;
+        }
+
+        .q-type-chip {
+            display: inline-flex;
+            align-items: center;
+            margin-top: 6px;
+            padding: 3px 10px;
+            border-radius: var(--r-full);
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--sky-50);
+            color: var(--sky-700);
+        }
+
+        /* ── STATUS BADGE ── */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 14px;
+            border-radius: var(--r-full);
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
             flex-shrink: 0;
         }
 
-        .option-text {
-            flex: 1;
+        .status-badge.correct {
+            background: var(--green-50);
+            color: var(--green-600);
+            border: 1.5px solid var(--green-100);
         }
 
-        .option-badge {
-            display: inline-block;
-            margin-left: 8px;
+        .status-badge.incorrect {
+            background: #ffebee;
+            color: #c62828;
+            border: 1.5px solid #ffcdd2;
+        }
+
+        .status-badge.pending {
+            background: #fff8e1;
+            color: #e65100;
+            border: 1.5px solid #ffecb3;
+        }
+
+        .status-badge.empty {
+            background: var(--gray-100);
+            color: var(--gray-500);
+            border: 1.5px solid var(--gray-200);
+        }
+
+        /* ── CARD BODY ── */
+        .q-card__body {
+            padding: 1.25rem 1.5rem;
+        }
+
+        .answer-section-label {
             font-size: 11px;
-            font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 3px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--color-text-muted);
+            margin-bottom: 8px;
         }
 
-        .option-badge.user-answer {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .option-badge.correct-answer {
-            background: #d4edda;
-            color: #155724;
-        }
-
+        /* ── TEXT ANSWERS ── */
         .text-answer-box {
-            background: #f9f9f9;
-            padding: 15px;
-            border: 2px solid #eee;
-            border-radius: 6px;
-            margin-top: 10px;
-            color: #333;
+            padding: 13px 16px;
+            border: 1.5px solid var(--color-border);
+            border-radius: var(--r-lg);
+            background: var(--gray-50);
+            font-size: 14.5px;
+            color: var(--gray-700);
+            line-height: 1.6;
         }
 
         .text-answer-box.correct {
-            background: #e8f5e9;
-            border-color: #4caf50;
+            background: var(--green-50);
+            border-color: var(--green-400);
+            color: #1b5e20;
         }
 
         .text-answer-box.incorrect {
             background: #ffebee;
-            border-color: #d32f2f;
+            border-color: #ef9a9a;
+            color: #b71c1c;
         }
 
         .rich-text-answer-box {
-            background: #ffffff;
-            padding: 15px;
-            border: 2px solid #eee;
-            border-radius: 6px;
-            margin-top: 10px;
-            color: #333;
+            padding: 13px 16px;
+            border: 1.5px solid var(--color-border);
+            border-radius: var(--r-lg);
+            background: var(--color-surface);
+            font-size: 14.5px;
+            color: var(--gray-700);
+            line-height: 1.7;
         }
 
         .rich-text-answer-box.correct {
-            background: #e8f5e9;
-            border-color: #4caf50;
+            background: var(--green-50);
+            border-color: var(--green-400);
         }
 
         .rich-text-answer-box.incorrect {
             background: #ffebee;
-            border-color: #d32f2f;
+            border-color: #ef9a9a;
         }
 
-        .no-answer {
-            padding: 15px;
-            background: #f0f0f0;
-            border-radius: 6px;
-            color: #999;
+        .no-answer-box {
+            padding: 13px 16px;
+            background: var(--gray-100);
+            border-radius: var(--r-lg);
+            color: var(--color-text-muted);
             font-style: italic;
-            margin-top: 10px;
+            font-size: 14px;
         }
 
-        .correct-answers {
-            margin-top: 15px;
-            padding: 12px;
-            background: #f0f7f4;
-            border-left: 4px solid #27ae60;
-            border-radius: 4px;
+        /* ── CORRECT ANSWERS HINT ── */
+        .correct-answers-panel {
+            margin-top: 12px;
+            padding: 12px 14px;
+            background: var(--teal-50);
+            border-left: 3px solid var(--teal-500);
+            border-radius: 0 var(--r-md) var(--r-md) 0;
         }
 
-        .correct-answers-title {
-            font-weight: 600;
-            color: #27ae60;
-            font-size: 13px;
+        .correct-answers-panel__title {
+            font-size: 11px;
+            font-weight: 700;
             text-transform: uppercase;
-            margin-bottom: 8px;
+            letter-spacing: .7px;
+            color: var(--teal-700);
+            margin-bottom: 6px;
         }
 
-        @media (max-width: 768px) {
-            .question-header {
-                flex-direction: column;
-            }
+        .correct-answers-panel p {
+            font-size: 13.5px;
+            color: var(--teal-800);
+            line-height: 1.5;
+        }
 
-            .correctness-badge {
-                margin-top: 10px;
-            }
+        /* ── OPTION ITEMS ── */
+        .option-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 11px 14px;
+            border: 1.5px solid var(--color-border);
+            border-radius: var(--r-lg);
+            background: var(--color-surface);
+            margin-bottom: 8px;
+            transition: var(--transition);
+        }
 
-            .header-info {
-                grid-template-columns: 1fr;
-            }
+        .option-item:last-child { margin-bottom: 0; }
+
+        .option-item.correct {
+            background: var(--green-50);
+            border-color: var(--green-400);
+        }
+
+        .option-item.selected-correct {
+            background: #c8e6c9;
+            border-color: #388e3c;
+        }
+
+        .option-item.selected-incorrect {
+            background: #ffebee;
+            border-color: #ef9a9a;
+        }
+
+        .option-item__check {
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .option-item__text {
+            flex: 1;
+            font-size: 14px;
+            color: var(--gray-700);
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .micro-badge {
+            display: inline-flex;
+            padding: 2px 8px;
+            border-radius: var(--r-full);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .micro-badge.user   { background: #fff3cd; color: #856404; }
+        .micro-badge.should { background: var(--green-50); color: var(--green-600); border: 1px solid var(--green-100); }
+
+        /* ── TEACHER GRADING ── */
+        .grading-panel {
+            margin-top: 14px;
+            padding: 14px;
+            background: var(--gray-50);
+            border: 1.5px solid var(--color-border);
+            border-radius: var(--r-lg);
+        }
+
+        .grading-panel__title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            color: var(--color-text-muted);
+            margin-bottom: 10px;
+        }
+
+        .grading-radios {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .grade-radio-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: var(--r-full);
+            border: 1.5px solid var(--color-border);
+            background: var(--color-surface);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            transition: var(--transition);
+        }
+
+        .grade-radio-label:hover {
+            border-color: var(--teal-400);
+            color: var(--teal-700);
+            background: var(--teal-50);
+        }
+
+        .grade-radio-label input[type="radio"] {
+            accent-color: var(--teal-500);
+        }
+
+        .grade-radio-label input[type="radio"]:checked + span {
+            color: var(--teal-700);
+        }
+
+        .grade-radio-label:has(input:checked) {
+            border-color: var(--teal-500);
+            background: var(--teal-50);
+            color: var(--teal-700);
+        }
+
+        /* ── SUBMIT BUTTON ── */
+        .grade-submit-wrap {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .grade-submit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 24px;
+            background: var(--teal-500);
+            color: #fff;
+            border: none;
+            border-radius: var(--r-full);
+            font-size: 14px;
+            font-weight: 700;
+            font-family: var(--font-body);
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0,181,165,.3);
+            transition: var(--transition);
+        }
+
+        .grade-submit-btn:hover {
+            background: var(--teal-600);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0,181,165,.4);
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 640px) {
+            .attempt-hero { padding: 1.5rem; }
+            .attempt-hero__title { font-size: 20px; }
+            .attempt-meta-grid { grid-template-columns: 1fr 1fr; }
+            .q-card__header { flex-direction: column; }
+            .status-badge { align-self: flex-start; }
         }
     </style>
-</head>
-<body>
-@include('components.menu')
+@endsection
 
-<div class="container">
-    <div class="mb-4">
-    <x-back-button :url="route('tests.results', $test)" text="К результатам" />
-</div>
+@section('content')
+<div class="attempt-shell">
 
-    <div class="header">
-        <h1>Детали попытки: {{ $test->title }}</h1>
-        
-        <div class="header-info">
-            <div class="info-box">
-                <div class="info-label">Студент</div>
-                <div class="info-value">{{ $user->name }}</div>
+    {{-- Back button --}}
+    <a href="{{ route('tests.results', $test) }}" class="back-link">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+        К результатам
+    </a>
+
+    {{-- Hero header --}}
+    <div class="attempt-hero">
+        <div class="attempt-hero__eyebrow">Детали попытки</div>
+        <h1 class="attempt-hero__title">{{ $test->title }}</h1>
+
+        <div class="attempt-meta-grid">
+            <div class="attempt-meta-item">
+                <div class="attempt-meta-item__label">Студент</div>
+                <div class="attempt-meta-item__value">{{ $user->name }}</div>
             </div>
-            <div class="info-box">
-                <div class="info-label">Попытка</div>
-                <div class="info-value">#{{ $attempt->attempt_number }}</div>
+            <div class="attempt-meta-item">
+                <div class="attempt-meta-item__label">Попытка</div>
+                <div class="attempt-meta-item__value">#{{ $attempt->attempt_number }}</div>
             </div>
-            <div class="info-box">
-                <div class="info-label">Результат</div>
-                <div class="info-value" style="color: {{ $attempt->score >= 70 ? '#27ae60' : ($attempt->score >= 50 ? '#f39c12' : '#e74c3c') }};">
+            <div class="attempt-meta-item">
+                <div class="attempt-meta-item__label">Результат</div>
+                <div class="attempt-meta-item__value {{ $attempt->score >= 70 ? 'score-high' : ($attempt->score >= 50 ? 'score-mid' : 'score-low') }}">
                     {{ $attempt->score }}%
                 </div>
             </div>
-            <div class="info-box">
-                <div class="info-label">Дата завершения</div>
-                <div class="info-value">{{ $attempt->ended_at->format('d.m.Y H:i') }}</div>
+            <div class="attempt-meta-item">
+                <div class="attempt-meta-item__label">Завершено</div>
+                <div class="attempt-meta-item__value">{{ $attempt->ended_at->format('d.m.Y H:i') }}</div>
             </div>
-            <div class="info-box">
-                <div class="info-label">Время затрачено</div>
-                <div class="info-value">{{ \App\Helpers\TimeFormatter::formatMinutes($attempt->started_at->diffInMinutes($attempt->ended_at)) }}</div>
+            <div class="attempt-meta-item">
+                <div class="attempt-meta-item__label">Время</div>
+                <div class="attempt-meta-item__value">{{ \App\Helpers\TimeFormatter::formatMinutes($attempt->started_at->diffInMinutes($attempt->ended_at)) }}</div>
             </div>
-            <div class="info-box">
-                <div class="info-label">Курс</div>
-                <div class="info-value">{{ $course->title }}</div>
+            <div class="attempt-meta-item">
+                <div class="attempt-meta-item__label">Курс</div>
+                <div class="attempt-meta-item__value" style="font-size:14px;">{{ $course->title }}</div>
             </div>
         </div>
     </div>
 
-    <h2 style="margin-bottom: 20px; color: #2c3e50;">Ответы студента</h2>
+    {{-- Questions --}}
+    <div class="answers-heading">Ответы студента</div>
 
-    <form method="POST" action="{{ route('test-attempts.grade-rich-text', $attempt) }}">
-        @csrf
+    @hasanyrole('admin|teacher')
+        <form method="POST" action="{{ route('test-attempts.grade-rich-text', $attempt) }}">
+            @csrf
+    @endhasanyrole
 
-        @foreach($questionDetails as $index => $detail)
-            @php
-                $question = $detail['question'];
-                $isCorrect = $detail['is_correct'];
-                $hasAnswer = $detail['user_answer_text'] || count($detail['user_selected_option_ids']) > 0;
-                $isManuallyGraded = $detail['is_manually_graded'] ?? false;
+    @foreach($questionDetails as $index => $detail)
+    @if($index === 0)
+        @php dump($detail) @endphp
+    @endif
+        @php
+            $question        = $detail['question'];
+            $isCorrect       = $detail['is_correct'];
+            $hasAnswer       = $detail['user_answer_text'] || count($detail['user_selected_option_ids']) > 0;
+            $isManuallyGraded = $detail['is_manually_graded'] ?? false;
 
-                // По умолчанию – как раньше
-                $badgeClass = $isCorrect ? 'correct' : ($hasAnswer ? 'incorrect' : 'empty');
-                $badgeText = $isCorrect ? '✓ Правильно' : ($hasAnswer ? '✗ Неправильно' : 'Не ответил');
+            if ($question->question_type === 'rich_text_answer' && $hasAnswer && !$isManuallyGraded) {
+                $badgeClass = 'pending';
+                $badgeText  = '⏳ Ожидает проверки';
+            } elseif ($isCorrect) {
+                $badgeClass = 'correct';
+                $badgeText  = '✓ Правильно';
+            } elseif ($hasAnswer) {
+                $badgeClass = 'incorrect';
+                $badgeText  = '✗ Неправильно';
+            } else {
+                $badgeClass = 'empty';
+                $badgeText  = '— Не ответил';
+            }
 
-                // Для развёрнутых ответов, которые ещё не проверены учителем, показываем "Ожидает проверки"
-                if ($question->question_type === 'rich_text_answer' && $hasAnswer && !$isManuallyGraded) {
-                    $badgeClass = 'empty';
-                    $badgeText = 'Ожидает проверки';
-                }
-            @endphp
+            $typeLabel = match($question->question_type) {
+                'single_choice'     => 'Один ответ',
+                'multiple_choice'   => 'Несколько ответов',
+                'rich_text_answer'  => 'Развёрнутый ответ',
+                default             => 'Текстовый ответ',
+            };
+        @endphp
 
-            <div class="question-card">
-                <div class="question-header">
-                    <div>
-                        <div class="question-number">Вопрос {{ $index + 1 }}</div>
-                        <div class="question-text">{{ strip_tags($question->question_text) }}</div>
-                        <span class="question-type">{{ 
-                            $question->question_type === 'single_choice' ? 'Один ответ' : 
-                            ($question->question_type === 'multiple_choice' ? 'Несколько ответов' : 
-                            ($question->question_type === 'rich_text_answer' ? 'Развёрнутый ответ' : 'Текстовый ответ'))
-                        }}</span>
+        <div class="q-card">
+
+            {{-- Card header --}}
+            <div class="q-card__header">
+                <div class="q-card__header-left">
+                    <div class="q-badge">{{ $index + 1 }}</div>
+                    <div class="q-card__meta">
+                        <div class="q-card__number">Вопрос {{ $index + 1 }}</div>
+                        <div class="q-card__text">{{ strip_tags($question->question_text) }}</div>
+                        <span class="q-type-chip">{{ $typeLabel }}</span>
                     </div>
-                    <span class="correctness-badge {{ $badgeClass }}">{{ $badgeText }}</span>
                 </div>
+                <span class="status-badge {{ $badgeClass }}">{{ $badgeText }}</span>
+            </div>
 
-                <div class="question-body">
+            {{-- Card body --}}
+            <div class="q-card__body">
+
                 @if($question->question_type === 'short_answer')
-                    <div style="margin-bottom: 15px;">
-                        <strong style="display: block; margin-bottom: 8px; color: #666; font-size: 13px; text-transform: uppercase;">Ответ студента:</strong>
-                        @if($detail['user_answer_text'])
-                            <div class="text-answer-box {{ $isCorrect ? 'correct' : 'incorrect' }}">
-                                {{ $detail['user_answer_text'] }}
-                            </div>
-                        @else
-                            <div class="no-answer">Студент не дал ответ</div>
-                        @endif
-                    </div>
+
+                    <div class="answer-section-label">Ответ студента</div>
+                    @if($detail['user_answer_text'])
+                        <div class="text-answer-box {{ $isCorrect ? 'correct' : 'incorrect' }}">
+                            {{ $detail['user_answer_text'] }}
+                        </div>
+                    @else
+                        <div class="no-answer-box">Студент не дал ответ</div>
+                    @endif
 
                     @if(!$isCorrect)
-                        <div class="correct-answers">
-                            <div class="correct-answers-title">Правильные ответы:</div>
+                        <div class="correct-answers-panel">
+                            <div class="correct-answers-panel__title">Правильные ответы</div>
                             @foreach($question->options->where('is_correct', true) as $option)
-                                <div>• {{ $option->option_text }}</div>
+                                <p>• {{ $option->option_text }}</p>
                             @endforeach
                         </div>
                     @endif
 
                 @elseif($question->question_type === 'rich_text_answer')
-                    <div style="margin-bottom: 15px;">
-                        <strong style="display: block; margin-bottom: 8px; color: #666; font-size: 13px; text-transform: uppercase;">Ответ студента:</strong>
-                        @if($detail['user_answer_text'])
-                            <div class="rich-text-answer-box {{ $isCorrect ? 'correct' : 'incorrect' }}">
-                                {!! $detail['user_answer_text'] !!}
-                            </div>
-                        @else
-                            <div class="no-answer">Студент не дал ответ</div>
-                        @endif
-                    </div>
+
+                    <div class="answer-section-label">Ответ студента</div>
+                    @if($detail['user_answer_text'])
+                        <div class="rich-text-answer-box {{ $isManuallyGraded ? ($isCorrect ? 'correct' : 'incorrect') : '' }}">
+                            {!! $detail['user_answer_text'] !!}
+                        </div>
+                    @else
+                        <div class="no-answer-box">Студент не дал ответ</div>
+                    @endif
 
                     @if($detail['user_answer_text'])
-                        <div style="margin-bottom: 15px;">
-                            <strong style="display: block; margin-bottom: 8px; color: #666; font-size: 13px; text-transform: uppercase;">Оценка учителя для развёрнутого ответа:</strong>
-                            <label style="margin-right: 10px;">
-                                <input type="radio" name="grades[{{ $question->id }}]" value="correct" {{ $isManuallyGraded && $isCorrect ? 'checked' : '' }}>
-                                Засчитать как правильный
-                            </label>
-                            <label>
-                                <input type="radio" name="grades[{{ $question->id }}]" value="incorrect" {{ $isManuallyGraded && !$isCorrect ? 'checked' : '' }}>
-                                Отметить как неправильный
-                            </label>
-                        </div>
+                        @hasanyrole('admin|teacher')
+                            <div class="grading-panel">
+                                <div class="grading-panel__title">Оценка учителя</div>
+                                <div class="grading-radios">
+                                    <label class="grade-radio-label">
+                                        <input type="radio" name="grades[{{ $question->id }}]" value="correct"
+                                            {{ $isManuallyGraded && $isCorrect ? 'checked' : '' }}>
+                                        <span>✓ Засчитать как правильный</span>
+                                    </label>
+                                    <label class="grade-radio-label">
+                                        <input type="radio" name="grades[{{ $question->id }}]" value="incorrect"
+                                            {{ $isManuallyGraded && !$isCorrect ? 'checked' : '' }}>
+                                        <span>✗ Отметить как неправильный</span>
+                                    </label>
+                                </div>
+                            </div>
+                        @endhasanyrole
                     @endif
 
                 @else
-                    {{-- multiple_choice --}}
-                    <div style="margin-bottom: 15px;">
-                        <strong style="display: block; margin-bottom: 8px; color: #666; font-size: 13px; text-transform: uppercase;">Варианты ответа:</strong>
-                        @foreach($question->options as $option)
-                            @php
-                                $isUserSelected = in_array($option->id, $detail['user_selected_option_ids']);
-                                $isCorrectOption = $option->is_correct;
-                                $optionClass = '';
-                                
-                                if ($isUserSelected && $isCorrectOption) {
-                                    $optionClass = 'selected correct';
-                                } elseif ($isUserSelected && !$isCorrectOption) {
-                                    $optionClass = 'selected incorrect';
-                                } elseif ($isCorrectOption) {
-                                    $optionClass = 'correct';
-                                } elseif ($isUserSelected) {
-                                    $optionClass = 'selected';
-                                }
-                            @endphp
+                    {{-- single_choice / multiple_choice --}}
+                    <div class="answer-section-label">Варианты ответа</div>
+                    @foreach($question->options as $option)
+                        @php
+                            $isUserSelected  = in_array($option->id, $detail['user_selected_option_ids']);
+                            $isCorrectOption = $option->is_correct;
 
-                            <div class="option {{ $optionClass }}">
-                                <div class="option-label">
-                                    <span class="option-radio">
-                                        <input type="checkbox" disabled {{ $isUserSelected ? 'checked' : '' }}>
-                                    </span>
-                                    <span class="option-text">
-                                        {{ $option->option_text }}
-                                        @if($isUserSelected)
-                                            <span class="option-badge user-answer">Выбран студентом</span>
-                                        @endif
-                                        @if($isCorrectOption && !$isUserSelected)
-                                            <span class="option-badge correct-answer">Должен быть выбран</span>
-                                        @endif
-                                    </span>
-                                </div>
+                            if ($isUserSelected && $isCorrectOption)       $cls = 'selected-correct';
+                            elseif ($isUserSelected && !$isCorrectOption)  $cls = 'selected-incorrect';
+                            elseif ($isCorrectOption)                       $cls = 'correct';
+                            else                                            $cls = '';
+                        @endphp
+                        <div class="option-item {{ $cls }}">
+                            <div class="option-item__check">
+                                <input type="checkbox" disabled {{ $isUserSelected ? 'checked' : '' }}
+                                    style="width:16px;height:16px;accent-color:var(--teal-500);margin-top:2px;">
                             </div>
-                        @endforeach
-                    </div>
+                            <div class="option-item__text">
+                                {{ $option->option_text }}
+                                @if($isUserSelected)
+                                    <span class="micro-badge user">Выбран студентом</span>
+                                @endif
+                                @if($isCorrectOption && !$isUserSelected)
+                                    <span class="micro-badge should">Должен быть выбран</span>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
                 @endif
-                </div>
+
             </div>
-        @endforeach
+        </div>
+    @endforeach
 
-        <button type="submit" style="margin-top: 20px; padding: 10px 20px; background: #2c3e50; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Сохранить оценки развёрнутых ответов
-        </button>
-    </form>
-
+    @hasanyrole('admin|teacher')
+        <div class="grade-submit-wrap">
+            <button type="submit" class="grade-submit-btn">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                Сохранить оценки развёрнутых ответов
+            </button>
+        </div>
+        </form>
+    @endhasanyrole
 
 </div>
-</body>
-</html>
+@endsection

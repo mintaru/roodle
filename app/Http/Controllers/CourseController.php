@@ -15,35 +15,15 @@ class CourseController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-
-        // Для главной страницы студентам и учителям показываем Livewire компонент
-        if (! $user->hasRole('admin')) {
+        if (!$user) {
+            return redirect()->route('login');
+        }
+        if ($user->hasRole('admin')) {
+            return view('admin.courses.index');
+        }
+        else {
             return view('courses');
         }
-
-        // Search parameters
-        $searchColumn = $request->input('search_column', 'title');
-        $searchValue = $request->input('search_value', '');
-
-        // Админ видит все курсы
-        $query = Course::with('groups', 'author');
-
-        // Apply search filter
-        if ($searchValue) {
-            if ($searchColumn === 'title') {
-                $query->where('title', 'like', '%'.$searchValue.'%');
-            } elseif ($searchColumn === 'id') {
-                $query->where('id', 'like', '%'.$searchValue.'%');
-            } elseif ($searchColumn === 'author') {
-                $query->whereHas('author', function ($q) use ($searchValue) {
-                    $q->where('name', 'like', '%'.$searchValue.'%');
-                });
-            }
-        }
-
-        $courses = $query->get();
-
-        return view('courses.index', compact('courses', 'searchColumn', 'searchValue'));
     }
 
     /**
@@ -62,7 +42,7 @@ class CourseController extends Controller
     private function canTeacherEdit(Course $course, $teacher = null)
     {
         $teacher = $teacher ?? Auth::user();
-        
+
         // Автор курса может редактировать
         if ($course->user_id === $teacher->id) {
             return true;
@@ -82,7 +62,7 @@ class CourseController extends Controller
     private function canTeacherDelete(Course $course, $teacher = null)
     {
         $teacher = $teacher ?? Auth::user();
-        
+
         // Автор курса может удалять
         if ($course->user_id === $teacher->id) {
             return true;
@@ -102,7 +82,7 @@ class CourseController extends Controller
     private function canTeacherView(Course $course, $teacher = null)
     {
         $teacher = $teacher ?? Auth::user();
-        
+
         // Автор курса активного может видеть
         if ($course->user_id === $teacher->id) {
             return true;
@@ -168,6 +148,10 @@ class CourseController extends Controller
     {
         $user = Auth::user();
 
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
         // Проверяем доступ для учителей
         if ($user->hasRole('teacher')) {
             abort_if(! $this->canTeacherView($course, $user), 404);
@@ -216,6 +200,10 @@ class CourseController extends Controller
     {
         $user = Auth::user();
 
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
         // Проверяем что учитель может редактировать
         if ($user->hasRole('teacher')) {
             abort_if(! $this->canTeacherEdit($course, $user), 403);
@@ -232,6 +220,10 @@ class CourseController extends Controller
     public function update(Request $request, Course $course)
     {
         $user = Auth::user();
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
 
         // Проверяем что учитель может редактировать
         if ($user->hasRole('teacher')) {
@@ -281,6 +273,10 @@ class CourseController extends Controller
     public function destroy(Course $course)
     {
         $user = Auth::user();
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
 
         // Проверяем что учитель может удалять
         if ($user->hasRole('teacher')) {

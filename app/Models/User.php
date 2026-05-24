@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'password',
         'username',
+        'avatar'
     ];
 
     /**
@@ -66,4 +67,5 @@ class User extends Authenticatable
         return $this->belongsToMany(Course::class, 'teacher_course_permissions', 'user_id', 'course_id')
             ->withPivot('can_edit', 'can_delete', 'can_manage_students');
     }
+
 }

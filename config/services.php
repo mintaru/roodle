@@ -34,5 +34,9 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'yandex' => [
+    'api_key'   => env('YANDEX_API_KEY'),
+    'folder_id' => env('YANDEX_FOLDER_ID'),
+],
 
 ];

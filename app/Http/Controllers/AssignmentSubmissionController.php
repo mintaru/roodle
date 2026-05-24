@@ -19,7 +19,7 @@ class AssignmentSubmissionController extends Controller
         }
 
         $submission = $assignment->getSubmissionByUser(Auth::id());
-        
+
         // Get all submissions for teachers/admins
         $submissions = collect();
         if (Auth::user()->hasAnyRole(['teacher', 'admin'])) {
@@ -59,7 +59,7 @@ class AssignmentSubmissionController extends Controller
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
                 $path = $file->store('assignment-submissions', 'public');
-                
+
                 AssignmentSubmissionFile::create([
                     'assignment_submission_id' => $submission->id,
                     'file_path' => $path,

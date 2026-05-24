@@ -23,7 +23,7 @@ class MaterialController extends Controller
 
         $file = $request->file('file');
         $path = $file->store('materials', 'public');
-        
+
         $material = $course->materials()->create([
             'title' => $request->title,
             'file_path' => $path,
@@ -42,12 +42,52 @@ class MaterialController extends Controller
         }
 
         $path = Storage::disk('public')->path($material->file_path);
-        
+
         if (!file_exists($path)) {
             abort(404, 'Файл не найден');
         }
 
         return response()->download($path, $material->file_name);
+    }
+
+    public function edit(Course $course, Material $material)
+    {
+        if ($material->course_id !== $course->id) {
+            abort(404);
+        }
+
+        return view('materials.edit', compact('course', 'material'));
+    }
+
+    public function update(Request $request, Course $course, Material $material)
+    {
+        if ($material->course_id !== $course->id) {
+            abort(404);
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'file' => 'nullable|file|max:102400',
+        ]);
+
+        $material->title = $request->title;
+
+        if ($request->hasFile('file')) {
+            // delete old file
+            if ($material->file_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($material->file_path);
+            }
+            $file = $request->file('file');
+            $path = $file->store('materials', 'public');
+            $material->file_path = $path;
+            $material->file_name = $file->getClientOriginalName();
+            $material->file_type = $file->getClientOriginalExtension();
+            $material->file_size = $file->getSize();
+        }
+
+        $material->save();
+
+        return redirect()->route('courses.show', $course)->with('success', 'Материал обновлён!');
     }
 
     public function destroy(Course $course, Material $material)
@@ -68,8 +108,8 @@ class MaterialController extends Controller
             abort(404);
         }
 
-        $material->status = $material->status === Material::STATUS_ACTIVE 
-            ? Material::STATUS_ARCHIVED 
+        $material->status = $material->status === Material::STATUS_ACTIVE
+            ? Material::STATUS_ARCHIVED
             : Material::STATUS_ACTIVE;
         $material->save();
 
@@ -79,7 +119,7 @@ class MaterialController extends Controller
     public function archive(Material $material)
     {
         $this->authorize('delete', $material);
-        
+
         $material->status = Material::STATUS_ARCHIVED;
         $material->save();
 
@@ -89,7 +129,7 @@ class MaterialController extends Controller
     public function restore(Material $material)
     {
         $this->authorize('delete', $material);
-        
+
         $material->status = Material::STATUS_ACTIVE;
         $material->save();
 

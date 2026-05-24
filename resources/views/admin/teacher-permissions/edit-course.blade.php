@@ -77,13 +77,6 @@
                                         class="w-4 h-4">
                                     <span class="text-sm">🗑️ Удаление курса</span>
                                 </label>
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox"
-                                        name="permissions[{{ $teacher->id }}][can_manage_students]" value="1"
-                                        {{ $isPermitted && $permission?->can_manage_students ? 'checked' : '' }}
-                                        class="w-4 h-4">
-                                    <span class="text-sm">👥 Управление студентами</span>
-                                </label>
                             </div>
                         </div>
                     @endforeach

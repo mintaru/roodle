@@ -12,7 +12,8 @@ class TestAttempt extends Model
         'score',
         'attempt_number',
         'started_at',
-        'ended_at'
+        'ended_at',
+        'last_question_index', // ← добавить
     ];
 
     protected $casts = [

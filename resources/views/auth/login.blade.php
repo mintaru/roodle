@@ -1,57 +1,74 @@
 <x-guest-layout>
-
     <x-auth-session-status class="mb-4" :status="session('status')" />
-
-    <div class="text-center mb-6">
-        <h1 class="text-3xl font-bold text-indigo-700 mb-2">Roodle</h1>
-        <p class="text-gray-700">Образовательная платформа</p>
-    </div>
 
     <form method="POST" action="{{ route('login') }}">
         @csrf
 
-        <!-- Username -->
         <div>
-            <x-input-label for="username" value="Имя пользователя" class="text-gray-700" />
-            <x-text-input id="username"
-                          class="block mt-1 w-full border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                          type="text"
-                          name="username"
-                          :value="old('username')"
-                          required autofocus
-                          autocomplete="username"
-                          placeholder="Введите имя пользователя" />
-            <x-input-error :messages="$errors->get('username')" class="mt-2 text-red-600" />
+            <label for="username" style="display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-muted,#9eaab7);margin-bottom:6px;">
+                Имя пользователя
+            </label>
+            <input
+                id="username"
+                type="text"
+                name="username"
+                value="{{ old('username') }}"
+                required autofocus
+                autocomplete="username"
+                placeholder="Введите имя пользователя"
+                style="width:100%;padding:11px 16px;border:1.5px solid var(--color-border,#e2e8ed);border-radius:var(--r-lg,16px);font-size:14px;font-family:var(--font-body,'Manrope',sans-serif);color:var(--color-text-primary,#111720);background:var(--color-surface,#fff);transition:.2s ease;outline:none;"
+                onfocus="this.style.borderColor='var(--teal-400,#26c6b8)';this.style.boxShadow='0 0 0 3px rgba(0,181,165,.12)'"
+                onblur="this.style.borderColor='var(--color-border,#e2e8ed)';this.style.boxShadow='none'"
+            >
+            @error('username')
+                <p style="margin-top:6px;font-size:13px;color:var(--red-500,#e53935);">{{ $message }}</p>
+            @enderror
         </div>
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" value="Пароль" class="text-gray-700" />
-            <x-text-input id="password"
-                          class="block mt-1 w-full border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                          type="password"
-                          name="password"
-                          required autocomplete="current-password"
-                          placeholder="Введите пароль" />
-            <x-input-error :messages="$errors->get('password')" class="mt-2 text-red-600" />
+        <div style="margin-top:1.25rem;">
+            <label for="password" style="display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-muted,#9eaab7);margin-bottom:6px;">
+                Пароль
+            </label>
+            <input
+                id="password"
+                type="password"
+                name="password"
+                required
+                autocomplete="current-password"
+                placeholder="Введите пароль"
+                style="width:100%;padding:11px 16px;border:1.5px solid var(--color-border,#e2e8ed);border-radius:var(--r-lg,16px);font-size:14px;font-family:var(--font-body,'Manrope',sans-serif);color:var(--color-text-primary,#111720);background:var(--color-surface,#fff);transition:.2s ease;outline:none;"
+                onfocus="this.style.borderColor='var(--teal-400,#26c6b8)';this.style.boxShadow='0 0 0 3px rgba(0,181,165,.12)'"
+                onblur="this.style.borderColor='var(--color-border,#e2e8ed)';this.style.boxShadow='none'"
+            >
+            @error('password')
+                <p style="margin-top:6px;font-size:13px;color:var(--red-500,#e53935);">{{ $message }}</p>
+            @enderror
         </div>
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox"
-                       class="rounded border-gray-400 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                       name="remember">
-                <span class="ms-2 text-sm text-gray-700">Запомнить меня</span>
+        <div style="margin-top:1rem;">
+            <label for="remember_me" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
+                <input
+                    id="remember_me"
+                    type="checkbox"
+                    name="remember"
+                    style="width:16px;height:16px;accent-color:var(--teal-500,#00b5a5);border-radius:4px;cursor:pointer;"
+                >
+                <span style="font-size:13px;color:var(--color-text-secondary,#6b7a89);">Запомнить меня</span>
             </label>
         </div>
 
-        <div class="flex items-center justify-between mt-6">
-
-            <x-primary-button class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg">
+        <div style="margin-top:1.75rem;">
+            <button
+                type="submit"
+                style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;background:var(--teal-500,#00b5a5);color:#fff;border:none;border-radius:var(--r-full,999px);font-family:var(--font-body,'Manrope',sans-serif);font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,181,165,.3);transition:.2s ease;"
+                onmouseover="this.style.background='var(--teal-600,#009e90)';this.style.transform='translateY(-1px)'"
+                onmouseout="this.style.background='var(--teal-500,#00b5a5)';this.style.transform='none'"
+            >
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
                 Войти
-            </x-primary-button>
+            </button>
         </div>
     </form>
-
 </x-guest-layout>

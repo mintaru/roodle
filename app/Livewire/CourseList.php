@@ -40,10 +40,13 @@ class CourseList extends Component
                 });
         }
 
-        // 🔍 Поиск
+        // 🔍 Поиск: по названию курса и по имени автора (учителя)
         if ($this->search) {
             $courses = $courses->where(function ($query) {
-                $query->where('title', 'like', '%' . $this->search . '%');
+                $query->where('title', 'like', '%' . $this->search . '%')
+                      ->orWhereHas('author', function ($q) {
+                          $q->where('name', 'like', '%' . $this->search . '%');
+                      });
             });
         }
 
