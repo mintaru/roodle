@@ -26,12 +26,14 @@ class Test extends Model
         'period_end',
         'randomize_questions',
         'display_mode',
+        'is_details_available',
     ];
 
     protected $casts = [
         'period_start' => 'datetime',
         'period_end' => 'datetime',
         'randomize_questions' => 'boolean',
+        'is_details_available' => 'boolean',
     ];
 
     const STATUS_ACTIVE = 'active';

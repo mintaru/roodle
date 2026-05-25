@@ -44,6 +44,7 @@ class TestController extends Controller
             'period_start' => 'nullable|date',
             'period_end' => 'nullable|date|after:period_start',
             'randomize_questions' => 'nullable|boolean',
+            'is_details_available' => 'nullable|boolean',
             'display_mode' => 'required|in:single_page,per_question,paged',
         ]);
         $validatedData['time_limit'] = $request->input('time_limit', 0);
@@ -74,6 +75,7 @@ class TestController extends Controller
 
         // Настройки отображения теста
         $validatedData['randomize_questions'] = $request->has('randomize_questions');
+        $validatedData['is_details_available'] = $request->has('is_details_available');
         $validatedData['display_mode'] = $request->input('display_mode', 'single_page');
 
         // Создаём тест
@@ -1389,6 +1391,7 @@ class TestController extends Controller
             'period_start' => 'nullable|date',
             'period_end' => 'nullable|date|after_or_equal:period_start',
             'randomize_questions' => 'nullable|boolean',
+            'is_details_available' => 'nullable|boolean',
             'display_mode' => 'required|in:single_page,per_question,paged',
         ]);
 
@@ -1420,6 +1423,7 @@ class TestController extends Controller
 
         // Настройки отображения теста
         $validatedData['randomize_questions'] = $request->has('randomize_questions');
+        $validatedData['is_details_available'] = $request->has('is_details_available');
         $validatedData['display_mode'] = $request->input('display_mode', 'single_page');
 
         // Обновляем тест

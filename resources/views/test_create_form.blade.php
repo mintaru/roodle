@@ -440,6 +440,13 @@ body {
                                 <span class="toggle-label">Случайно перемешивать вопросы для студента</span>
                             </label>
                         </div>
+
+                        <div class="field">
+                            <label class="toggle-row" for="is_details_available">
+                                <input type="checkbox" id="is_details_available" name="is_details_available" value="1" checked>
+                                <span class="toggle-label">Показывать обзоры попыток студентам</span>
+                            </label>
+                        </div>
                     </div>
 
                     {{-- SECTION 4: Access period --}}

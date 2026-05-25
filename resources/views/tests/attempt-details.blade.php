@@ -9,10 +9,12 @@
             margin: 0 auto;
             padding: 2rem 1.5rem 4rem;
         }
+
         body {
-    margin: 0;
-    padding: 0;
-}
+            margin: 0;
+            padding: 0;
+        }
+
         /* ── BACK BUTTON ── */
         .back-link {
             display: inline-flex;
@@ -55,7 +57,7 @@
             width: 240px;
             height: 240px;
             border-radius: 50%;
-            background: rgba(255,255,255,.07);
+            background: rgba(255, 255, 255, .07);
             pointer-events: none;
         }
 
@@ -67,7 +69,7 @@
             width: 170px;
             height: 170px;
             border-radius: 50%;
-            background: rgba(255,255,255,.04);
+            background: rgba(255, 255, 255, .04);
             pointer-events: none;
         }
 
@@ -97,7 +99,7 @@
         }
 
         .attempt-meta-item {
-            background: rgba(255,255,255,.12);
+            background: rgba(255, 255, 255, .12);
             backdrop-filter: blur(6px);
             border-radius: var(--r-lg);
             padding: 12px 14px;
@@ -118,9 +120,17 @@
             line-height: 1.2;
         }
 
-        .attempt-meta-item__value.score-high  { color: #a5f3ca; }
-        .attempt-meta-item__value.score-mid   { color: #fde68a; }
-        .attempt-meta-item__value.score-low   { color: #fca5a5; }
+        .attempt-meta-item__value.score-high {
+            color: #a5f3ca;
+        }
+
+        .attempt-meta-item__value.score-mid {
+            color: #fde68a;
+        }
+
+        .attempt-meta-item__value.score-low {
+            color: #fca5a5;
+        }
 
         /* ── SECTION HEADING ── */
         .answers-heading {
@@ -135,7 +145,7 @@
             background: var(--color-surface);
             border: 1px solid var(--color-border);
             border-radius: var(--r-xl);
-            box-shadow: 0 2px 8px rgba(0,0,0,.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
             overflow: hidden;
             margin-bottom: 1rem;
             transition: box-shadow var(--transition);
@@ -352,7 +362,9 @@
             transition: var(--transition);
         }
 
-        .option-item:last-child { margin-bottom: 0; }
+        .option-item:last-child {
+            margin-bottom: 0;
+        }
 
         .option-item.correct {
             background: var(--green-50);
@@ -393,8 +405,16 @@
             font-weight: 700;
         }
 
-        .micro-badge.user   { background: #fff3cd; color: #856404; }
-        .micro-badge.should { background: var(--green-50); color: var(--green-600); border: 1px solid var(--green-100); }
+        .micro-badge.user {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .micro-badge.should {
+            background: var(--green-50);
+            color: var(--green-600);
+            border: 1px solid var(--green-100);
+        }
 
         /* ── TEACHER GRADING ── */
         .grading-panel {
@@ -445,7 +465,7 @@
             accent-color: var(--teal-500);
         }
 
-        .grade-radio-label input[type="radio"]:checked + span {
+        .grade-radio-label input[type="radio"]:checked+span {
             color: var(--teal-700);
         }
 
@@ -475,228 +495,361 @@
             font-weight: 700;
             font-family: var(--font-body);
             cursor: pointer;
-            box-shadow: 0 4px 16px rgba(0,181,165,.3);
+            box-shadow: 0 4px 16px rgba(0, 181, 165, .3);
             transition: var(--transition);
         }
 
         .grade-submit-btn:hover {
             background: var(--teal-600);
             transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(0,181,165,.4);
+            box-shadow: 0 6px 20px rgba(0, 181, 165, .4);
         }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 640px) {
-            .attempt-hero { padding: 1.5rem; }
-            .attempt-hero__title { font-size: 20px; }
-            .attempt-meta-grid { grid-template-columns: 1fr 1fr; }
-            .q-card__header { flex-direction: column; }
-            .status-badge { align-self: flex-start; }
+            .attempt-hero {
+                padding: 1.5rem;
+            }
+
+            .attempt-hero__title {
+                font-size: 20px;
+            }
+
+            .attempt-meta-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .q-card__header {
+                flex-direction: column;
+            }
+
+            .status-badge {
+                align-self: flex-start;
+            }
         }
     </style>
 @endsection
 
 @section('content')
-<div class="attempt-shell">
+    <div class="attempt-shell">
 
-    {{-- Back button --}}
-    <a href="{{ route('tests.results', $test) }}" class="back-link">
-        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-        </svg>
-        К результатам
-    </a>
+        {{-- Back button --}}
+        <a href="{{ route('tests.view', $test) }}" class="back-link">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            К тесту
+        </a>
 
-    {{-- Hero header --}}
-    <div class="attempt-hero">
-        <div class="attempt-hero__eyebrow">Детали попытки</div>
-        <h1 class="attempt-hero__title">{{ $test->title }}</h1>
+        {{-- Hero header --}}
+        <div class="attempt-hero">
+            <div class="attempt-hero__eyebrow">Детали попытки</div>
+            <h1 class="attempt-hero__title">{{ $test->title }}</h1>
 
-        <div class="attempt-meta-grid">
-            <div class="attempt-meta-item">
-                <div class="attempt-meta-item__label">Студент</div>
-                <div class="attempt-meta-item__value">{{ $user->name }}</div>
-            </div>
-            <div class="attempt-meta-item">
-                <div class="attempt-meta-item__label">Попытка</div>
-                <div class="attempt-meta-item__value">#{{ $attempt->attempt_number }}</div>
-            </div>
-            <div class="attempt-meta-item">
-                <div class="attempt-meta-item__label">Результат</div>
-                <div class="attempt-meta-item__value {{ $attempt->score >= 70 ? 'score-high' : ($attempt->score >= 50 ? 'score-mid' : 'score-low') }}">
-                    {{ $attempt->score }}%
+            <div class="attempt-meta-grid">
+                <div class="attempt-meta-item">
+                    <div class="attempt-meta-item__label">Студент</div>
+                    <div class="attempt-meta-item__value">{{ $user->name }}</div>
                 </div>
-            </div>
-            <div class="attempt-meta-item">
-                <div class="attempt-meta-item__label">Завершено</div>
-                <div class="attempt-meta-item__value">{{ $attempt->ended_at->format('d.m.Y H:i') }}</div>
-            </div>
-            <div class="attempt-meta-item">
-                <div class="attempt-meta-item__label">Время</div>
-                <div class="attempt-meta-item__value">{{ \App\Helpers\TimeFormatter::formatMinutes($attempt->started_at->diffInMinutes($attempt->ended_at)) }}</div>
-            </div>
-            <div class="attempt-meta-item">
-                <div class="attempt-meta-item__label">Курс</div>
-                <div class="attempt-meta-item__value" style="font-size:14px;">{{ $course->title }}</div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Questions --}}
-    <div class="answers-heading">Ответы студента</div>
-
-    @hasanyrole('admin|teacher')
-        <form method="POST" action="{{ route('test-attempts.grade-rich-text', $attempt) }}">
-            @csrf
-    @endhasanyrole
-
-    @foreach($questionDetails as $index => $detail)
-    @if($index === 0)
-        @php dump($detail) @endphp
-    @endif
-        @php
-            $question        = $detail['question'];
-            $isCorrect       = $detail['is_correct'];
-            $hasAnswer       = $detail['user_answer_text'] || count($detail['user_selected_option_ids']) > 0;
-            $isManuallyGraded = $detail['is_manually_graded'] ?? false;
-
-            if ($question->question_type === 'rich_text_answer' && $hasAnswer && !$isManuallyGraded) {
-                $badgeClass = 'pending';
-                $badgeText  = '⏳ Ожидает проверки';
-            } elseif ($isCorrect) {
-                $badgeClass = 'correct';
-                $badgeText  = '✓ Правильно';
-            } elseif ($hasAnswer) {
-                $badgeClass = 'incorrect';
-                $badgeText  = '✗ Неправильно';
-            } else {
-                $badgeClass = 'empty';
-                $badgeText  = '— Не ответил';
-            }
-
-            $typeLabel = match($question->question_type) {
-                'single_choice'     => 'Один ответ',
-                'multiple_choice'   => 'Несколько ответов',
-                'rich_text_answer'  => 'Развёрнутый ответ',
-                default             => 'Текстовый ответ',
-            };
-        @endphp
-
-        <div class="q-card">
-
-            {{-- Card header --}}
-            <div class="q-card__header">
-                <div class="q-card__header-left">
-                    <div class="q-badge">{{ $index + 1 }}</div>
-                    <div class="q-card__meta">
-                        <div class="q-card__number">Вопрос {{ $index + 1 }}</div>
-                        <div class="q-card__text">{{ strip_tags($question->question_text) }}</div>
-                        <span class="q-type-chip">{{ $typeLabel }}</span>
+                <div class="attempt-meta-item">
+                    <div class="attempt-meta-item__label">Попытка</div>
+                    <div class="attempt-meta-item__value">#{{ $attempt->attempt_number }}</div>
+                </div>
+                <div class="attempt-meta-item">
+                    <div class="attempt-meta-item__label">Результат</div>
+                    <div
+                        class="attempt-meta-item__value {{ $attempt->score >= 70 ? 'score-high' : ($attempt->score >= 50 ? 'score-mid' : 'score-low') }}">
+                        {{ $attempt->score }}%
                     </div>
                 </div>
-                <span class="status-badge {{ $badgeClass }}">{{ $badgeText }}</span>
+                <div class="attempt-meta-item">
+                    <div class="attempt-meta-item__label">Завершено</div>
+                    <div class="attempt-meta-item__value">{{ $attempt->ended_at->format('d.m.Y H:i') }}</div>
+                </div>
+                <div class="attempt-meta-item">
+                    <div class="attempt-meta-item__label">Время</div>
+                    <div class="attempt-meta-item__value">
+                        {{ \App\Helpers\TimeFormatter::formatMinutes($attempt->started_at->diffInMinutes($attempt->ended_at)) }}
+                    </div>
+                </div>
+                <div class="attempt-meta-item">
+                    <div class="attempt-meta-item__label">Курс</div>
+                    <div class="attempt-meta-item__value" style="font-size:14px;">{{ $course->title }}</div>
+                </div>
             </div>
+        </div>
 
-            {{-- Card body --}}
-            <div class="q-card__body">
+        {{-- Questions --}}
+        <div class="answers-heading">Ответы студента</div>
 
-                @if($question->question_type === 'short_answer')
+        @hasanyrole('admin|teacher')
+            <form method="POST" action="{{ route('test-attempts.grade-rich-text', $attempt) }}">
+                @csrf
+            @endhasanyrole
 
-                    <div class="answer-section-label">Ответ студента</div>
-                    @if($detail['user_answer_text'])
-                        <div class="text-answer-box {{ $isCorrect ? 'correct' : 'incorrect' }}">
-                            {{ $detail['user_answer_text'] }}
+            @foreach ($questionDetails as $index => $detail)
+                @php
+                    $question = $detail['question'];
+                    $isCorrect = $detail['is_correct'];
+                    $hasAnswer = $detail['user_answer_text'] || count($detail['user_selected_option_ids']) > 0;
+                    $isManuallyGraded = $detail['is_manually_graded'] ?? false;
+
+                    if ($question->question_type === 'rich_text_answer' && $hasAnswer && !$isManuallyGraded) {
+                        $badgeClass = 'pending';
+                        $badgeText = '⏳ Ожидает проверки';
+                    } elseif ($isCorrect) {
+                        $badgeClass = 'correct';
+                        $badgeText = '✓ Правильно';
+                    } elseif ($hasAnswer) {
+                        $badgeClass = 'incorrect';
+                        $badgeText = '✗ Неправильно';
+                    } else {
+                        $badgeClass = 'empty';
+                        $badgeText = '— Не ответил';
+                    }
+
+                    $typeLabel = match ($question->question_type) {
+                        'single_choice' => 'Один ответ',
+                        'multiple_choice' => 'Несколько ответов',
+                        'rich_text_answer' => 'Развёрнутый ответ',
+                        'fill_in_dropdown' => 'Выпадающий список',
+                        'fill_in_the_blank' => 'Заполнение пропуска',
+                        default => 'Текстовый ответ',
+                    };
+                @endphp
+
+                <div class="q-card">
+
+                    {{-- Card header --}}
+                    <div class="q-card__header">
+                        <div class="q-card__header-left">
+                            <div class="q-badge">{{ $index + 1 }}</div>
+                            <div class="q-card__meta">
+                                <div class="q-card__number">Вопрос {{ $index + 1 }}</div>
+                                <div class="q-card__text">{{ strip_tags($question->question_text) }}</div>
+                                <span class="q-type-chip">{{ $typeLabel }}</span>
+                            </div>
                         </div>
-                    @else
-                        <div class="no-answer-box">Студент не дал ответ</div>
-                    @endif
+                        <span class="status-badge {{ $badgeClass }}">{{ $badgeText }}</span>
+                    </div>
 
-                    @if(!$isCorrect)
-                        <div class="correct-answers-panel">
-                            <div class="correct-answers-panel__title">Правильные ответы</div>
-                            @foreach($question->options->where('is_correct', true) as $option)
-                                <p>• {{ $option->option_text }}</p>
-                            @endforeach
-                        </div>
-                    @endif
+                    {{-- Card body --}}
+                    <div class="q-card__body">
 
-                @elseif($question->question_type === 'rich_text_answer')
-
-                    <div class="answer-section-label">Ответ студента</div>
-                    @if($detail['user_answer_text'])
-                        <div class="rich-text-answer-box {{ $isManuallyGraded ? ($isCorrect ? 'correct' : 'incorrect') : '' }}">
-                            {!! $detail['user_answer_text'] !!}
-                        </div>
-                    @else
-                        <div class="no-answer-box">Студент не дал ответ</div>
-                    @endif
-
-                    @if($detail['user_answer_text'])
-                        @hasanyrole('admin|teacher')
-                            <div class="grading-panel">
-                                <div class="grading-panel__title">Оценка учителя</div>
-                                <div class="grading-radios">
-                                    <label class="grade-radio-label">
-                                        <input type="radio" name="grades[{{ $question->id }}]" value="correct"
-                                            {{ $isManuallyGraded && $isCorrect ? 'checked' : '' }}>
-                                        <span>✓ Засчитать как правильный</span>
-                                    </label>
-                                    <label class="grade-radio-label">
-                                        <input type="radio" name="grades[{{ $question->id }}]" value="incorrect"
-                                            {{ $isManuallyGraded && !$isCorrect ? 'checked' : '' }}>
-                                        <span>✗ Отметить как неправильный</span>
-                                    </label>
+                        @if ($question->question_type === 'short_answer')
+                            <div class="answer-section-label">Ответ студента</div>
+                            @if ($detail['user_answer_text'])
+                                <div class="text-answer-box {{ $isCorrect ? 'correct' : 'incorrect' }}">
+                                    {{ $detail['user_answer_text'] }}
                                 </div>
-                            </div>
-                        @endhasanyrole
-                    @endif
+                            @else
+                                <div class="no-answer-box">Студент не дал ответ</div>
+                            @endif
 
-                @else
-                    {{-- single_choice / multiple_choice --}}
-                    <div class="answer-section-label">Варианты ответа</div>
-                    @foreach($question->options as $option)
-                        @php
-                            $isUserSelected  = in_array($option->id, $detail['user_selected_option_ids']);
-                            $isCorrectOption = $option->is_correct;
+                            @if (!$isCorrect)
+                                <div class="correct-answers-panel">
+                                    <div class="correct-answers-panel__title">Правильные ответы</div>
+                                    @foreach ($question->options->where('is_correct', true) as $option)
+                                        <p>• {{ $option->option_text }}</p>
+                                    @endforeach
+                                </div>
+                            @endif
+                        @elseif($question->question_type === 'rich_text_answer')
+                            <div class="answer-section-label">Ответ студента</div>
+                            @if ($detail['user_answer_text'])
+                                <div
+                                    class="rich-text-answer-box {{ $isManuallyGraded ? ($isCorrect ? 'correct' : 'incorrect') : '' }}">
+                                    {!! $detail['user_answer_text'] !!}
+                                </div>
+                            @else
+                                <div class="no-answer-box">Студент не дал ответ</div>
+                            @endif
 
-                            if ($isUserSelected && $isCorrectOption)       $cls = 'selected-correct';
-                            elseif ($isUserSelected && !$isCorrectOption)  $cls = 'selected-incorrect';
-                            elseif ($isCorrectOption)                       $cls = 'correct';
-                            else                                            $cls = '';
-                        @endphp
-                        <div class="option-item {{ $cls }}">
-                            <div class="option-item__check">
-                                <input type="checkbox" disabled {{ $isUserSelected ? 'checked' : '' }}
-                                    style="width:16px;height:16px;accent-color:var(--teal-500);margin-top:2px;">
-                            </div>
-                            <div class="option-item__text">
-                                {{ $option->option_text }}
-                                @if($isUserSelected)
-                                    <span class="micro-badge user">Выбран студентом</span>
-                                @endif
-                                @if($isCorrectOption && !$isUserSelected)
-                                    <span class="micro-badge should">Должен быть выбран</span>
-                                @endif
-                            </div>
-                        </div>
-                    @endforeach
-                @endif
+                            @if ($detail['user_answer_text'])
+                                @hasanyrole('admin|teacher')
+                                    <div class="grading-panel">
+                                        <div class="grading-panel__title">Оценка учителя</div>
+                                        <div class="grading-radios">
+                                            <label class="grade-radio-label">
+                                                <input type="radio" name="grades[{{ $question->id }}]" value="correct"
+                                                    {{ $isManuallyGraded && $isCorrect ? 'checked' : '' }}>
+                                                <span>✓ Засчитать как правильный</span>
+                                            </label>
+                                            <label class="grade-radio-label">
+                                                <input type="radio" name="grades[{{ $question->id }}]" value="incorrect"
+                                                    {{ $isManuallyGraded && !$isCorrect ? 'checked' : '' }}>
+                                                <span>✗ Отметить как неправильный</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                @endhasanyrole
+                            @endif
+                        @elseif(in_array($question->question_type, ['single_choice', 'multiple_choice']))
+                            {{-- single_choice / multiple_choice --}}
+                            <div class="answer-section-label">Варианты ответа</div>
+                            @foreach ($question->options as $option)
+                                @php
+                                    $isUserSelected = in_array($option->id, $detail['user_selected_option_ids']);
+                                    $isCorrectOption = $option->is_correct;
 
-            </div>
-        </div>
-    @endforeach
+                                    if ($isUserSelected && $isCorrectOption) {
+                                        $cls = 'selected-correct';
+                                    } elseif ($isUserSelected && !$isCorrectOption) {
+                                        $cls = 'selected-incorrect';
+                                    } elseif ($isCorrectOption) {
+                                        $cls = 'correct';
+                                    } else {
+                                        $cls = '';
+                                    }
+                                @endphp
+                                <div class="option-item {{ $cls }}">
+                                    <div class="option-item__check">
+                                        <input type="checkbox" disabled {{ $isUserSelected ? 'checked' : '' }}
+                                            style="width:16px;height:16px;accent-color:var(--teal-500);margin-top:2px;">
+                                    </div>
+                                    <div class="option-item__text">
+                                        {{ $option->option_text }}
+                                        @if ($isUserSelected)
+                                            <span class="micro-badge user">Выбран студентом</span>
+                                        @endif
+                                        @if ($isCorrectOption && !$isUserSelected)
+                                            <span class="micro-badge should">Должен быть выбран</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        @elseif($question->question_type === 'fill_in_dropdown')
+                            <div class="answer-section-label">Ответ студента (выпадающий список)</div>
+                            @php
+                                // Группируем варианты по blank_id
+                                $byBlank = [];
+                                foreach ($question->options as $opt) {
+                                    $decoded = json_decode($opt->option_text, true);
+                                    if (!is_array($decoded)) {
+                                        continue;
+                                    }
+                                    $bid = $decoded['blank_id'];
+                                    $byBlank[$bid][] = [
+                                        'id' => $opt->id,
+                                        'text' => $decoded['text'] ?? '',
+                                        'is_correct' => (bool) $opt->is_correct,
+                                        'selected' => in_array($opt->id, $detail['user_selected_option_ids']),
+                                    ];
+                                }
+                                ksort($byBlank);
+                            @endphp
 
-    @hasanyrole('admin|teacher')
-        <div class="grade-submit-wrap">
-            <button type="submit" class="grade-submit-btn">
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                </svg>
-                Сохранить оценки развёрнутых ответов
-            </button>
-        </div>
-        </form>
-    @endhasanyrole
+                            @if (empty($detail['user_selected_option_ids']))
+                                <div class="no-answer-box">Студент не дал ответ</div>
+                            @else
+                                @foreach ($byBlank as $blankId => $opts)
+                                    @php
+                                        $selected = collect($opts)->firstWhere('selected', true);
+                                        $correct = collect($opts)->firstWhere('is_correct', true);
+                                        $isBlankCorrect = $selected && $selected['is_correct'];
+                                    @endphp
+                                    <div
+                                        class="option-item {{ $isBlankCorrect ? 'selected-correct' : ($selected ? 'selected-incorrect' : '') }}">
+                                        <div class="option-item__text">
+                                            <span
+                                                style="color:var(--color-text-muted);font-size:12px;font-weight:700;min-width:70px;">
+                                                Пропуск {{ $blankId }}:
+                                            </span>
+                                            @if ($selected)
+                                                <strong>{{ $selected['text'] }}</strong>
+                                                @if (!$isBlankCorrect && $correct)
+                                                    <span class="micro-badge should">Правильно:
+                                                        {{ $correct['text'] }}</span>
+                                                @endif
+                                            @else
+                                                <em style="color:var(--color-text-muted)">не выбрано</em>
+                                                @if ($correct)
+                                                    <span class="micro-badge should">Правильно:
+                                                        {{ $correct['text'] }}</span>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endif
+                        @elseif($question->question_type === 'fill_in_the_blank')
+                            {{-- fill_in_the_blank --}}
+                            <div class="answer-section-label">Ответ студента (пропуски)</div>
+                            @php
+                                // user_answer_text может быть JSON-массивом вида [{"blank_id":1,"text":"..."}]
+                                $userBlanks = [];
+                                if ($detail['user_answer_text']) {
+                                    $decoded = json_decode($detail['user_answer_text'], true);
+                                    if (is_array($decoded)) {
+                                        foreach ($decoded as $b) {
+                                            $userBlanks[$b['blank_id']] = $b['text'] ?? '';
+                                        }
+                                    }
+                                }
 
-</div>
+                                // Правильные ответы из options — option_text тоже JSON
+                                $correctBlanks = [];
+                                foreach ($question->options->where('is_correct', true) as $opt) {
+                                    $decoded = json_decode($opt->option_text, true);
+                                    if (is_array($decoded) && isset($decoded['blank_id'])) {
+                                        $correctBlanks[$decoded['blank_id']][] = $decoded['text'] ?? '';
+                                    }
+                                }
+                            @endphp
+
+                            @if (empty($userBlanks))
+                                <div class="no-answer-box">Студент не дал ответ</div>
+                            @else
+                                @foreach ($userBlanks as $blankId => $userText)
+                                    @php
+                                        $correct = $correctBlanks[$blankId] ?? [];
+                                        $isBlankCorrect = collect($correct)->contains(
+                                            fn($c) => mb_strtolower(trim($c)) === mb_strtolower(trim($userText)),
+                                        );
+                                    @endphp
+                                    <div class="option-item {{ $isBlankCorrect ? 'selected-correct' : 'selected-incorrect' }}"
+                                        style="margin-bottom:8px;">
+                                        <div class="option-item__text">
+                                            <span
+                                                style="color:var(--color-text-muted);font-size:12px;font-weight:700;min-width:70px;">
+                                                Пропуск {{ $blankId }}:
+                                            </span>
+                                            <strong>{{ $userText ?: '(пусто)' }}</strong>
+                                            @if (!$isBlankCorrect && count($correct))
+                                                <span class="micro-badge should">
+                                                    Правильно: {{ implode(' / ', $correct) }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endif
+                        @else
+                            {{-- fallback --}}
+                            <div class="answer-section-label">Ответ студента</div>
+                            @if ($detail['user_answer_text'])
+                                <div class="text-answer-box">{{ $detail['user_answer_text'] }}</div>
+                            @else
+                                <div class="no-answer-box">Студент не дал ответ</div>
+                            @endif
+                        @endif
+
+                    </div>
+                </div>
+            @endforeach
+
+            @hasanyrole('admin|teacher')
+                <div class="grade-submit-wrap">
+                    <button type="submit" class="grade-submit-btn">
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Сохранить оценки развёрнутых ответов
+                    </button>
+                </div>
+            </form>
+        @endhasanyrole
+
+    </div>
 @endsection

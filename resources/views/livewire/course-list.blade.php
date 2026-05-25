@@ -86,7 +86,20 @@
           @endif
 
           <div class="course-card__body">
-            <h2 class="course-card__title">{{ $course->title }}</h2>
+            @php
+            $title = $course->title;
+            if (strlen($title) > 50) {
+                $words = explode(' ', $title);
+                $result = '';
+                foreach ($words as $word) {
+                    if (strlen($result . ' ' . $word) > 50) break;
+                    $result .= ($result ? ' ' : '') . $word;
+                }
+                $title = $result . '...';
+            }
+          @endphp
+
+          <h2 class="course-card__title">{{ $title }}</h2>
             @if($course->author)
               <p class="course-card__teacher" style="font-size:0.9rem;color:var(--muted-color);margin-top:6px;">{{ $course->author->name }}</p>
             @endif

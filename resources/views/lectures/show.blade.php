@@ -1,236 +1,453 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Лекция - Roodle</title>
+
+    <title>{{ $lecture->title }} — Roodle</title>
+
+    <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
+
+    <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
-    <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
+
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+
     <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
+
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
-            .lecture-content {
-        word-break: break-word;
-        overflow-wrap: break-word;
-    }
+        .lecture-content {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            color: var(--color-text-secondary);
+            line-height: 1.8;
+            font-size: 15px;
+        }
 
-    .lecture-content img {
-        max-width: 100%;
-        height: auto;
-        border-radius: var(--r-lg);
-        margin: 1.5rem 0;
-        box-shadow: var(--shadow-md);
-    }
+        .lecture-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--r-lg);
+            margin: 1.5rem 0;
+            box-shadow: var(--shadow-md);
+        }
 
-    .lecture-content p {
-        margin-bottom: 1rem;
-    }
+        .lecture-content h1,
+        .lecture-content h2,
+        .lecture-content h3,
+        .lecture-content h4,
+        .lecture-content h5,
+        .lecture-content h6 {
+            color: var(--color-text-primary);
+            font-weight: 700;
+            margin: 1.5rem 0 1rem;
+            line-height: 1.3;
+        }
 
-    .lecture-content h1,
-    .lecture-content h2,
-    .lecture-content h3,
-    .lecture-content h4,
-    .lecture-content h5,
-    .lecture-content h6 {
-        color: var(--color-text-primary);
-        font-weight: 700;
-        margin: 1.5rem 0 1rem;
-        line-height: 1.3;
-    }
+        .lecture-content p {
+            margin-bottom: 1rem;
+        }
 
-    .lecture-content a {
-        color: var(--teal-600);
-        text-decoration: underline;
-        transition: var(--transition);
-    }
+        .lecture-content a {
+            color: var(--teal-600);
+            text-decoration: underline;
+        }
 
-    .lecture-content a:hover {
-        color: var(--teal-800);
-    }
+        .lecture-content ul,
+        .lecture-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
 
-    .lecture-content ul,
-    .lecture-content ol {
-        margin-left: 1.5rem;
-        margin-bottom: 1rem;
-    }
+        .lecture-content blockquote {
+            border-left: 4px solid var(--teal-500);
+            padding-left: 1rem;
+            color: var(--color-text-secondary);
+            margin: 1.5rem 0;
+            font-style: italic;
+        }
 
-    .lecture-content li {
-        margin-bottom: 0.5rem;
-    }
+        .lecture-content pre {
+            background: var(--gray-900);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--r-lg);
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
 
-    .lecture-content blockquote {
-        border-left: 4px solid var(--teal-500);
-        padding-left: 1rem;
-        color: var(--color-text-secondary);
-        margin: 1.5rem 0;
-        font-style: italic;
-    }
+        .lecture-content code {
+            background: var(--gray-100);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--red-500);
+        }
 
-    .lecture-content code {
-        background: var(--gray-100);
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-family: 'Courier New', monospace;
-        font-size: 13px;
-        color: var(--red-500);
-    }
-
-    .lecture-content pre {
-        background: var(--gray-900);
-        color: #fff;
-        padding: 1rem;
-        border-radius: var(--r-lg);
-        overflow-x: auto;
-        margin: 1.5rem 0;
-    }
-
-    .trix-content {
-        font-size: 15px;
-    }
-
-    .lecture-content-text {
-        white-space: pre-wrap;
-    }
+        .lecture-content-text {
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 
 <body>
 
+@include('components.menu')
 
+<div class="layout">
 
-    @include('components.menu')
+    {{-- SIDEBAR --}}
+    <aside class="sidebar">
 
-    <div class="main">
-        <!-- BREADCRUMB & BACK BUTTON -->
-        <div style="margin-bottom: 2rem;">
-            <x-back-button :url="route('courses.show', $lecture->course)" text="К курсу" />
+        <p class="sidebar-section-title">
+            Навигация
+        </p>
+
+        <a href="{{ route('courses.show', $lecture->course) }}" class="sidebar-link">
+
+            <svg width="16"
+                 height="16"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 viewBox="0 0 24 24">
+
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+
+            </svg>
+
+            К курсу
+
+        </a>
+
+        <a href="{{ route('home') }}" class="sidebar-link">
+
+            <svg width="16"
+                 height="16"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 viewBox="0 0 24 24">
+
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+
+            </svg>
+
+            Все курсы
+
+        </a>
+
+        <p class="sidebar-section-title" style="margin-top: 2rem;">
+            Курс
+        </p>
+
+        <div style="padding: 0 0.75rem;">
+
+            <p style="
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--gray-800);
+                line-height: 1.4;
+            ">
+                {{ $lecture->course->title }}
+            </p>
+
         </div>
 
-        <!-- LECTURE HERO -->
-        <div class="course-hero" style="margin-bottom: 2rem;">
-            <div class="course-hero__breadcrumb">
-                <a href="{{ route('admin.courses.index') }}"
-                    style="color: rgba(255,255,255,.7); text-decoration: none;">Курсы</a>
-                <span style="opacity: .5; margin: 0 8px;">/</span>
-                <a href="{{ route('courses.show', $lecture->course) }}"
-                    style="color: rgba(255,255,255,.7); text-decoration: none;">{{ $lecture->course->title }}</a>
-            </div>
-            <h1 class="course-hero__title">{{ $lecture->title }}</h1>
+    </aside>
 
-            @if ($lecture->pdf_path)
-            {{-- Определяем тип файла --}}
-            @php
-                $ext = strtolower(pathinfo($lecture->pdf_path, PATHINFO_EXTENSION));
-                $fileUrl = route('lectures.file', [$lecture->course, $lecture]);
-            @endphp
+    {{-- MAIN --}}
+    <main class="main">
 
-            <div class="panel" style="margin-bottom: 2rem;">
-                <div class="panel__header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2 class="panel__title">
-                        {{ $ext === 'pdf' ? '📄 PDF материал' : '📝 Word документ' }}
-                    </h2>
-                    <a href="{{ $fileUrl }}" download class="btn btn-white" style="font-size: 13px;">
-                        ⬇️ Скачать
-                    </a>
-                </div>
+        {{-- BREADCRUMB --}}
+        <nav style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1.75rem;
+            font-size: 13px;
+            color: var(--color-text-muted);
+        ">
 
-                @if ($ext === 'pdf')
-                    {{-- PDF: нативный браузерный рендер --}}
-                    <iframe
-                        src="{{ $fileUrl }}"
-                        width="100%"
-                        height="800px"
-                        style="border: none; border-radius: var(--r-lg);"
-                        loading="lazy"
-                    ></iframe>
-                @else
-                    {{-- Word: показываем сконвертированный HTML (уже есть в content) --}}
-                    {{-- Файл доступен для скачивания кнопкой выше --}}
-                    <div class="panel" style="background: var(--gray-50); padding: 1rem; border-radius: var(--r-md);">
-                        <span style="color: var(--color-text-muted); font-size: 14px;">
-                            💡 Word документ отображается как форматированный текст ниже.
-                            Для просмотра оригинала — скачайте файл.
-                        </span>
-                    </div>
-                @endif
-            </div>
-        @endif
+            <a href="{{ route('home') }}"
+               style="color: var(--color-text-muted); text-decoration: none;">
+
+                Курсы
+
+            </a>
+
+            <svg width="14"
+                 height="14"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 viewBox="0 0 24 24">
+
+                <path d="M9 18l6-6-6-6"/>
+
+            </svg>
+
+            <a href="{{ route('courses.show', $lecture->course) }}"
+               style="color: var(--color-text-muted); text-decoration: none;">
+
+                {{ $lecture->course->title }}
+
+            </a>
+
+            <svg width="14"
+                 height="14"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 viewBox="0 0 24 24">
+
+                <path d="M9 18l6-6-6-6"/>
+
+            </svg>
+
+            <span style="color: var(--gray-600); font-weight: 500;">
+
+                {{ $lecture->title }}
+
+            </span>
+
+        </nav>
+
+        {{-- PAGE HEADER --}}
+        <div class="page-header">
+
+            <h1 class="page-header__title">
+                {{ $lecture->title }}
+            </h1>
+
         </div>
 
-        <!-- LECTURE INFO PANEL -->
-        <div class="grid-3-1" style="margin-bottom: 2rem;">
-            <!-- CONTENT -->
-            <div class="panel">
-                <div class="panel__header">
-                    <h2 class="panel__title">Содержание лекции</h2>
-                </div>
+        <div class="grid-3-1">
 
-                <div class="lecture-content {{ ($lecture->content_type ?? 'text') === 'html' ? 'trix-content' : 'lecture-content-text' }}"
-                    style="color: var(--color-text-secondary); line-height: 1.8; font-size: 15px;">
-                    @if (($lecture->content_type ?? 'text') === 'html')
-                        {!! $lecture->content !!}
-                    @else
-                        {!! nl2br(e($lecture->content ?? '')) !!}
-                    @endif
-                </div>
-            </div>
+            {{-- MAIN CONTENT --}}
+            <div style="display:flex; flex-direction:column; gap:1rem;">
 
-            <!-- SIDEBAR INFO -->
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <!-- COURSE INFO -->
-                <div class="panel">
-                    <div class="panel__title" style="margin-bottom: 1rem;">📚 Информация</div>
+                {{-- FILE PANEL --}}
+                @if ($lecture->pdf_path)
 
-                    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-                        <div>
-                            <div
-                                style="font-size: 12px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: .5px; margin-bottom: 6px;">
-                                Курс</div>
-                            <a href="{{ route('courses.show', $lecture->course) }}"
-                                style="color: var(--teal-600); text-decoration: none; font-weight: 600; font-size: 15px; transition: var(--transition);"
-                                onmouseover="this.style.color='var(--teal-800)'"
-                                onmouseout="this.style.color='var(--teal-600)'">
-                                {{ $lecture->course->title }}
+                    @php
+                        $ext = strtolower(pathinfo($lecture->pdf_path, PATHINFO_EXTENSION));
+                        $fileUrl = route('lectures.file', [$lecture->course, $lecture]);
+                    @endphp
+
+                    <div class="panel" style="padding: 1.5rem;">
+
+                        <div style="
+                            display:flex;
+                            align-items:center;
+                            justify-content:space-between;
+                            margin-bottom:1rem;
+                        ">
+
+                            <h2 class="panel__title">
+                                {{ $ext === 'pdf' ? '📄 PDF материал' : '📝 Word документ' }}
+                            </h2>
+
+                            <a href="{{ $fileUrl }}"
+                               download
+                               class="btn btn-secondary">
+
+                                Скачать
+
                             </a>
+
+                        </div>
+
+                        @if ($ext === 'pdf')
+
+                            <iframe
+                                src="{{ $fileUrl }}"
+                                width="100%"
+                                height="800"
+                                style="
+                                    border:none;
+                                    border-radius:var(--r-lg);
+                                    overflow:hidden;
+                                "
+                            ></iframe>
+
+                        @else
+
+                            <div style="
+                                padding: 12px 14px;
+                                background: var(--sky-50);
+                                border: 1px solid var(--sky-100);
+                                border-radius: var(--r-md);
+                                font-size: 13px;
+                                color: var(--sky-700);
+                            ">
+
+                                💡 Word документ отображается ниже как форматированный текст.
+
+                            </div>
+
+                        @endif
+
+                    </div>
+
+                @endif
+
+                {{-- LECTURE CONTENT --}}
+                <div class="panel" style="padding: 2rem;">
+
+                    <div class="panel__header">
+
+                        <h2 class="panel__title">
+                            Содержание лекции
+                        </h2>
+
+                    </div>
+
+                    <div class="lecture-content {{ ($lecture->content_type ?? 'text') === 'html' ? 'trix-content' : 'lecture-content-text' }}">
+
+                        @if (($lecture->content_type ?? 'text') === 'html')
+
+                            {!! $lecture->content !!}
+
+                        @else
+
+                            {!! nl2br(e($lecture->content ?? '')) !!}
+
+                        @endif
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {{-- SIDEBAR INFO --}}
+            <div style="
+                display:flex;
+                flex-direction:column;
+                gap:1rem;
+            ">
+
+                {{-- INFO CARD --}}
+                <div class="panel" style="padding:1.5rem;">
+
+                    <div class="panel__title" style="margin-bottom:1.25rem;">
+                        📚 Информация
+                    </div>
+
+                    <div style="
+                        display:flex;
+                        flex-direction:column;
+                        gap:1.25rem;
+                    ">
+
+                        <div>
+
+                            <div style="
+                                font-size:12px;
+                                color:var(--color-text-muted);
+                                text-transform:uppercase;
+                                font-weight:600;
+                                margin-bottom:6px;
+                            ">
+                                Курс
+                            </div>
+
+                            <a href="{{ route('courses.show', $lecture->course) }}"
+                               style="
+                                    color: var(--teal-600);
+                                    text-decoration: none;
+                                    font-weight: 600;
+                               ">
+
+                                {{ $lecture->course->title }}
+
+                            </a>
+
                         </div>
 
                         @if ($lecture->duration)
+
                             <div>
-                                <div
-                                    style="font-size: 12px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: .5px; margin-bottom: 6px;">
-                                    ⏱️ Длительность</div>
-                                <div style="font-weight: 600; color: var(--color-text-primary);">
-                                    {{ $lecture->duration }} минут</div>
+
+                                <div style="
+                                    font-size:12px;
+                                    color:var(--color-text-muted);
+                                    text-transform:uppercase;
+                                    font-weight:600;
+                                    margin-bottom:6px;
+                                ">
+                                    Длительность
+                                </div>
+
+                                <div style="font-weight:600;">
+
+                                    ⏱️ {{ $lecture->duration }} минут
+
+                                </div>
+
                             </div>
+
                         @endif
 
                         <div>
-                            <div
-                                style="font-size: 12px; color: var(--color-text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: .5px; margin-bottom: 6px;">
-                                📅 Добавлено</div>
-                            <div style="font-weight: 500; color: var(--color-text-secondary);">
-                                {{ $lecture->created_at->format('d.m.Y') }}</div>
+
+                            <div style="
+                                font-size:12px;
+                                color:var(--color-text-muted);
+                                text-transform:uppercase;
+                                font-weight:600;
+                                margin-bottom:6px;
+                            ">
+                                Добавлено
+                            </div>
+
+                            <div style="font-weight:500;">
+
+                                {{ $lecture->created_at->format('d.m.Y') }}
+
+                            </div>
+
                         </div>
+
                     </div>
+
                 </div>
 
-                <!-- MATERIAL TYPE BADGE -->
-                <div class="panel" style="text-align: center; padding: 1.25rem;">
+                {{-- TYPE BADGE --}}
+                <div class="panel" style="
+                    padding:1.25rem;
+                    text-align:center;
+                ">
+
                     @if (($lecture->content_type ?? 'text') === 'html')
-                        <span class="badge badge-teal">📝 Форматированный текст</span>
-                    @else
-                        <span class="badge badge-sky">📄 Обычный текст</span>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
 
+                        <span class="badge badge-teal">
+                            📝 Форматированный текст
+                        </span>
+
+                    @else
+
+                        <span class="badge badge-sky">
+                            📄 Обычный текст
+                        </span>
+
+                    @endif
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
 </html>
