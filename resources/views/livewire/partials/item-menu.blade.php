@@ -6,17 +6,42 @@
     x-transition:leave="transition ease-in duration-75"
     x-transition:leave-start="opacity-100 scale-100"
     x-transition:leave-end="opacity-0 scale-95"
-    style="position: absolute; right: 0; top: calc(100% + 4px); z-index: 50;
+    x-init="
+    $watch('open', val => {
+        if (val) {
+            $nextTick(() => {
+                const btn = $el.previousElementSibling;
+                const rect = btn.getBoundingClientRect();
+                const menuHeight = $el.offsetHeight;
+                const spaceBelow = window.innerHeight - rect.bottom;
+                const spaceAbove = rect.top;
+
+                if (spaceBelow < menuHeight + 8 && spaceAbove >= menuHeight + 8) {
+                    // Открываем вверх
+                    $el.style.top = (rect.top - menuHeight - 4) + 'px';
+                } else {
+                    // Открываем вниз (по умолчанию)
+                    $el.style.top = (rect.bottom + 4) + 'px';
+                }
+
+                $el.style.left = (rect.right - $el.offsetWidth) + 'px';
+            });
+        }
+    })
+    "
+    style="position: fixed; z-index: 9999;
            background: var(--color-surface); border: 1px solid var(--color-border);
            border-radius: var(--r-md); box-shadow: 0 4px 16px rgba(0,0,0,0.12);
            min-width: 185px; padding: 4px 0; white-space: nowrap;">
 
     <div style="display: flex; padding: 4px 8px; border-bottom: 1px solid var(--color-border); gap: 4px;">
 
-        <button wire:click="moveItem({{ $sectionItem->id }}, 'up')" class="btn btn-ghost"
-            style="flex:1; padding: 3px 6px; font-size: 12px;">↑ Вверх</button>
-        <button wire:click="moveItem({{ $sectionItem->id }}, 'down')" class="btn btn-ghost"
-            style="flex:1; padding: 3px 6px; font-size: 12px;">↓ Вниз</button>
+        <div style="display: flex; padding: 4px 8px; border-bottom: 1px solid var(--color-border); gap: 4px;">
+            <button wire:click="moveItem({{ $sectionItem->id }}, 'up')" @click="open = false" class="btn btn-ghost"
+                style="flex:1; padding: 3px 6px; font-size: 12px;">↑ Вверх</button>
+            <button wire:click="moveItem({{ $sectionItem->id }}, 'down')" @click="open = false" class="btn btn-ghost"
+                style="flex:1; padding: 3px 6px; font-size: 12px;">↓ Вниз</button>
+        </div>
     </div>
 
     @if ($type === 'test')

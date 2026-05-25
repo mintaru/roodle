@@ -324,6 +324,26 @@
                                 Случайно перемешивать вопросы
                             </label>
 
+                            <label style="
+                                display:flex;
+                                align-items:center;
+                                gap:10px;
+                                margin-top:10px;
+                                font-size:14px;
+                                color:var(--gray-700);
+                                cursor:pointer;
+                            ">
+                                <input
+                                    type="checkbox"
+                                    id="is_details_available"
+                                    name="is_details_available"
+                                    value="1"
+                                    {{ $test->is_details_available ? 'checked' : '' }}
+                                >
+
+                                Показывать обзоры попыток студентам
+                            </label>
+
                         </div>
 
                     </div>

@@ -91,7 +91,7 @@
             {{-- Stats panel --}}
             <div class="panel" style="padding: 1.5rem 2rem; margin-bottom: 1.25rem;">
 
-                <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                <div style="display: flex; gap: 2rem; flex-wrap: wrap; justify-content:center;">
 
                     <div style="text-align: center;">
                         <p style="font-size: 24px; font-weight: 700; color: var(--gray-800);">
@@ -183,12 +183,14 @@
                                     <span style="font-size: 16px; font-weight: 700; color: var(--gray-800);">
                                         {{ $attempt->score }}%
                                     </span>
-                                    <a href="{{ route('test-attempts.details', $attempt) }}"
-                                       style="font-size: 13px; color: var(--teal-600); text-decoration: none; font-weight: 500;"
-                                       onmouseover="this.style.textDecoration='underline'"
-                                       onmouseout="this.style.textDecoration='none'">
-                                        Обзор
-                                    </a>
+                                    @if ($test->is_details_available || auth()->user()->hasAnyRole(['admin','teacher']))
+                                        <a href="{{ route('test-attempts.details', $attempt) }}"
+                                           style="font-size: 13px; color: var(--teal-600); text-decoration: none; font-weight: 500;"
+                                           onmouseover="this.style.textDecoration='underline'"
+                                           onmouseout="this.style.textDecoration='none'">
+                                            Обзор
+                                        </a>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
@@ -202,7 +204,7 @@
 
                 @if ($isUnlimited || $userAttemptsCount < $maxAttemptsForUser)
 
-                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;  justify-content: center;">
 
                         @if ($hasActiveAttempt)
                             @if ($displayMode === 'single_page')

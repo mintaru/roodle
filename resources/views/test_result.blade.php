@@ -6,7 +6,7 @@
             <p class="text-5xl font-bold my-2 {{ $score >= 50 ? 'text-green-600' : 'text-red-600' }}">{{ $score }}%</p>
             <p class="text-gray-600">Правильных ответов: {{ $correctAnswers }} из {{ $totalQuestions }}</p>
         </div>
-        <a href="/" class="btn btn-secondary">Вернуться к списку тестов</a>
+        <a href="/" class="btn btn-secondary">Вернуться к списку курсов</a>
     </div>
 
 </div>

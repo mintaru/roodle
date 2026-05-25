@@ -114,6 +114,11 @@
                     @forelse($sectionItems as $sectionItem)
                         @php
                             $item = $sectionItem->item;
+                        @endphp
+                        @if (!$item)
+                            @continue
+                        @endif
+                        @php
                             $isArchived =
                                 ($item instanceof \App\Models\Test &&
                                     ($item->status ?? 'active') === \App\Models\Test::STATUS_ARCHIVED) ||
@@ -149,41 +154,55 @@
                                 <div x-data="{ open: false }" @click.outside="open = false"
                                     style="display: flex; align-items: center; gap: 14px; position: relative;">
                                     <div style="display: flex; align-items: center; flex-shrink: 0;">
-                                        <img src="{{ asset('storage/icons/test.png') }}" alt="Тест" style="width: 36px; height: 36px;">
+                                        <img src="{{ asset('storage/icons/test.png') }}" alt="Тест"
+                                            style="width: 36px; height: 36px;">
                                     </div>
                                     <div style="flex: 1;">
                                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                            <strong style="color: var(--teal-600); font-size: 12px; text-transform: uppercase;">Тест</strong>
+                                            <strong
+                                                style="color: var(--teal-600); font-size: 12px; text-transform: uppercase;">Тест</strong>
                                             @if (($item->status ?? 'active') === \App\Models\Test::STATUS_ARCHIVED)
-                                                <span style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивирован]</span>
+                                                <span
+                                                    style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивирован]</span>
                                             @endif
                                         </div>
                                         <a href="{{ route('tests.view', $item) }}"
                                             style="color: var(--teal-600); text-decoration: none; font-weight: 600; font-size: 14px;">{{ $item->title }}</a>
-                                        <p style="font-size: 12px; color: var(--color-text-muted); margin: 4px 0;">
-                                            Доступен с {{ $item->formattedPeriodStart() ?? '—' }} до {{ $item->formattedPeriodEnd() ?? '—' }}
-                                        </p>
+                                            @if ($item->formattedPeriodEnd() != null)
+                                            <p style="font-size: 12px; color: var(--color-text-muted); margin: 4px 0;">
+                                                Доступен с {{ $item->formattedPeriodStart() ?? '—' }} до
+                                                {{ $item->formattedPeriodEnd() ?? '—' }}
+                                            </p>
+                                            @endif
+
                                     </div>
                                     @if ($canManage)
                                         <div style="flex-shrink: 0; position: relative;">
                                             <button type="button" @click="open = !open" class="btn btn-ghost"
                                                 style="padding: 4px 10px; font-size: 18px; line-height: 1; color: var(--color-text-muted); border-color: transparent;">⋯</button>
-                                            @include('livewire.partials.item-menu', ['item' => $item, 'sectionItem' => $sectionItem, 'course' => $course, 'type' => 'test'])
+                                            @include('livewire.partials.item-menu', [
+                                                'item' => $item,
+                                                'sectionItem' => $sectionItem,
+                                                'course' => $course,
+                                                'type' => 'test',
+                                            ])
                                         </div>
                                     @endif
                                 </div>
-
                             @elseif($item instanceof \App\Models\Lecture)
                                 <div x-data="{ open: false }" @click.outside="open = false"
                                     style="display: flex; align-items: center; gap: 14px; position: relative;">
                                     <div style="display: flex; align-items: center; flex-shrink: 0;">
-                                        <img src="{{ asset('storage/icons/lecture.svg') }}" alt="Лекция" style="width: 36px; height: 36px;">
+                                        <img src="{{ asset('storage/icons/lecture.svg') }}" alt="Лекция"
+                                            style="width: 36px; height: 36px;">
                                     </div>
                                     <div style="flex: 1;">
                                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                            <strong style="color: var(--sky-600); font-size: 12px; text-transform: uppercase;">Лекция</strong>
+                                            <strong
+                                                style="color: var(--sky-600); font-size: 12px; text-transform: uppercase;">Лекция</strong>
                                             @if (($item->status ?? 'active') === \App\Models\Lecture::STATUS_ARCHIVED)
-                                                <span style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивирована]</span>
+                                                <span
+                                                    style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивирована]</span>
                                             @endif
                                         </div>
                                         <a href="{{ route('lectures.show', ['course' => $course, 'lecture' => $item]) }}"
@@ -193,26 +212,33 @@
                                         <div style="flex-shrink: 0; position: relative;">
                                             <button type="button" @click="open = !open" class="btn btn-ghost"
                                                 style="padding: 4px 10px; font-size: 18px; line-height: 1; color: var(--color-text-muted); border-color: transparent;">⋯</button>
-                                            @include('livewire.partials.item-menu', ['item' => $item, 'sectionItem' => $sectionItem, 'course' => $course, 'type' => 'lecture'])
+                                            @include('livewire.partials.item-menu', [
+                                                'item' => $item,
+                                                'sectionItem' => $sectionItem,
+                                                'course' => $course,
+                                                'type' => 'lecture',
+                                            ])
                                         </div>
                                     @endif
                                 </div>
-
                             @elseif($item instanceof \App\Models\Material)
                                 <div x-data="{ open: false }" @click.outside="open = false"
                                     style="display: flex; align-items: center; gap: 14px; position: relative;">
                                     <div style="display: flex; align-items: center; flex-shrink: 0;">
-                                        <img src="{{ asset('storage/icons/material.svg') }}" alt="Материал" style="width: 36px; height: 36px;">
+                                        <img src="{{ asset('storage/icons/material.svg') }}" alt="Материал"
+                                            style="width: 36px; height: 36px;">
                                     </div>
                                     <div style="flex: 1;">
                                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                            <strong style="color: var(--green-600); font-size: 12px; text-transform: uppercase;">Материал</strong>
+                                            <strong
+                                                style="color: var(--green-600); font-size: 12px; text-transform: uppercase;">Материал</strong>
                                             @if (($item->status ?? 'active') === \App\Models\Material::STATUS_ARCHIVED)
-                                                <span style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивирован]</span>
+                                                <span
+                                                    style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивирован]</span>
                                             @endif
                                         </div>
                                         <a href="{{ route('materials.download', ['course' => $course, 'material' => $item]) }}"
-                                           style="font-weight: 600; font-size: 14px; color: var(--gray-800); text-decoration: none; margin: 0; display: block;">
+                                            style="font-weight: 600; font-size: 14px; color: var(--gray-800); text-decoration: none; margin: 0; display: block;">
                                             {{ $item->title }}
                                         </a>
                                     </div>
@@ -220,22 +246,29 @@
                                         <div style="flex-shrink: 0; position: relative;">
                                             <button type="button" @click="open = !open" class="btn btn-ghost"
                                                 style="padding: 4px 10px; font-size: 18px; line-height: 1; color: var(--color-text-muted); border-color: transparent;">⋯</button>
-                                            @include('livewire.partials.item-menu', ['item' => $item, 'sectionItem' => $sectionItem, 'course' => $course, 'type' => 'material'])
+                                            @include('livewire.partials.item-menu', [
+                                                'item' => $item,
+                                                'sectionItem' => $sectionItem,
+                                                'course' => $course,
+                                                'type' => 'material',
+                                            ])
                                         </div>
                                     @endif
                                 </div>
-
                             @elseif($item instanceof \App\Models\Assignment)
                                 <div x-data="{ open: false }" @click.outside="open = false"
                                     style="display: flex; align-items: center; gap: 14px; position: relative;">
                                     <div style="display: flex; align-items: center; flex-shrink: 0;">
-                                        <img src="{{ asset('storage/icons/assignment.svg') }}" alt="Задание" style="width: 36px; height: 36px;">
+                                        <img src="{{ asset('storage/icons/assignment.svg') }}" alt="Задание"
+                                            style="width: 36px; height: 36px;">
                                     </div>
                                     <div style="flex: 1;">
                                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                            <strong style="color: var(--amber-600); font-size: 12px; text-transform: uppercase;">Задание</strong>
+                                            <strong
+                                                style="color: var(--amber-600); font-size: 12px; text-transform: uppercase;">Задание</strong>
                                             @if (($item->status ?? 'active') === \App\Models\Assignment::STATUS_ARCHIVED)
-                                                <span style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивировано]</span>
+                                                <span
+                                                    style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивировано]</span>
                                             @endif
                                         </div>
                                         <a href="{{ route('assignments.view', ['course' => $course, 'assignment' => $item]) }}"
@@ -250,7 +283,12 @@
                                         <div style="flex-shrink: 0; position: relative;">
                                             <button type="button" @click="open = !open" class="btn btn-ghost"
                                                 style="padding: 4px 10px; font-size: 18px; line-height: 1; color: var(--color-text-muted); border-color: transparent;">⋯</button>
-                                            @include('livewire.partials.item-menu', ['item' => $item, 'sectionItem' => $sectionItem, 'course' => $course, 'type' => 'assignment'])
+                                            @include('livewire.partials.item-menu', [
+                                                'item' => $item,
+                                                'sectionItem' => $sectionItem,
+                                                'course' => $course,
+                                                'type' => 'assignment',
+                                            ])
                                         </div>
                                     @endif
                                 </div>
@@ -565,8 +603,6 @@
             </div>
 
             <script>
-
-
                 function openCreateModal() {
                     backToCreateType();
                     document.getElementById('create-modal-overlay').style.display = 'flex';

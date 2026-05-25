@@ -20,7 +20,7 @@
         <div class="header__actions">
 
 
-            <div class="avatar overflow-hidden" title="{{ auth()->user()->name ?? 'User' }}">
+            <div onclick="window.location='/profile-edit';" class="avatar overflow-hidden" title="{{ auth()->user()->name ?? 'User' }}">
                 @if (auth()->user()->avatar)
                     <img src="{{ Storage::url(auth()->user()->avatar) }}"
                          alt="{{ auth()->user()->name }}"
@@ -49,14 +49,7 @@
                         </svg>
                         Профиль
                     </a>
-                    <a href="#" class="profile-dropdown-item">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <circle cx="12" cy="12" r="3" />
-                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
-                        </svg>
-                        Настройки
-                    </a>
+
                     <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
                     <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                         @csrf
