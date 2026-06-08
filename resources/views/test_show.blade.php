@@ -7,14 +7,10 @@
     <title>{{ $test->title }}</title>
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap"
-        rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="{{ asset('css/trix.min.css') }}">
+    <script src="{{ asset('js/trix.min.js') }}"></script>
 
     <style>
         .tq-wrap {
@@ -846,13 +842,15 @@
     @include("components.menu")
     <div class="tq-wrap">
 
-        <a href="{{ route('courses.show', $test->course) }}" class="tq-back">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2.5">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            К курсу
-        </a>
+        @if($test->course)
+            <a href="{{ route('courses.show', $test->course) }}" class="tq-back">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                К курсу
+            </a>
+        @endif
 
         <div class="tq-header">
             <div class="tq-header__eyebrow">Тест</div>

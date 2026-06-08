@@ -14,6 +14,9 @@ class AssignmentSubmissionController extends Controller
 {
     public function view(Course $course, Assignment $assignment)
     {
+        // Ensure course is accessible for current user
+        abort_if(! $course->isAvailable(), 404);
+
         if ($assignment->course_id !== $course->id) {
             abort(404);
         }
@@ -33,6 +36,9 @@ class AssignmentSubmissionController extends Controller
 
     public function submit(Request $request, Course $course, Assignment $assignment)
     {
+        // Ensure course is accessible for current user
+        abort_if(! $course->isAvailable(), 404);
+
         if ($assignment->course_id !== $course->id) {
             abort(404);
         }
@@ -77,6 +83,9 @@ class AssignmentSubmissionController extends Controller
 
     public function downloadSubmissionFile(Course $course, Assignment $assignment, AssignmentSubmission $submission, AssignmentSubmissionFile $file)
     {
+        // Ensure course is accessible for current user
+        abort_if(! $course->isAvailable(), 404);
+
         if ($assignment->course_id !== $course->id || $submission->assignment_id !== $assignment->id || $file->assignment_submission_id !== $submission->id) {
             abort(404);
         }
@@ -97,6 +106,9 @@ class AssignmentSubmissionController extends Controller
 
     public function deleteSubmissionFile(Course $course, Assignment $assignment, AssignmentSubmission $submission, AssignmentSubmissionFile $file)
     {
+        // Ensure course is accessible for current user
+        abort_if(! $course->isAvailable(), 404);
+
         if ($assignment->course_id !== $course->id || $submission->assignment_id !== $assignment->id || $file->assignment_submission_id !== $submission->id) {
             abort(404);
         }
@@ -114,6 +126,9 @@ class AssignmentSubmissionController extends Controller
 
     public function grade(Request $request, Course $course, Assignment $assignment, AssignmentSubmission $submission)
     {
+        // Ensure course is accessible for current user
+        abort_if(! $course->isAvailable(), 404);
+
         if ($assignment->course_id !== $course->id || $submission->assignment_id !== $assignment->id) {
             abort(404);
         }

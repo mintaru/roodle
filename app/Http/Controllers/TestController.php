@@ -78,8 +78,22 @@ class TestController extends Controller
         $validatedData['is_details_available'] = $request->has('is_details_available');
         $validatedData['display_mode'] = $request->input('display_mode', 'single_page');
 
-        // Создаём тест
-        $test = $course->tests()->create($validatedData);
+        // Опция: добавить в общий банк
+        $addToBank = $request->has('add_to_bank');
+
+        if ($addToBank) {
+            // Общий банк — тест не привязан к конкретному курсу и не имеет владельца
+            $validatedData['is_global'] = true;
+            $validatedData['user_id'] = null;
+            $validatedData['course_id'] = null;
+            $test = Test::create($validatedData);
+        } else {
+            // Привязка к пользователю (частный тест) — сохраняем как собственность пользователя
+            $validatedData['is_global'] = false;
+            $validatedData['user_id'] = $request->user()->id;
+            $validatedData['course_id'] = null;
+            $test = Test::create($validatedData);
+        }
 
         return redirect()->route('tests.show', $test);
     }
@@ -94,7 +108,9 @@ class TestController extends Controller
     // Отображение теста с вопросами
     public function show(Test $test)
     {
-        abort_if(! $test->isAvailable(), 404);
+        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin','teacher']))) {
+            abort_if(! $test->isAvailable(), 404);
+        }
 
         $test->load('questions.options');
 
@@ -109,7 +125,9 @@ class TestController extends Controller
 
     public function view(Test $test)
     {
-        abort_if(! $test->isAvailable(), 404);
+        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin','teacher']))) {
+            abort_if(! $test->isAvailable(), 404);
+        }
 
         $user = Auth::user();
 
@@ -313,7 +331,9 @@ class TestController extends Controller
 
     public function result(Test $test, Request $request)
     {
-        abort_if(! $test->isAvailable(), 404);
+        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin','teacher']))) {
+            abort_if(! $test->isAvailable(), 404);
+        }
 
         $user = Auth::user();
 
@@ -403,82 +423,135 @@ class TestController extends Controller
      */
     public function results(Test $test)
     {
-        // Проверяем, что пользователь с правом редактирования курсов (учитель/админ)
-        if (! Auth::user()->can('edit courses')) {
+        $user = Auth::user();
+
+        $course = $test->course;
+
+        // If teacher/admin — show results for course users or for users who attempted the test when no course
+        if ($user && $user->can('edit courses')) {
+            if ($course) {
+                $usersInCourse = $course->groups()
+                    ->with('users')
+                    ->get()
+                    ->pluck('users')
+                    ->flatten()
+                    ->unique('id')
+                    ->values();
+            } else {
+                $userIds = $test->attempts()->pluck('user_id')->unique()->filter()->values()->toArray();
+                $usersInCourse = \App\Models\User::whereIn('id', $userIds)->get();
+            }
+
+            $studentsData = [];
+            foreach ($usersInCourse as $user) {
+                // Все попытки пользователя (завершённые и текущие)
+                $attempts = $test->attempts()
+                    ->where('user_id', $user->id)
+                    ->orderBy('attempt_number', 'asc')
+                    ->get();
+
+                $activeAttempt = $attempts->where('ended_at', null)->first();
+                $completedAttempts = $attempts->where('ended_at', '!=', null);
+                $lastCompletedAttempt = $completedAttempts->last();
+
+                // Какой номер попытки сейчас/будет
+                $currentAttemptNumber = $attempts->count() + 1;
+
+                // Статус
+                $status = 'не начинали';
+                $timeSpent = null;
+                $currentQuestion = null;
+                $totalQuestions = $test->questions()->count();
+
+                if ($activeAttempt) {
+                    $status = 'в процессе';
+                    // Считаем секунды, прошедшие с начала попытки
+                    if ($activeAttempt->started_at) {
+                        $timeSpent = now()->diffInSeconds($activeAttempt->started_at);
+                    }
+
+                    // Определяем текущий вопрос
+                    $answeredQuestions = \App\Models\TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
+                        ->distinct()
+                        ->count('question_id');
+                    $currentQuestion = $answeredQuestions + 1;
+                    if ($currentQuestion > $totalQuestions) {
+                        $currentQuestion = $totalQuestions;
+                    }
+                } elseif ($completedAttempts->count() > 0) {
+                    $status = 'завершили';
+                    if ($lastCompletedAttempt && $lastCompletedAttempt->started_at && $lastCompletedAttempt->ended_at) {
+                        $timeSpent = $lastCompletedAttempt->started_at->diffInSeconds($lastCompletedAttempt->ended_at);
+                    }
+                }
+
+                $studentsData[] = [
+                    'user' => $user,
+                    'status' => $status,
+                    'attempts' => $attempts,
+                    'activeAttempt' => $activeAttempt,
+                    'completedAttempts' => $completedAttempts,
+                    'lastCompletedAttempt' => $lastCompletedAttempt,
+                    'timeSpent' => $timeSpent,
+                    'currentQuestion' => $currentQuestion,
+                    'totalQuestions' => $totalQuestions,
+                    'current_attempt_number' => $currentAttemptNumber,
+                ];
+            }
+            return view('tests.results', compact('test', 'studentsData', 'course'));
+        }
+
+        // Non-teacher: allow students to view only their own results
+        if (! $user) {
             abort(403, 'Unauthorized');
         }
 
-        // Получаем все группы, связанные с курсом теста
-        $course = $test->course;
+        $attempts = $test->attempts()
+            ->where('user_id', $user->id)
+            ->orderBy('attempt_number', 'asc')
+            ->get();
 
-        // Получаем всех уникальных пользователей из групп курса
-        $usersInCourse = $course->groups()
-            ->with('users')
-            ->get()
-            ->pluck('users')
-            ->flatten()
-            ->unique('id')
-            ->values();
+        $activeAttempt = $attempts->where('ended_at', null)->first();
+        $completedAttempts = $attempts->where('ended_at', '!=', null);
+        $lastCompletedAttempt = $completedAttempts->last();
+        $currentAttemptNumber = $attempts->count() + 1;
 
-        // Подготавливаем данные для каждого пользователя
-        $studentsData = [];
+        $status = 'не начинали';
+        $timeSpent = null;
+        $currentQuestion = null;
+        $totalQuestions = $test->questions()->count();
 
-        foreach ($usersInCourse as $user) {
-            // Все попытки пользователя (завершённые и текущие)
-            $attempts = $test->attempts()
-                ->where('user_id', $user->id)
-                ->orderBy('attempt_number', 'asc')
-                ->get();
-
-            // Определяем, есть ли активная попытка
-            $activeAttempt = $attempts->where('ended_at', null)->first();
-            $completedAttempts = $attempts->where('ended_at', '!=', null);
-            $lastCompletedAttempt = $completedAttempts->last();
-
-            // Какой номер попытки сейчас/будет
-            $currentAttemptNumber = $attempts->count() + 1;
-
-            // Статус
-            $status = 'не начинали';
-            $timeSpent = null;
-            $currentQuestion = null;
-            $totalQuestions = $test->questions()->count();
-
-            if ($activeAttempt) {
-                $status = 'в процессе';
-                // Считаем секунды, прошедшие с начала попытки
-                if ($activeAttempt->started_at) {
-                    $timeSpent = now()->diffInSeconds($activeAttempt->started_at);
-                }
-
-                // Определяем текущий вопрос
-                $answeredQuestions = \App\Models\TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
-                    ->distinct()
-                    ->count('question_id');
-                $currentQuestion = $answeredQuestions + 1;
-                if ($currentQuestion > $totalQuestions) {
-                    $currentQuestion = $totalQuestions;
-                }
-            } elseif ($completedAttempts->count() > 0) {
-                $status = 'завершили';
-                if ($lastCompletedAttempt && $lastCompletedAttempt->started_at && $lastCompletedAttempt->ended_at) {
-                    $timeSpent = $lastCompletedAttempt->started_at->diffInSeconds($lastCompletedAttempt->ended_at);
-                }
+        if ($activeAttempt) {
+            $status = 'в процессе';
+            if ($activeAttempt->started_at) {
+                $timeSpent = now()->diffInSeconds($activeAttempt->started_at);
             }
+            $answeredQuestions = \App\Models\TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
+                ->distinct()
+                ->count('question_id');
+            $currentQuestion = $answeredQuestions + 1;
+            if ($currentQuestion > $totalQuestions) {
+                $currentQuestion = $totalQuestions;
+            }
+        } elseif ($completedAttempts->count() > 0) {
+            $status = 'завершили';
+            if ($lastCompletedAttempt && $lastCompletedAttempt->started_at && $lastCompletedAttempt->ended_at) {
+                $timeSpent = $lastCompletedAttempt->started_at->diffInSeconds($lastCompletedAttempt->ended_at);
+            }
+        }
 
-            $studentsData[] = [
-                'user' => $user,
-                'status' => $status,
-                'attempts' => $attempts,
-                'activeAttempt' => $activeAttempt,
-                'completedAttempts' => $completedAttempts,
-                'lastCompletedAttempt' => $lastCompletedAttempt,
-                'timeSpent' => $timeSpent,
-                'currentQuestion' => $currentQuestion,
-                'totalQuestions' => $totalQuestions,
-                'current_attempt_number' => $currentAttemptNumber,  // ← добавить
-            ];
-        }  // closes foreach
+        $studentsData = [[
+            'user' => $user,
+            'status' => $status,
+            'attempts' => $attempts,
+            'activeAttempt' => $activeAttempt,
+            'completedAttempts' => $completedAttempts,
+            'lastCompletedAttempt' => $lastCompletedAttempt,
+            'timeSpent' => $timeSpent,
+            'currentQuestion' => $currentQuestion,
+            'totalQuestions' => $totalQuestions,
+            'current_attempt_number' => $currentAttemptNumber,
+        ]];
 
         return view('tests.results', compact('test', 'studentsData', 'course'));
     }
@@ -491,6 +564,13 @@ class TestController extends Controller
         $test = $attempt->test;
         $user = $attempt->user;
         $course = $test->course;
+
+        $authUser = Auth::user();
+
+        // Allow owner of the attempt or users with course-edit rights (teachers/admins)
+        if (! ($authUser && ($authUser->id === $user->id || $authUser->can('edit courses')))) {
+            abort(403, 'Unauthorized');
+        }
 
         // Загружаем все вопросы теста с опциями
         $test->load(['questions' => function ($q) {
@@ -794,7 +874,9 @@ class TestController extends Controller
      */
     public function attempt(Test $test)
     {
-        abort_if(! $test->isAvailable(), 404);
+        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin','teacher']))) {
+            abort_if(! $test->isAvailable(), 404);
+        }
 
         $user = Auth::user();
 
@@ -924,7 +1006,9 @@ class TestController extends Controller
      */
     public function attemptPage(Test $test, $questionIndex = 1)
     {
-        abort_if(! $test->isAvailable(), 404);
+        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin','teacher']))) {
+            abort_if(! $test->isAvailable(), 404);
+        }
 
         $user = Auth::user();
 
@@ -1429,7 +1513,12 @@ class TestController extends Controller
         // Обновляем тест
         $test->update($validatedData);
 
-        return redirect()->route('courses.show', $test->course)
+        if ($test->course) {
+            return redirect()->route('courses.show', $test->course)
+                ->with('success', 'Параметры теста успешно обновлены!');
+        }
+
+        return redirect()->route('tests.show', $test)
             ->with('success', 'Параметры теста успешно обновлены!');
     }
 }

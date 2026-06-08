@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Редактирование теста</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="{{ asset('css/tailwind.min.css') }}" rel="stylesheet">
 </head>
 <body class="bg-gray-100 p-8">
 
@@ -60,7 +60,7 @@
             <label for="time_limit">Ограничение по времени (минуты, 0 = без ограничения)</label>
             <input type="number" name="time_limit" id="time_limit" value="{{ old('time_limit', $test->time_limit ?? 0) }}" min="0" class="form-control">
         </div>
-        
+
         <div class="mt-6 pt-6 border-t border-gray-200">
             <div class="bg-blue-50 p-4 rounded mb-4">
                 <p class="text-sm font-medium text-gray-700">Информация о тесте:</p>

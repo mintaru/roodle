@@ -1,26 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Курсы</title>
-    
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <title>Мои курсы - Roodle</title>
+    <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
     @livewireStyles
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
+    <script defer src="{{ asset('js/alpine.min.js') }}"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body>
 
-{{-- Подключаем меню --}}
-@include('components.menu')
-<div class="container mx-auto py-8">
-    <div class="mb-4">
-        <x-back-button :url="route('home')" text="К курсам" />
-    </div>
+    <!-- HEADER -->
+    @include('components.menu')
+
+    <!-- MAIN CONTENT -->
     @livewire('archived-course-list')
-</div>
 
-@livewireScripts
+    <!-- SCRIPTS -->
+    @livewireScripts
+
 </body>
 </html>

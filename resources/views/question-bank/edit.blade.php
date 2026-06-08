@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Редактирование вопроса</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="{{ asset('css/tailwind.min.css') }}" rel="stylesheet">
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen p-6">
 
@@ -62,7 +62,7 @@
                             <div class="flex-1 space-y-3">
                                 <input type="hidden" name="options[{{ $index }}][id]" value="{{ $option->id }}">
                                 <textarea name="options[{{ $index }}][option_text]" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Введите текст варианта ответа">{{ $option->option_text }}</textarea>
-                                
+
                                 <label class="flex items-center gap-2 cursor-pointer">
                                     <input type="checkbox" name="options[{{ $index }}][is_correct]" value="1" {{ $option->is_correct ? 'checked' : '' }} class="w-4 h-4 text-green-600 rounded focus:ring-2 focus:ring-green-500">
                                     <span class="text-sm font-medium text-gray-700">Это правильный ответ</span>
@@ -98,14 +98,14 @@
 
     document.getElementById('addOptionBtn').addEventListener('click', function() {
         const container = document.getElementById('optionsContainer');
-        
+
         const optionRow = document.createElement('div');
         optionRow.className = 'option-row p-4 border border-gray-300 rounded-lg bg-gray-50';
         optionRow.innerHTML = `
             <div class="flex items-start gap-4">
                 <div class="flex-1 space-y-3">
                     <textarea name="options[${optionIndex}][option_text]" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Введите текст варианта ответа"></textarea>
-                    
+
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" name="options[${optionIndex}][is_correct]" value="1" class="w-4 h-4 text-green-600 rounded focus:ring-2 focus:ring-green-500">
                         <span class="text-sm font-medium text-gray-700">Это правильный ответ</span>
@@ -116,10 +116,10 @@
                 </button>
             </div>
         `;
-        
+
         container.appendChild(optionRow);
         optionIndex++;
-        
+
         addRemoveListener(optionRow.querySelector('.removeOptionBtn'));
     });
 

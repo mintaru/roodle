@@ -37,6 +37,9 @@ class MaterialController extends Controller
 
     public function download(Course $course, Material $material)
     {
+        // Ensure course is accessible for current user
+        abort_if(! $course->isAvailable(), 404);
+
         if ($material->course_id !== $course->id) {
             abort(404);
         }

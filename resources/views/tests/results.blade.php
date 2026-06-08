@@ -7,10 +7,7 @@
 
     <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
+    <script src="{{ asset('js/alpine.min.js') }}" defer></script>
     <style>
         [x-cloak] { display: none !important; }
 
@@ -192,10 +189,12 @@
     {{-- Sidebar --}}
     <aside class="sidebar">
         <p class="sidebar-section-title">Навигация</p>
-        <a href="{{ route('courses.show', $course) }}" class="sidebar-link">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-            К курсу
-        </a>
+        @if($course)
+            <a href="{{ route('courses.show', $course) }}" class="sidebar-link">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                К курсу
+            </a>
+        @endif
         <a href="{{ route('home') }}" class="sidebar-link">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
             Все курсы
@@ -203,7 +202,9 @@
 
         <p class="sidebar-section-title" style="margin-top: 2rem;">Курс</p>
         <div style="padding: 0 0.75rem;">
-            <p style="font-size: 13px; font-weight: 600; color: var(--gray-800); line-height: 1.4;">{{ $course->title }}</p>
+            @if($course)
+                <p style="font-size: 13px; font-weight: 600; color: var(--gray-800); line-height: 1.4;">{{ $course->title }}</p>
+            @endif
         </div>
     </aside>
 
@@ -215,7 +216,9 @@
         <nav style="display: flex; align-items: center; gap: 8px; margin-bottom: 1.75rem; font-size: 13px; color: var(--color-text-muted);">
             <a href="{{ route('home') }}" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--teal-600)'" onmouseout="this.style.color='var(--color-text-muted)'">Курсы</a>
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
-            <a href="{{ route('courses.show', $course) }}" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--teal-600)'" onmouseout="this.style.color='var(--color-text-muted)'">{{ $course->title }}</a>
+            @if($course)
+                <a href="{{ route('courses.show', $course) }}" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--teal-600)'" onmouseout="this.style.color='var(--color-text-muted)'">{{ $course->title }}</a>
+            @endif
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
             <span style="color: var(--gray-600); font-weight: 500;">{{ $test->title }}</span>
         </nav>
@@ -300,13 +303,15 @@
                                     </td>
 
                                     <td style="white-space:nowrap;">
-                                        <button
-                                            type="button"
-                                            class="action-btn"
-                                            @click="showModal = true; selectedUserId = {{ $data['user']->id }}; selectedUserName = '{{ $data['user']->name }}'; extraAttempts = '';"
-                                        >
-                                            + Попытка
-                                        </button>
+                                        @can('edit courses')
+                                            <button
+                                                type="button"
+                                                class="action-btn"
+                                                @click="showModal = true; selectedUserId = {{ $data['user']->id }}; selectedUserName = '{{ $data['user']->name }}'; extraAttempts = '';"
+                                            >
+                                                + Попытка
+                                            </button>
+                                        @endcan
                                         <button type="button" class="action-btn" @click="expanded = !expanded" style="background:#4a5568;padding:6px 10px;">Просмотр попыток</button>
                                     </td>
                                 </tr>
@@ -355,6 +360,7 @@
     </main>
 </div>
 {{-- Модалка выдачи дополнительных попыток --}}
+@can('edit courses')
 <div
     x-show="showModal"
     x-cloak
@@ -396,5 +402,6 @@
         </form>
     </div>
 </div>
+@endcan
 </body>
 </html>

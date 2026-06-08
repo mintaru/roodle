@@ -7,13 +7,12 @@
 
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
 
-    <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap"
-        rel="stylesheet">
 
-    <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
 
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="{{ asset('css/trix.min.css') }}">
+    <script src="{{ asset('js/trix.min.js') }}"></script>
+
+    <script defer src="{{ asset('js/alpine.min.js') }}"></script>
 
     <style>
 

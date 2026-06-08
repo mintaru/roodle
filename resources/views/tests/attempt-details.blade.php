@@ -1,7 +1,8 @@
 @extends('layout')
 
 @section('head')
-    <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ asset('css/trix.min.css') }}">
+<script src="{{ asset('js/trix.min.js') }}"></script>
     <style>
         /* ── PAGE SHELL ── */
         .attempt-shell {
@@ -574,7 +575,13 @@
                 </div>
                 <div class="attempt-meta-item">
                     <div class="attempt-meta-item__label">Курс</div>
-                    <div class="attempt-meta-item__value" style="font-size:14px;">{{ $course->title }}</div>
+                    <div class="attempt-meta-item__value" style="font-size:14px;">
+                        @if($course)
+                            {{ $course->title }}
+                        @else
+                            Без курса
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

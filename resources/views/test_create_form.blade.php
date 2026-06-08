@@ -4,59 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Создание нового теста — Roodle</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
-        .page-wrapper {
-            min-height: calc(100vh - 80px);
-            background: var(--color-bg);
-            padding: 2.5rem 1.5rem 4rem;
+        body {
+            margin: 0;
+            padding: 0;
         }
 
-        .form-container {
-            max-width: 680px;
-            margin: 0 auto;
-        }
-
-        /* --- Breadcrumb / back --- */
-        .back-row {
-            margin-bottom: 1.75rem;
-        }
-
-        /* --- Page title block --- */
-        .page-title-block {
-            margin-bottom: 2rem;
-        }
-
-        .page-title-block .label {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--color-text-muted);
-            margin-bottom: 6px;
-        }
-
-        .page-title-block h1 {
-            font-family: var(--font-display);
-            font-size: 30px;
-            color: var(--gray-900);
-            letter-spacing: -0.4px;
-            line-height: 1.15;
-        }
-
-        /* --- Card --- */
+        /* --- Form card sections --- */
         .form-card {
             background: var(--color-surface);
             border: 1px solid var(--color-border);
-            border-radius: var(--r-2xl);
-            box-shadow: var(--shadow-md);
+            border-radius: var(--r-xl);
+            box-shadow: var(--shadow-sm);
             overflow: hidden;
+            max-width: 600px;
         }
 
-        /* --- Section dividers inside card --- */
         .form-section {
             padding: 1.75rem 2rem;
             border-bottom: 1px solid var(--color-border);
@@ -90,7 +55,7 @@
             flex-shrink: 0;
         }
 
-        /* --- Form fields --- */
+        /* --- Fields --- */
         .field {
             margin-bottom: 1.25rem;
         }
@@ -125,6 +90,7 @@
             background: var(--gray-50);
             transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
             appearance: none;
+            box-sizing: border-box;
         }
 
         .input:focus,
@@ -167,7 +133,6 @@
             cursor: pointer;
         }
 
-        /* --- Input with suffix --- */
         .input-group {
             display: flex;
             gap: 10px;
@@ -178,7 +143,7 @@
             flex: 1;
         }
 
-        /* --- Toggle/checkbox styled --- */
+        /* --- Toggle rows --- */
         .toggle-row {
             display: flex;
             align-items: center;
@@ -196,21 +161,15 @@
             background: var(--teal-50);
         }
 
-.toggle-row input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    accent-color: var(--teal-500);
-    cursor: pointer;
-    flex-shrink: 0;
-    align-self: center; /* ← замените margin-top на это */
-    position: relative;
-    top: 4px; /* ← небольшой сдвиг без влияния на layout */
-}
-
-body {
-    margin:0;
-    padding:0;
-}
+        .toggle-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--teal-500);
+            cursor: pointer;
+            flex-shrink: 0;
+            position: relative;
+            top: 1px;
+        }
 
         .toggle-row .toggle-label {
             font-size: 14px;
@@ -219,20 +178,14 @@ body {
             user-select: none;
         }
 
-        .toggle-row .toggle-desc {
-            margin-left: auto;
-            font-size: 12px;
-            color: var(--color-text-muted);
-        }
-
-        /* --- Date row --- */
+        /* --- Date grid --- */
         .date-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
         }
 
-        /* --- Footer (submit) --- */
+        /* --- Footer --- */
         .form-footer {
             padding: 1.5rem 2rem;
             background: var(--gray-50);
@@ -256,33 +209,6 @@ body {
             opacity: 0.5;
         }
 
-        /* --- Back button --- */
-        .btn-back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13.5px;
-            font-weight: 600;
-            color: var(--gray-500);
-            text-decoration: none;
-            padding: 6px 0;
-            transition: color 0.2s;
-        }
-
-        .btn-back-link:hover {
-            color: var(--gray-800);
-        }
-
-        .btn-back-link svg {
-            transition: transform 0.2s;
-        }
-
-        .btn-back-link:hover svg {
-            transform: translateX(-3px);
-        }
-
-
-
         @media (max-width: 600px) {
             .form-section {
                 padding: 1.5rem 1.25rem;
@@ -300,246 +226,272 @@ body {
             .date-grid {
                 grid-template-columns: 1fr;
             }
-
-            .form-container {
-                padding: 0;
-            }
         }
     </style>
 </head>
 <body>
 
+{{-- Меню --}}
 
-    <div class="page-wrapper">
-        <div class="form-container">
+<div class="layout">
+    {{-- Sidebar --}}
+    <aside class="sidebar">
+        <p class="sidebar-section-title">Навигация</p>
+        <a href="{{ route('courses.show', $course) }}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            К курсу
+        </a>
+        <a href="{{ route('home') }}" class="sidebar-link">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+            Все курсы
+        </a>
 
-            <!-- Back link -->
-            <div class="back-row">
-                <a href="{{ route('courses.show', $course) }}" class="btn-back-link">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M19 12H5M5 12l7 7M5 12l7-7"/>
-                    </svg>
-                    К курсу
-                </a>
-            </div>
+        <p class="sidebar-section-title" style="margin-top: 2rem;">Курс</p>
+        <div style="padding: 0 0.75rem;">
+            <p style="font-size: 13px; font-weight: 600; color: var(--gray-800); line-height: 1.4;">{{ $course->title }}</p>
+        </div>
+    </aside>
 
-            <!-- Page heading -->
-            <div class="page-title-block">
-                <p class="label">Новый тест</p>
-                <h1>Создание теста</h1>
-            </div>
+    {{-- Main --}}
+    <main class="main">
 
-            <!-- Form card -->
-            <div class="form-card">
-                <form action="{{ route('tests.store', $course) }}" method="POST">
-                    @csrf
+        {{-- Breadcrumb --}}
+        <nav style="display: flex; align-items: center; gap: 8px; margin-bottom: 1.75rem; font-size: 13px; color: var(--color-text-muted);">
+            <a href="{{ route('home') }}" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--teal-600)'" onmouseout="this.style.color='var(--color-text-muted)'">Курсы</a>
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+            <a href="{{ route('courses.show', $course) }}" style="color: var(--color-text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--teal-600)'" onmouseout="this.style.color='var(--color-text-muted)'">{{ $course->title }}</a>
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+            <span style="color: var(--gray-600); font-weight: 500;">Создание теста</span>
+        </nav>
 
-                    {{-- SECTION 1: Basic info --}}
-                    <div class="form-section">
-                        <div class="form-section__title">
-                            <div class="form-section__title-icon">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                </svg>
-                            </div>
-                            Основное
+        {{-- Page header --}}
+        <div class="page-header">
+            <h1 class="page-header__title">Создание теста</h1>
+        </div>
+
+        {{-- Form card --}}
+        <div class="form-card">
+            <form action="{{ route('tests.store', $course) }}" method="POST">
+                @csrf
+
+                {{-- SECTION 1: Basic info --}}
+                <div class="form-section">
+                    <div class="form-section__title">
+                        <div class="form-section__title-icon">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
                         </div>
+                        Основное
+                    </div>
 
-                        <div class="field">
-                            <label for="title">Название теста</label>
+                    {{-- Course badge --}}
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--teal-50); border-radius: var(--r-md); margin-bottom: 1.25rem; border: 1px solid var(--teal-100);">
+                        <svg width="16" height="16" fill="none" stroke="var(--teal-600)" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                        <span style="font-size: 13px; font-weight: 600; color: var(--teal-700);">{{ $course->title }}</span>
+                    </div>
+
+                    <div class="field">
+                        <label for="title">Название теста <span style="color: var(--red-400);">*</span></label>
+                        <input
+                            type="text"
+                            id="title"
+                            name="title"
+                            class="input"
+                            placeholder="Например: Контрольная по теме 3"
+                            value="{{ old('title') }}"
+                            required
+                        >
+                    </div>
+                    <div class="field">
+                        <label class="toggle-row" for="add_to_bank">
+                            <input type="checkbox" id="add_to_bank" name="add_to_bank" value="1" checked>
+                            <span class="toggle-label">Добавить в общий банк тестов (видно всем преподавателям)</span>
+                        </label>
+                    </div>
+                </div>
+
+                {{-- SECTION 2: Attempts & time --}}
+                <div class="form-section">
+                    <div class="form-section__title">
+                        <div class="form-section__title-icon">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                        Попытки и время
+                    </div>
+
+                    <div class="field">
+                        <label for="max_attempts">Максимальное количество попыток</label>
+                        <div class="input-group">
                             <input
-                                type="text"
-                                id="title"
-                                name="title"
+                                type="number"
+                                id="max_attempts"
+                                name="max_attempts"
                                 class="input"
-                                placeholder="Например: Контрольная по теме 3"
-                                value="{{ old('title') }}"
-                                required
+                                min="1"
+                                value="1"
+                                style="max-width: 120px;"
                             >
                         </div>
+                        <p class="hint">Укажите 0, чтобы разрешить неограниченное число попыток.</p>
                     </div>
 
-                    {{-- SECTION 2: Attempts & time --}}
-                    <div class="form-section">
-                        <div class="form-section__title">
-                            <div class="form-section__title-icon">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <path d="M12 6v6l4 2"/>
-                                </svg>
-                            </div>
-                            Попытки и время
-                        </div>
-
-                        <div class="field">
-                            <label for="max_attempts">Максимальное количество попыток</label>
-                            <div class="input-group">
-                                <input
-                                    type="number"
-                                    id="max_attempts"
-                                    name="max_attempts"
-                                    class="input"
-                                    min="1"
-                                    value="1"
-                                    style="max-width: 120px;"
-                                >
-                            </div>
-                            <p class="hint">Укажите 0, чтобы разрешить неограниченное число попыток.</p>
-                        </div>
-
-                        <div class="field">
-                            <label class="toggle-row" for="unlimited_attempts">
-                                <input type="checkbox" id="unlimited_attempts" name="unlimited_attempts" value="1">
-                                <span class="toggle-label">Неограниченное количество попыток</span>
-                            </label>
-                        </div>
-
-                        <div class="field">
-                            <label for="time_limit">Ограничение по времени</label>
-                            <div class="input-group">
-                                <input
-                                    type="number"
-                                    name="time_limit"
-                                    id="time_limit"
-                                    value="{{ old('time_limit', $test->time_limit ?? 0) }}"
-                                    min="0"
-                                    class="input"
-                                    style="max-width: 120px;"
-                                >
-                                <span style="font-size:13.5px; color: var(--gray-500); font-weight: 600;">минут</span>
-                            </div>
-                            <p class="hint">Введите 0, чтобы убрать ограничение по времени.</p>
-                        </div>
+                    <div class="field">
+                        <label class="toggle-row" for="unlimited_attempts">
+                            <input type="checkbox" id="unlimited_attempts" name="unlimited_attempts" value="1">
+                            <span class="toggle-label">Неограниченное количество попыток</span>
+                        </label>
                     </div>
 
-                    {{-- SECTION 3: Display --}}
-                    <div class="form-section">
-                        <div class="form-section__title">
-                            <div class="form-section__title-icon">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                                    <path d="M3 9h18M9 21V9"/>
-                                </svg>
-                            </div>
-                            Отображение вопросов
+                    <div class="field">
+                        <label for="time_limit">Ограничение по времени</label>
+                        <div class="input-group">
+                            <input
+                                type="number"
+                                name="time_limit"
+                                id="time_limit"
+                                value="{{ old('time_limit', $test->time_limit ?? 0) }}"
+                                min="0"
+                                class="input"
+                                style="max-width: 120px;"
+                            >
+                            <span style="font-size:13.5px; color: var(--gray-500); font-weight: 600;">минут</span>
                         </div>
-
-                        <div class="field">
-                            <label for="display_mode">Режим отображения</label>
-                            <div class="select-wrapper">
-                                <select id="display_mode" name="display_mode" class="select input">
-                                    <option value="single_page">Каждый вопрос на новой странице</option>
-                                    <option value="paged">Выбрать расположение вопросов самому</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="field" id="randomize_questions_block">
-                            <label class="toggle-row" for="randomize_questions">
-                                <input type="checkbox" id="randomize_questions" name="randomize_questions" value="1">
-                                <span class="toggle-label">Случайно перемешивать вопросы для студента</span>
-                            </label>
-                        </div>
-
-                        <div class="field">
-                            <label class="toggle-row" for="is_details_available">
-                                <input type="checkbox" id="is_details_available" name="is_details_available" value="1" checked>
-                                <span class="toggle-label">Показывать обзоры попыток студентам</span>
-                            </label>
-                        </div>
+                        <p class="hint">Введите 0, чтобы убрать ограничение по времени.</p>
                     </div>
+                </div>
 
-                    {{-- SECTION 4: Access period --}}
-                    <div class="form-section">
-                        <div class="form-section__title">
-                            <div class="form-section__title-icon">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                                    <rect x="3" y="4" width="18" height="18" rx="2"/>
-                                    <path d="M16 2v4M8 2v4M3 10h18"/>
-                                </svg>
-                            </div>
-                            Период доступа
-                        </div>
-
-                        <div class="date-grid">
-                            <div class="field" style="margin-bottom:0;">
-                                <label for="period_start">Доступен с</label>
-                                <input
-                                    type="datetime-local"
-                                    id="period_start"
-                                    name="period_start"
-                                    value="{{ now()->format('Y-m-d\TH:i') }}"
-                                    class="input"
-                                >
-                            </div>
-                            <div class="field" style="margin-bottom:0;">
-                                <label for="period_end">Доступен до</label>
-                                <input
-                                    type="datetime-local"
-                                    id="period_end"
-                                    name="period_end"
-                                    class="input"
-                                >
-                                <p class="hint">Оставьте пустым — без ограничения.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Footer --}}
-                    <div class="form-footer">
-                        <span class="form-footer-hint">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10"/>
-                                <path d="M12 8v4M12 16h.01"/>
+                {{-- SECTION 3: Display --}}
+                <div class="form-section">
+                    <div class="form-section__title">
+                        <div class="form-section__title-icon">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <path d="M3 9h18M9 21V9"/>
                             </svg>
-                            После создания вы сможете добавить вопросы
-                        </span>
-                        <button type="submit" class="btn btn-primary">
-                            Создать и добавить вопросы
-                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </button>
+                        </div>
+                        Отображение вопросов
                     </div>
 
-                </form>
-            </div>
+                    <div class="field">
+                        <label for="display_mode">Режим отображения</label>
+                        <div class="select-wrapper">
+                            <select id="display_mode" name="display_mode" class="select input">
+                                <option value="single_page">Каждый вопрос на новой странице</option>
+                                <option value="paged">Выбрать расположение вопросов самому</option>
+                            </select>
+                        </div>
+                    </div>
 
+                    <div class="field" id="randomize_questions_block">
+                        <label class="toggle-row" for="randomize_questions">
+                            <input type="checkbox" id="randomize_questions" name="randomize_questions" value="1">
+                            <span class="toggle-label">Случайно перемешивать вопросы для студента</span>
+                        </label>
+                    </div>
+
+                    <div class="field">
+                        <label class="toggle-row" for="is_details_available">
+                            <input type="checkbox" id="is_details_available" name="is_details_available" value="1" checked>
+                            <span class="toggle-label">Показывать обзоры попыток студентам</span>
+                        </label>
+                    </div>
+                </div>
+
+                {{-- SECTION 4: Access period --}}
+                <div class="form-section">
+                    <div class="form-section__title">
+                        <div class="form-section__title-icon">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                <path d="M16 2v4M8 2v4M3 10h18"/>
+                            </svg>
+                        </div>
+                        Период доступа
+                    </div>
+
+                    <div class="date-grid">
+                        <div class="field" style="margin-bottom:0;">
+                            <label for="period_start">Доступен с</label>
+                            <input
+                                type="datetime-local"
+                                id="period_start"
+                                name="period_start"
+                                value="{{ now()->format('Y-m-d\TH:i') }}"
+                                class="input"
+                            >
+                        </div>
+                        <div class="field" style="margin-bottom:0;">
+                            <label for="period_end">Доступен до</label>
+                            <input
+                                type="datetime-local"
+                                id="period_end"
+                                name="period_end"
+                                class="input"
+                            >
+                            <p class="hint">Оставьте пустым — без ограничения.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Footer --}}
+                <div class="form-footer">
+                    <span class="form-footer-hint">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 8v4M12 16h.01"/>
+                        </svg>
+                        После создания вы сможете добавить вопросы
+                    </span>
+                    <button type="submit" class="btn btn-primary">
+                        Создать и добавить вопросы
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+
+            </form>
         </div>
-    </div>
 
-    <script>
-        // Unlimited attempts toggle
-        const unlimitedCheckbox = document.getElementById('unlimited_attempts');
-        const maxAttemptsInput = document.getElementById('max_attempts');
+    </main>
+</div>
 
-        unlimitedCheckbox.addEventListener('change', function () {
-            if (this.checked) {
-                maxAttemptsInput.disabled = true;
-                maxAttemptsInput.value = 0;
-            } else {
-                maxAttemptsInput.disabled = false;
-                maxAttemptsInput.value = 1;
-            }
-        });
+<script>
+    // Unlimited attempts toggle
+    const unlimitedCheckbox = document.getElementById('unlimited_attempts');
+    const maxAttemptsInput = document.getElementById('max_attempts');
 
-        // Randomize questions visibility
-        const displayMode = document.getElementById('display_mode');
-        const randomizeBlock = document.getElementById('randomize_questions_block');
-        const randomizeCheckbox = document.getElementById('randomize_questions');
-
-        function toggleRandomize() {
-            if (displayMode.value === 'paged') {
-                randomizeBlock.style.display = 'none';
-                randomizeCheckbox.checked = false;
-            } else {
-                randomizeBlock.style.display = '';
-            }
+    unlimitedCheckbox.addEventListener('change', function () {
+        if (this.checked) {
+            maxAttemptsInput.disabled = true;
+            maxAttemptsInput.value = 0;
+        } else {
+            maxAttemptsInput.disabled = false;
+            maxAttemptsInput.value = 1;
         }
+    });
 
-        displayMode.addEventListener('change', toggleRandomize);
-        toggleRandomize();
-    </script>
+    // Randomize questions visibility
+    const displayMode = document.getElementById('display_mode');
+    const randomizeBlock = document.getElementById('randomize_questions_block');
+    const randomizeCheckbox = document.getElementById('randomize_questions');
+
+    function toggleRandomize() {
+        if (displayMode.value === 'paged') {
+            randomizeBlock.style.display = 'none';
+            randomizeCheckbox.checked = false;
+        } else {
+            randomizeBlock.style.display = '';
+        }
+    }
+
+    displayMode.addEventListener('change', toggleRandomize);
+    toggleRandomize();
+</script>
 
 </body>
 </html>

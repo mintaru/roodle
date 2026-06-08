@@ -1,40 +1,32 @@
-<div class="py-10 px-6">
-    <h1 class="text-3xl font-bold text-center mb-10">Архивные курсы</h1>
-
-    <div class="p-6">
-        <h1 class="text-xl font-bold mb-3">Поиск</h1>
-
-        <input type="text" wire:model.live="search" placeholder="Введите текст..." class="border rounded p-2">
-
+<main class="main">
+    <div class="courses-header">
+        <div>
+            <h1 class="section-title">Архивные курсы</h1>
+        </div>
     </div>
 
+    <div class="courses-search">
+        <h2 class="section-subtitle">Поиск</h2>
+        <div class="search-input-wrapper">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input type="text" wire:model.live="search"
+                placeholder="Введите название курса или имя автора..." class="search-input">
+        </div>
+    </div>
 
-
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-
-        @if (auth()->check())
-            {{-- <div class="p-4 bg-gray-100 rounded mb-4">
-        <strong>Ваши группы:</strong>
-        @forelse(auth()->user()->groups as $group)
-            <span class="inline-block bg-blue-200 text-blue-800 px-2 py-1 rounded mr-2">
-                {{ $group->name }}
-            </span>
-        @empty
-            <span class="text-gray-500">Вы пока не в группе</span>
-        @endforelse
-    </div> --}}
-        @endif
-
+    <div class="courses-grid" x-data="{ openMenuId: null }">
         @forelse($courses as $course)
-            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition p-6 flex flex-col relative"
-                x-data="{ open: false }">
+            <div class="course-card" @click="window.location.href = '{{ route('courses.show', $course) }}';"
+                @mouseleave="openMenuId = null" style="cursor: pointer;">
 
-
-
-
-                <button @click="open = !open"
-                    class="mt-4 inline-block text-center">
+                {{-- Меню восстановления --}}
+                <button @click.stop="openMenuId = openMenuId === {{ $course->id }} ? null : {{ $course->id }}"
+                    class="course-card-menu-btn" title="Меню"
+                    :class="{ 'course-card-menu-btn--visible': openMenuId === {{ $course->id }} }">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                         <circle cx="12" cy="5" r="2" />
                         <circle cx="12" cy="12" r="2" />
@@ -42,51 +34,46 @@
                     </svg>
                 </button>
 
-
-                <div x-show="open" @click.away="open = false" x-transition x-cloak
-                    class="absolute left-14 top-10 z-30
-                       bg-white border rounded-lg shadow-lg w-44">
-                    <form action="{{ route('courses.restore', $course) }}" method="POST">
+                <div x-show="openMenuId === {{ $course->id }}" @click.away="openMenuId = null" x-transition
+                    class="course-card-menu" style="display:none">
+                    <form action="{{ route('courses.restore', $course) }}" method="POST"
+                        style="display: inline;" @click.stop>
                         @csrf
                         @method('PATCH')
-
-                        <button type="submit"
-                            class="w-full px-4 py-2 text-left text-sm
-                               text-gray-700 hover:bg-gray-100">
+                        <button type="submit" class="btn course-card-menu-item">
                             Восстановить
                         </button>
                     </form>
                 </div>
 
-
-
+                {{-- Изображение --}}
                 @if ($course->image_path)
                     <img src="{{ asset('storage/' . $course->image_path) }}" alt="{{ $course->title }}"
-                        class="w-full h-48 object-cover rounded-lg mb-4">
+                        class="course-card__image">
+                @else
+                    <div class="course-card__image course-card__image--placeholder"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
                 @endif
-                <h2 class="text-2xl font-semibold mb-3 text-gray-800">
-                    {{ $course->title }}
-                </h2>
-                <p class="text-gray-600 flex-grow">
-                    Доступен с {{ $course->formattedPeriodStartForUser(auth()->user()) ?? '—' }}
-                </p>
-                <p class="text-gray-600 flex-grow">
-                    Доступен до {{ $course->formattedPeriodEndForUser(auth()->user()) ?? '—' }}
-                </p>
 
-
-
-                <a href="{{ route('courses.show', $course) }}"
-                    class="mt-4 inline-block text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition">
-                    Перейти на курс
-                </a>
-
-
+                <div class="course-card__body">
+                    <h2 class="course-card__title">{{ $course->title }}</h2>
+                    @if ($course->author)
+                        <p class="course-card__teacher"
+                            style="font-size:0.9rem;color:var(--muted-color);margin-top:6px;">
+                            {{ $course->author->name }}
+                        </p>
+                    @endif
+                </div>
             </div>
         @empty
-            <div class="col-span-full text-center text-gray-500">
-                Курсов пока нет 🙁
+            <div class="courses-empty">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.5">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+                <p>Архивных курсов пока нет</p>
             </div>
         @endforelse
     </div>
-</div>
+</main>

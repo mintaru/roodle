@@ -6,8 +6,8 @@
     <meta name="last-question-index" content="{{ $lastQuestionIndex ?? 0 }}">
     <meta name="test-start-time"
         content="{{ $attempt->started_at ? $attempt->started_at->timestamp * 1000 : now()->timestamp * 1000 }}">
-    <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.umd.min.js"></script>
+        <link rel="stylesheet" href="{{ asset('css/trix.min.css') }}">
+        <script src="{{ asset('js/trix.min.js') }}"></script>
     <style>
         /* ── RESET & BASE ── */
         *,
