@@ -138,9 +138,27 @@ class CourseManager extends Component
         $addedMaterialIds = $sec->items()->where('item_type', \App\Models\Material::class)->pluck('item_id')->toArray();
         $addedAssignmentIds = $sec->items()->where('item_type', \App\Models\Assignment::class)->pluck('item_id')->toArray();
 
+        // Собираем тесты: тесты привязанные к курсу, общий банк и мои личные тесты
+        $courseTests = $this->course->tests->where('status', \App\Models\Test::STATUS_ACTIVE)
+            ->whereNotIn('id', $addedTestIds)->map(fn ($t) => ['id' => $t->id, 'title' => $t->title])->values()->toArray();
+
+        $globalTestsQuery = \App\Models\Test::where('is_global', true)
+            ->where('status', \App\Models\Test::STATUS_ACTIVE)
+            ->whereNotIn('id', $addedTestIds);
+
+        $myTestsQuery = \App\Models\Test::where('user_id', auth()->id())
+            ->where('status', \App\Models\Test::STATUS_ACTIVE)
+            ->whereNotIn('id', $addedTestIds);
+
+        $globalTests = $globalTestsQuery->get()->map(fn ($t) => ['id' => $t->id, 'title' => $t->title])->values()->toArray();
+        $myTests = $myTestsQuery->get()->map(fn ($t) => ['id' => $t->id, 'title' => $t->title])->values()->toArray();
+
         return [
-            'tests' => $this->course->tests->where('status', \App\Models\Test::STATUS_ACTIVE)
-                ->whereNotIn('id', $addedTestIds)->map(fn ($t) => ['id' => $t->id, 'title' => $t->title])->values()->toArray(),
+            'tests' => [
+                'course' => $courseTests,
+                'global' => $globalTests,
+                'mine' => $myTests,
+            ],
             'lectures' => $this->course->lectures->where('status', \App\Models\Lecture::STATUS_ACTIVE)
                 ->whereNotIn('id', $addedLectureIds)->map(fn ($l) => ['id' => $l->id, 'title' => $l->title])->values()->toArray(),
             'materials' => $this->course->materials->where('status', \App\Models\Material::STATUS_ACTIVE)
@@ -197,7 +215,18 @@ class CourseManager extends Component
             }
 
             if ($itemType === 'test') {
-                $item = Test::where('course_id', $this->course->id)->findOrFail($itemId);
+                $item = Test::findOrFail($itemId);
+
+                // Проверяем, что тест доступен для прикрепления: должен быть либо глобальным,
+                // либо принадлежать текущему пользователю, либо уже быть привязан к этому курсу.
+                $allowed = ($item->is_global ?? false)
+                    || ($item->user_id && $item->user_id === auth()->id())
+                    || ($item->course_id && $item->course_id === $this->course->id);
+
+                if (! $allowed) {
+                    throw new \Exception('У вас нет прав добавить этот тест в курс');
+                }
+
                 if (($item->status ?? 'active') === Test::STATUS_ARCHIVED) {
                     throw new \Exception('Нельзя добавить архивный тест в секцию');
                 }

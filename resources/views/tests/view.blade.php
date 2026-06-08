@@ -26,12 +26,14 @@
 
         <p class="sidebar-section-title">Навигация</p>
 
-        <a href="{{ route('courses.show', $test->course) }}" class="sidebar-link">
+        @if($test->course)
+            <a href="{{ route('courses.show', $test->course) }}" class="sidebar-link">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M19 12H5M12 5l-7 7 7 7"/>
             </svg>
             К курсу
-        </a>
+            </a>
+        @endif
 
         <a href="{{ route('home') }}" class="sidebar-link">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -43,9 +45,11 @@
         <p class="sidebar-section-title" style="margin-top: 2rem;">Курс</p>
 
         <div style="padding: 0 0.75rem;">
-            <p style="font-size: 13px; font-weight: 600; color: var(--gray-800); line-height: 1.4;">
-                {{ $test->course->title }}
-            </p>
+            @if($test->course)
+                <p style="font-size: 13px; font-weight: 600; color: var(--gray-800); line-height: 1.4;">
+                    {{ $test->course->title }}
+                </p>
+            @endif
         </div>
 
     </aside>
@@ -62,12 +66,14 @@
                 Курсы
             </a>
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
-            <a href="{{ route('courses.show', $test->course) }}"
-               style="color: var(--color-text-muted); text-decoration: none; transition: color 0.2s;"
-               onmouseover="this.style.color='var(--teal-600)'"
-               onmouseout="this.style.color='var(--color-text-muted)'">
-                {{ $test->course->title }}
-            </a>
+            @if($test->course)
+                <a href="{{ route('courses.show', $test->course) }}"
+                   style="color: var(--color-text-muted); text-decoration: none; transition: color 0.2s;"
+                   onmouseover="this.style.color='var(--teal-600)'"
+                   onmouseout="this.style.color='var(--color-text-muted)'>
+                    {{ $test->course->title }}
+                </a>
+            @endif
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
             <span style="color: var(--gray-600); font-weight: 500;">{{ $test->title }}</span>
         </nav>

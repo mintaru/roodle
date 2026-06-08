@@ -20,6 +20,8 @@ class Test extends Model
         'title',
         'description',
         'status',
+        'user_id',
+        'is_global',
         'max_attempts',
         'time_limit',
         'period_start',
@@ -34,6 +36,7 @@ class Test extends Model
         'period_end' => 'datetime',
         'randomize_questions' => 'boolean',
         'is_details_available' => 'boolean',
+        'is_global' => 'boolean',
     ];
 
     const STATUS_ACTIVE = 'active';
@@ -62,6 +65,11 @@ class Test extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
     }
 
     public function attempts()

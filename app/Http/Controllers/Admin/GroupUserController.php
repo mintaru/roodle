@@ -11,25 +11,7 @@ class GroupUserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Group::withCount('users');
-        
-        // Ищем по колонке
-        $searchColumn = $request->input('search_column', 'name');
-        $searchValue = $request->input('search_value', '');
-        
-        if ($searchValue) {
-            if ($searchColumn === 'name') {
-                $query->where('name', 'like', '%' . $searchValue . '%');
-            } elseif ($searchColumn === 'id') {
-                $query->where('id', 'like', '%' . $searchValue . '%');
-            } elseif ($searchColumn === 'users_count') {
-                $query->having('users_count', '=', $searchValue);
-            }
-        }
-        
-        $groups = $query->get();
-        
-        return view('admin.groups.index', compact('groups', 'searchColumn', 'searchValue'));
+        return view('admin.groups.index');
     }
 
     public function show(Group $group)

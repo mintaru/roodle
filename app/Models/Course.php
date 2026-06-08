@@ -92,8 +92,14 @@ class Course extends Model
             return false;
         }
 
-        if ($user && $user->hasRole('teacher') && $this->user_id === $user->id) {
-            return true;
+        // Teachers: allow if author or has explicit teacher permission
+        if ($user && $user->hasRole('teacher')) {
+            if ($this->user_id === $user->id) {
+                return true;
+            }
+            if ($this->teacherPermissions()->where('user_id', $user->id)->exists()) {
+                return true;
+            }
         }
 
         $now = now()->utc();

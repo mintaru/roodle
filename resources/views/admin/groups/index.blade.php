@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Группы студентов</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -215,60 +213,10 @@
                 Создать новую группу
             </a>
 
-            <!-- Search Form -->
-            <div class="search-box">
-                <form method="GET" action="{{ route('admin.groups.index') }}">
-                    <div>
-                        <label>Искать по колонке:</label>
-                        <select name="search_column" id="search_column">
-                            <option value="name" {{ $searchColumn === 'name' ? 'selected' : '' }}>Название группы</option>
-                            <option value="id" {{ $searchColumn === 'id' ? 'selected' : '' }}>ID</option>
-                            <option value="users_count" {{ $searchColumn === 'users_count' ? 'selected' : '' }}>Количество студентов</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Поисковый запрос:</label>
-                        <input type="text" name="search_value" placeholder="Введите текст для поиска..." value="{{ $searchValue }}">
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="margin-bottom:0">Поиск</button>
-                    <a href="{{ route('admin.groups.index') }}" class="btn btn-secondary">Очистить</a>
-                </form>
-            </div>
-
-            <table class="groups-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Название группы</th>
-                        <th>Количество студентов</th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($groups as $group)
-                        <tr>
-                            <td>{{ $group->id }}</td>
-                            <td>
-                                <a href="{{ route('admin.groups.show', $group) }}" class="table-link">
-                                    {{ $group->name }}
-                                </a>
-                            </td>
-                            <td>{{ $group->users_count }}</td>
-                            <td>
-                                <a href="{{ route('admin.groups.show', $group) }}" class="table-link">Редактировать</a>
-                                <form action="{{ route('admin.groups.destroy', $group) }}" method="POST" style="display:inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-danger" onclick="return confirm('Вы уверены, что хотите удалить эту группу?')">Удалить</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            @livewire('admin.group-search')
         </div>
     </div>
 
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="{{ asset('js/alpine.min.js') }}"></script>
 </body>
 </html>

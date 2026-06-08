@@ -802,7 +802,7 @@
                     const map = {
                         test: {
                             key: 'tests',
-                            sub: 'Выберите тест'
+                            sub: 'Выберите тест (общий банк / мои / курс)'
                         },
                         lecture: {
                             key: 'lectures',
@@ -817,12 +817,21 @@
                             sub: 'Выберите задание'
                         },
                     };
-                    _aItems = (ATTACH_DATA[_aSectionId] || {})[map[type].key] || [];
+
                     document.getElementById('attach-modal-subtitle').textContent = map[type].sub;
                     document.getElementById('attach-step-type').style.display = 'none';
                     document.getElementById('attach-step-item').style.display = '';
                     document.getElementById('attach-search-input').value = '';
-                    renderAItems(_aItems);
+
+                    if (type === 'test') {
+                        // grouped: { course:[], global:[], mine:[] }
+                        _aItems = (ATTACH_DATA[_aSectionId] && ATTACH_DATA[_aSectionId].tests) || { course: [], global: [], mine: [] };
+                        renderAItemsGrouped(_aItems);
+                    } else {
+                        _aItems = (ATTACH_DATA[_aSectionId] || {})[map[type].key] || [];
+                        renderAItems(_aItems);
+                    }
+
                     setACE(false);
                 }
 
@@ -836,7 +845,17 @@
                 }
 
                 function filterAttachItems(q) {
-                    renderAItems(q ? _aItems.filter(i => i.title.toLowerCase().includes(q.toLowerCase())) : _aItems);
+                    if (_aType === 'test') {
+                        const grouped = _aItems;
+                        const f = (arr) => arr.filter(i => i.title.toLowerCase().includes(q.toLowerCase()));
+                        renderAItemsGrouped({
+                            course: f(grouped.course || []),
+                            global: f(grouped.global || []),
+                            mine: f(grouped.mine || []),
+                        });
+                    } else {
+                        renderAItems(q ? _aItems.filter(i => i.title.toLowerCase().includes(q.toLowerCase())) : _aItems);
+                    }
                 }
 
                 function renderAItems(items) {
@@ -849,6 +868,28 @@
                     list.innerHTML = items.map(item =>
                         `<div onclick="selectAItem(${item.id},this)" data-id="${item.id}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--r-md);background:var(--color-surface-2);font-size:13px;color:var(--gray-700);cursor:pointer;"><div class="acheck" style="width:18px;height:18px;flex-shrink:0;border-radius:50%;border:1.5px solid var(--gray-300);display:flex;align-items:center;justify-content:center;font-size:11px;"></div><span>${item.title.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span></div>`
                     ).join('');
+                }
+
+                function renderAItemsGrouped(grouped) {
+                    const list = document.getElementById('attach-item-list');
+                    const hasAny = (grouped.course && grouped.course.length) || (grouped.global && grouped.global.length) || (grouped.mine && grouped.mine.length);
+                    if (!hasAny) {
+                        list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--color-text-muted);font-size:13px;">Нет доступных элементов</div>';
+                        return;
+                    }
+                    let html = '';
+                    const section = (title, arr) => {
+                        if (!arr || !arr.length) return '';
+                        return `<div style="font-size:13px;font-weight:700;color:var(--gray-700);margin:6px 0;">${title}</div>` + arr.map(item =>
+                            `<div onclick="selectAItem(${item.id},this)" data-id="${item.id}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--r-md);background:var(--color-surface-2);font-size:13px;color:var(--gray-700);cursor:pointer;"><div class="acheck" style="width:18px;height:18px;flex-shrink:0;border-radius:50%;border:1.5px solid var(--gray-300);display:flex;align-items:center;justify-content:center;font-size:11px;"></div><span>${item.title.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span></div>`
+                        ).join('');
+                    };
+
+                    html += section('В этом курсе', grouped.course || []);
+                    html += section('Общий банк', grouped.global || []);
+                    html += section('Мои тесты', grouped.mine || []);
+
+                    list.innerHTML = html;
                 }
 
                 function selectAItem(id, el) {

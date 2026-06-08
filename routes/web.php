@@ -42,8 +42,27 @@ RouteFacade::bind('course', function ($value) {
         abort(404);
     }
 
-    if (! $course->isAvailable()) {
-        abort(404);
+    // Если пользователь аутентифицирован — даём приоритет ролям:
+    // - админ всегда может
+    // - преподаватель может если он автор или у него есть разрешение в teacher_course_permissions
+    // Только дальше вызываем isAvailable() для студентов/прочих.
+    if (\Illuminate\Support\Facades\Auth::check()) {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user->hasRole('admin')) {
+            return $course;
+        }
+        if ($user->hasRole('teacher')) {
+            if ($course->user_id === $user->id) {
+                return $course;
+            }
+            if ($course->teacherPermissions()->where('user_id', $user->id)->exists()) {
+                return $course;
+            }
+        }
+
+        if (! $course->isAvailable()) {
+            abort(404);
+        }
     }
 
     return $course;
@@ -57,8 +76,27 @@ RouteFacade::bind('lecture', function ($value) {
     }
 
     $course = $lecture->course;
-    if (! $course || ! $course->isAvailable()) {
+    if (! $course) {
         abort(404);
+    }
+
+    if (\Illuminate\Support\Facades\Auth::check()) {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user->hasRole('admin')) {
+            return $lecture;
+        }
+        if ($user->hasRole('teacher')) {
+            if ($course->user_id === $user->id) {
+                return $lecture;
+            }
+            if ($course->teacherPermissions()->where('user_id', $user->id)->exists()) {
+                return $lecture;
+            }
+        }
+
+        if (! $course->isAvailable()) {
+            abort(404);
+        }
     }
 
     return $lecture;
@@ -72,8 +110,27 @@ RouteFacade::bind('material', function ($value) {
     }
 
     $course = $material->course;
-    if (! $course || ! $course->isAvailable()) {
+    if (! $course) {
         abort(404);
+    }
+
+    if (\Illuminate\Support\Facades\Auth::check()) {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user->hasRole('admin')) {
+            return $material;
+        }
+        if ($user->hasRole('teacher')) {
+            if ($course->user_id === $user->id) {
+                return $material;
+            }
+            if ($course->teacherPermissions()->where('user_id', $user->id)->exists()) {
+                return $material;
+            }
+        }
+
+        if (! $course->isAvailable()) {
+            abort(404);
+        }
     }
 
     return $material;
@@ -87,8 +144,27 @@ RouteFacade::bind('assignment', function ($value) {
     }
 
     $course = $assignment->course;
-    if (! $course || ! $course->isAvailable()) {
+    if (! $course) {
         abort(404);
+    }
+
+    if (\Illuminate\Support\Facades\Auth::check()) {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user->hasRole('admin')) {
+            return $assignment;
+        }
+        if ($user->hasRole('teacher')) {
+            if ($course->user_id === $user->id) {
+                return $assignment;
+            }
+            if ($course->teacherPermissions()->where('user_id', $user->id)->exists()) {
+                return $assignment;
+            }
+        }
+
+        if (! $course->isAvailable()) {
+            abort(404);
+        }
     }
 
     return $assignment;
@@ -102,8 +178,29 @@ RouteFacade::bind('test', function ($value) {
     }
 
     $course = $test->course;
-    if (! $course || ! $course->isAvailable()) {
-        abort(404);
+    $course = $test->course;
+    // Tests can be standalone (not linked to any course) — allow and let controller/policies handle visibility
+    if (! $course) {
+        return $test;
+    }
+
+    if (\Illuminate\Support\Facades\Auth::check()) {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        if ($user->hasRole('admin')) {
+            return $test;
+        }
+        if ($user->hasRole('teacher')) {
+            if ($course->user_id === $user->id) {
+                return $test;
+            }
+            if ($course->teacherPermissions()->where('user_id', $user->id)->exists()) {
+                return $test;
+            }
+        }
+
+        if (! $course->isAvailable()) {
+            abort(404);
+        }
     }
 
     return $test;
@@ -165,7 +262,7 @@ Route::delete('/tests/{test}/questions/{question}', [TestController::class, 'rem
 Route::get('/tests/{test}/results', [TestController::class, 'results'])->middleware(['auth','role:admin|teacher'])->name('tests.results');
 
 // Просмотр деталей попытки ученика
-Route::get('/test-attempts/{attempt}/details', [TestController::class, 'viewAttemptDetails'])->middleware(['auth','role:admin|teacher'])->name('test-attempts.details');
+Route::get('/test-attempts/{attempt}/details', [TestController::class, 'viewAttemptDetails'])->middleware(['auth'])->name('test-attempts.details');
 
 Route::post('/tests/generate-question', [QuestionController::class, 'generate'])->middleware(['auth','role:admin|teacher'])->name('questions.generate');
 

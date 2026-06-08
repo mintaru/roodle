@@ -5,13 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $course->title }} - Roodle</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap"
-        rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ asset('css/trix.min.css') }}">
+    <script src="{{ asset('js/trix.min.js') }}"></script>
     @livewireStyles
     <style>
         .tq-wrap {

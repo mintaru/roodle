@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Пользователи</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -215,58 +213,12 @@
                 Создать нового пользователя
             </a>
 
-            <!-- Search Form -->
-            <div class="search-box">
-                <form method="GET" action="{{ route('admin.users.index') }}">
-                    <div>
-                        <label>Искать по колонке:</label>
-                        <select name="search_column" id="search_column">
-                            <option value="name" {{ $searchColumn === 'name' ? 'selected' : '' }}>Имя</option>
-                            <option value="username" {{ $searchColumn === 'username' ? 'selected' : '' }}>Логин</option>
-                            <option value="role" {{ $searchColumn === 'role' ? 'selected' : '' }}>Роль</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Поисковый запрос:</label>
-                        <input type="text" name="search_value" placeholder="Введите текст для поиска..." value="{{ $searchValue }}">
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="margin-bottom:0">Поиск</button>
-                    <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Очистить</a>
-                </form>
-            </div>
+            @livewire('admin.user-search')
 
-            <table class="groups-table">
-                <thead>
-                    <tr>
-                        <th>Имя</th>
-                        <th>Логин</th>
-                        <th>Роль</th>
-                        <th>Группы</th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($users as $user)
-                        <tr>
-                            <td>{{ $user->name }}</td>
-                            <td>{{ $user->username }}</td>
-                            <td>{{ $user->roles->pluck('name')->join(', ') }}</td>
-                            <td>{{ $user->groups->pluck('name')->join(', ') }}</td>
-                            <td>
-                                <a href="{{ route('admin.users.edit', $user) }}" class="table-link">Редактировать</a>
-                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" style="display:inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-danger" onclick="return confirm('Вы уверены, что хотите удалить этого пользователя?')">Удалить</button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+
         </div>
     </div>
 
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="{{ asset('js/alpine.min.js') }}"></script>
 </body>
 </html>
