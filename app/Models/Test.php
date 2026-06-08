@@ -80,6 +80,11 @@ class Test extends Model
             return true;
         }
 
+        // If the parent course is not available for the current user, test is not available
+        if ($this->course && method_exists($this->course, 'isAvailable') && ! $this->course->isAvailable()) {
+            return false;
+        }
+
         if ($this->status === self::STATUS_ARCHIVED) {
             return false;
         }

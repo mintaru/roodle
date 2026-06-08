@@ -194,6 +194,9 @@ class AssignmentController extends Controller
 
     public function downloadFile(Course $course, Assignment $assignment, AssignmentFile $file)
     {
+        // Ensure course is accessible for current user
+        abort_if(! $course->isAvailable(), 404);
+
         if ($assignment->course_id !== $course->id || $file->assignment_id !== $assignment->id) {
             abort(404);
         }

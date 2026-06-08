@@ -130,6 +130,9 @@ class LectureController extends Controller
 
     public function show(Course $course, Lecture $lecture)
     {
+        // Ensure course is accessible for current user (covers archived / not-enrolled cases)
+        abort_if(! $course->isAvailable(), 404);
+
         $user = \Illuminate\Support\Facades\Auth::user();
         if (! $user?->hasAnyRole(['admin', 'teacher']) && ($lecture->status ?? 'active') === Lecture::STATUS_ARCHIVED) {
             abort(404);
@@ -288,6 +291,9 @@ class LectureController extends Controller
 
     public function serveFile(Course $course, Lecture $lecture)
 {
+    // Ensure course is accessible for current user
+    abort_if(! $course->isAvailable(), 404);
+
     if (!$lecture->pdf_path) {
         abort(404);
     }

@@ -71,39 +71,64 @@ class Course extends Model
 
     public function isAvailable(?int $groupId = null): bool
     {
-        if (Auth::check() && Auth::user()->hasRole('admin')) {
+        $user = Auth::user();
+
+        // Admins always have access
+        if ($user && $user->hasRole('admin')) {
             return true;
         }
 
-        $user = Auth::user();
+        // If course is archived, only admin or permitted teacher/author can access
+        if ($this->status === self::STATUS_ARCHIVED) {
+            if ($user && $user->hasRole('teacher')) {
+                if ($this->user_id === $user->id) {
+                    return true;
+                }
+                if ($this->teacherPermissions()->where('user_id', $user->id)->exists()) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         if ($user && $user->hasRole('teacher') && $this->user_id === $user->id) {
             return true;
         }
 
         $now = now()->utc();
 
-        // Для студента: проверяем период доступа по группам пользователя
-        if ($user) {
-            $userGroupIds = $user->groups->pluck('id');
-            $hasGroupInCourse = false;
-            foreach ($userGroupIds as $gid) {
-                $pivot = $this->groups()->where('group_id', $gid)->first()?->pivot;
-                if (! $pivot) {
-                    continue;
-                }
-                $hasGroupInCourse = true;
-                $groupStart = $this->parseUtc($pivot->period_start) ?? $this->parseUtc($this->getRawOriginal('period_start'));
-                $groupEnd = $this->parseUtc($pivot->period_end) ?? $this->parseUtc($this->getRawOriginal('period_end'));
-                $withinStart = ! $groupStart || $now->gte($groupStart);
-                $withinEnd = ! $groupEnd || $now->lte($groupEnd);
-                if ($withinStart && $withinEnd) {
-                    return true;
-                }
+        // Если у курса есть группы — требуем, чтобы пользователь был в одной из них.
+        // Если у курса групп нет — доступ студентам запрещён (только admin/teacher выше).
+        $courseHasGroups = $this->groups()->exists();
+        if (! $courseHasGroups) {
+            return false;
+        }
+
+        // Для курсов с группами — проверяем членство и период доступа по группам.
+        // Неавторизованный пользователь не может получить доступ
+        if (! $user) {
+            return false;
+        }
+
+        $userGroupIds = $user->groups->pluck('id');
+        foreach ($userGroupIds as $gid) {
+            $pivot = $this->groups()->where('group_id', $gid)->first()?->pivot;
+            if (! $pivot) {
+                continue;
             }
-            if ($hasGroupInCourse) {
-                return false;
+
+            $groupStart = $this->parseUtc($pivot->period_start) ?? $this->parseUtc($this->getRawOriginal('period_start'));
+            $groupEnd = $this->parseUtc($pivot->period_end) ?? $this->parseUtc($this->getRawOriginal('period_end'));
+            $withinStart = ! $groupStart || $now->gte($groupStart);
+            $withinEnd = ! $groupEnd || $now->lte($groupEnd);
+            if ($withinStart && $withinEnd) {
+                return true;
             }
         }
+
+        // Пользователь либо не состоит ни в одной группе курса, либо не в периоде доступа
+        return false;
 
         // Глобальный период (если пользователь не в группах курса)
         $globalStart = $this->parseUtc($this->getRawOriginal('period_start'));

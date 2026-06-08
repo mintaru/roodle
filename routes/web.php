@@ -34,6 +34,81 @@ use App\Http\Controllers\GradeReportController;
 |
 */
 
+// Автоматическая проверка доступа при model binding для {course}
+use Illuminate\Support\Facades\Route as RouteFacade;
+RouteFacade::bind('course', function ($value) {
+    $course = \App\Models\Course::where('id', $value)->first();
+    if (! $course) {
+        abort(404);
+    }
+
+    if (! $course->isAvailable()) {
+        abort(404);
+    }
+
+    return $course;
+});
+
+// Bind lecture: ensure parent course is available
+RouteFacade::bind('lecture', function ($value) {
+    $lecture = \App\Models\Lecture::where('id', $value)->first();
+    if (! $lecture) {
+        abort(404);
+    }
+
+    $course = $lecture->course;
+    if (! $course || ! $course->isAvailable()) {
+        abort(404);
+    }
+
+    return $lecture;
+});
+
+// Bind material: ensure parent course is available
+RouteFacade::bind('material', function ($value) {
+    $material = \App\Models\Material::where('id', $value)->first();
+    if (! $material) {
+        abort(404);
+    }
+
+    $course = $material->course;
+    if (! $course || ! $course->isAvailable()) {
+        abort(404);
+    }
+
+    return $material;
+});
+
+// Bind assignment: ensure parent course is available
+RouteFacade::bind('assignment', function ($value) {
+    $assignment = \App\Models\Assignment::where('id', $value)->first();
+    if (! $assignment) {
+        abort(404);
+    }
+
+    $course = $assignment->course;
+    if (! $course || ! $course->isAvailable()) {
+        abort(404);
+    }
+
+    return $assignment;
+});
+
+// Bind test: ensure parent course is available
+RouteFacade::bind('test', function ($value) {
+    $test = \App\Models\Test::where('id', $value)->first();
+    if (! $test) {
+        abort(404);
+    }
+
+    $course = $test->course;
+    if (! $course || ! $course->isAvailable()) {
+        abort(404);
+    }
+
+    return $test;
+});
+
 
 
 
