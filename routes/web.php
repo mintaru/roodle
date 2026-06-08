@@ -48,7 +48,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/', [CourseController::class, 'index'])->middleware('auth')->name("home");
 Route::get('/courses/archived', [CourseController::class, 'archived'])->name('courses.archived');
 
-Route::get('/courses/create', [CourseController::class, 'create'])->middleware('auth')->name('courses.create');
+Route::get('/courses/create', [CourseController::class, 'create'])->middleware(['auth','role:admin|teacher'])->name('courses.create');
 Route::get('/courses/{course}', [CourseController::class, 'show'])->middleware('auth')->name('courses.show');
 
 // Маршрут для настройки базы данных
@@ -60,11 +60,11 @@ Route::get('/courses/{course}', [CourseController::class, 'show'])->middleware('
 
 // Страница создания нового теста
 // Перенаправлен на метод create() в TestController
-Route::get('/courses/{course}/tests/create', [TestController::class, 'create'])->middleware('auth')->name('tests.create');
+Route::get('/courses/{course}/tests/create', [TestController::class, 'create'])->middleware(['auth','role:admin|teacher'])->name('tests.create');
 
 // Обработка формы создания теста (POST-запрос)
 // Перенаправлен на метод store() в TestController
-Route::post('/courses/{course}/tests', [TestController::class, 'store'])->name('tests.store');
+Route::post('/courses/{course}/tests', [TestController::class, 'store'])->middleware(['auth','role:admin|teacher'])->name('tests.store');
 
 Route::get('/tests/{test}/view', [TestController::class, 'view'])->middleware('auth')->name('tests.view');
 
@@ -76,38 +76,39 @@ Route::get('/tests/{test}', [TestController::class, 'show'])->middleware('auth')
 
 // Обработка добавления нового вопроса к тесту (POST-запрос)
 // Перенаправлен на метод storeQuestion() в TestController
-Route::post('/tests/{test}/questions', [TestController::class, 'storeQuestion'])->name('tests.store_question');
+Route::post('/tests/{test}/questions', [TestController::class, 'storeQuestion'])->middleware(['auth','role:admin|teacher'])->name('tests.store_question');
 
 // Обновление разбиения вопросов по страницам внутри теста
 Route::put('/tests/{test}/layout', [TestController::class, 'updateLayout'])
-    ->middleware('auth')
+    ->middleware(['auth','role:admin|teacher'])
     ->name('tests.update_layout');
 
 // Удаление вопроса из теста (DELETE-запрос)
-Route::delete('/tests/{test}/questions/{question}', [TestController::class, 'removeQuestion'])->name('tests.removeQuestion');
+Route::delete('/tests/{test}/questions/{question}', [TestController::class, 'removeQuestion'])->middleware(['auth','role:admin|teacher'])->name('tests.removeQuestion');
 
 // Просмотр результатов теста (обзор тестирования)
-Route::get('/tests/{test}/results', [TestController::class, 'results'])->middleware('auth')->name('tests.results');
+Route::get('/tests/{test}/results', [TestController::class, 'results'])->middleware(['auth','role:admin|teacher'])->name('tests.results');
 
 // Просмотр деталей попытки ученика
-Route::get('/test-attempts/{attempt}/details', [TestController::class, 'viewAttemptDetails'])->middleware('auth')->name('test-attempts.details');
+Route::get('/test-attempts/{attempt}/details', [TestController::class, 'viewAttemptDetails'])->middleware(['auth','role:admin|teacher'])->name('test-attempts.details');
 
-Route::post('/tests/generate-question', [QuestionController::class, 'generate'])->name('questions.generate');
+Route::post('/tests/generate-question', [QuestionController::class, 'generate'])->middleware(['auth','role:admin|teacher'])->name('questions.generate');
 
 // Ручная проверка развёрнутых ответов в попытке
 Route::post('/test-attempts/{attempt}/grade-rich-text', [TestController::class, 'gradeRichTextAnswers'])
-    ->middleware('auth')
+    ->middleware(['auth','role:admin|teacher'])
     ->name('test-attempts.grade-rich-text');
 
 // Выдача дополнительных попыток для ученика (по тесту и пользователю)
 Route::post('/tests/{test}/users/{user}/grant-attempts', [TestController::class, 'grantExtraAttempts'])
-    ->middleware('auth')
+    ->middleware(['auth','role:admin|teacher'])
     ->name('test-attempts.grant-attempts');
 
 // Эти маршруты показывают, как можно их вынести в контроллер для единообразия.
 
 // Страница для начала прохождения теста
 Route::get('/tests/{test}/attempt', [TestController::class, 'attempt'])
+    ->middleware('auth')
     ->name('tests.attempt');
 
 Route::get('/tests/{test}/attempt/{questionIndex?}', [TestController::class, 'attemptPage'])
@@ -116,12 +117,14 @@ Route::get('/tests/{test}/attempt/{questionIndex?}', [TestController::class, 'at
 
 // Обработка сохранения временного ответа (AJAX)
 Route::post('/tests/{test}/save-answer', [TestController::class, 'saveAnswer'])
+    ->middleware('auth')
     ->name('tests.save_answer');
 
 // Сохранение последнего вопроса при навигации между страницами теста
-Route::post('/tests/{test}/save-progress', [TestController::class, 'saveProgress']);
+Route::post('/tests/{test}/save-progress', [TestController::class, 'saveProgress'])->middleware('auth');
 // Обработка очищения ответа (AJAX)
 Route::post('/tests/{test}/clear-answer', [TestController::class, 'clearAnswer'])
+    ->middleware('auth')
     ->name('tests.clear_answer');
 
 // Синхронизация таймера между устройствами
@@ -134,9 +137,9 @@ Route::post('/tests/{test}/result', [TestController::class, 'result'])
     ->middleware('auth')
     ->name('tests.result');
 
-Route::get('/courses/{course}/lectures/create', [LectureController::class, 'create'])->middleware('auth')->name('lectures.create');
-Route::post('/courses/{course}/lectures', [LectureController::class, 'store'])->middleware('auth')->name('lectures.store');
-Route::post('/lectures/upload-attachment', [LectureController::class, 'uploadAttachment'])->middleware('auth')->name('lectures.upload-attachment');
+Route::get('/courses/{course}/lectures/create', [LectureController::class, 'create'])->middleware(['auth','role:admin|teacher'])->name('lectures.create');
+Route::post('/courses/{course}/lectures', [LectureController::class, 'store'])->middleware(['auth','role:admin|teacher'])->name('lectures.store');
+Route::post('/lectures/upload-attachment', [LectureController::class, 'uploadAttachment'])->middleware(['auth','role:admin|teacher'])->name('lectures.upload-attachment');
 Route::get('/courses/{course}/lectures/{lecture}/file', [LectureController::class, 'serveFile'])
     ->name('lectures.file')
     ->middleware('auth');
@@ -145,29 +148,29 @@ Route::get('/courses/{course}/lectures/{lecture}/file', [LectureController::clas
 Route::get('/courses/{course}/lectures/{lecture}', [LectureController::class, 'show'])->middleware('auth')->name('lectures.show');
 
 // Маршруты для материалов
-Route::get('/courses/{course}/materials/create', [MaterialController::class, 'create'])->middleware('auth')->name('materials.create');
-Route::post('/courses/{course}/materials', [MaterialController::class, 'store'])->middleware('auth')->name('materials.store');
-Route::get('/courses/{course}/materials/{material}/edit', [MaterialController::class, 'edit'])->middleware('auth')->name('materials.edit');
-Route::put('/courses/{course}/materials/{material}', [MaterialController::class, 'update'])->middleware('auth')->name('materials.update');
+Route::get('/courses/{course}/materials/create', [MaterialController::class, 'create'])->middleware(['auth','role:admin|teacher'])->name('materials.create');
+Route::post('/courses/{course}/materials', [MaterialController::class, 'store'])->middleware(['auth','role:admin|teacher'])->name('materials.store');
+Route::get('/courses/{course}/materials/{material}/edit', [MaterialController::class, 'edit'])->middleware(['auth','role:admin|teacher'])->name('materials.edit');
+Route::put('/courses/{course}/materials/{material}', [MaterialController::class, 'update'])->middleware(['auth','role:admin|teacher'])->name('materials.update');
 Route::get('/courses/{course}/materials/{material}/download', [MaterialController::class, 'download'])->middleware('auth')->name('materials.download');
-Route::delete('/courses/{course}/materials/{material}', [MaterialController::class, 'destroy'])->middleware('auth')->name('materials.destroy');
-Route::patch('/courses/{course}/materials/{material}/toggle-status', [MaterialController::class, 'toggleStatus'])->middleware('auth')->name('materials.toggle-status');
+Route::delete('/courses/{course}/materials/{material}', [MaterialController::class, 'destroy'])->middleware(['auth','role:admin|teacher'])->name('materials.destroy');
+Route::patch('/courses/{course}/materials/{material}/toggle-status', [MaterialController::class, 'toggleStatus'])->middleware(['auth','role:admin|teacher'])->name('materials.toggle-status');
 
 // Маршруты для заданий
-Route::get('/courses/{course}/assignments/create', [AssignmentController::class, 'create'])->middleware('auth')->name('assignments.create');
-Route::post('/courses/{course}/assignments', [AssignmentController::class, 'store'])->middleware('auth')->name('assignments.store');
+Route::get('/courses/{course}/assignments/create', [AssignmentController::class, 'create'])->middleware(['auth','role:admin|teacher'])->name('assignments.create');
+Route::post('/courses/{course}/assignments', [AssignmentController::class, 'store'])->middleware(['auth','role:admin|teacher'])->name('assignments.store');
 Route::get('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'show'])->middleware('auth')->name('assignments.show');
-Route::get('/courses/{course}/assignments/{assignment}/edit', [AssignmentController::class, 'edit'])->middleware('auth')->name('assignments.edit');
-Route::put('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'update'])->middleware('auth')->name('assignments.update');
-Route::delete('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'destroy'])->middleware('auth')->name('assignments.destroy');
-Route::delete('/courses/{course}/assignments/{assignment}/files/{file}', [AssignmentController::class, 'deleteFile'])->middleware('auth')->name('assignments.delete-file');
+Route::get('/courses/{course}/assignments/{assignment}/edit', [AssignmentController::class, 'edit'])->middleware(['auth','role:admin|teacher'])->name('assignments.edit');
+Route::put('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'update'])->middleware(['auth','role:admin|teacher'])->name('assignments.update');
+Route::delete('/courses/{course}/assignments/{assignment}', [AssignmentController::class, 'destroy'])->middleware(['auth','role:admin|teacher'])->name('assignments.destroy');
+Route::delete('/courses/{course}/assignments/{assignment}/files/{file}', [AssignmentController::class, 'deleteFile'])->middleware(['auth','role:admin|teacher'])->name('assignments.delete-file');
 Route::get('/courses/{course}/assignments/{assignment}/files/{file}/download', [AssignmentController::class, 'downloadFile'])->middleware('auth')->name('assignments.download-file');
-Route::post('/courses/{course}/assignments/{assignment}/move', [AssignmentController::class, 'move'])->middleware('auth')->name('assignments.move');
+Route::post('/courses/{course}/assignments/{assignment}/move', [AssignmentController::class, 'move'])->middleware(['auth','role:admin|teacher'])->name('assignments.move');
 
 // Маршруты для ответов на задания
-Route::get('/courses/{course}/assignments/{assignment}/view', [AssignmentSubmissionController::class, 'view'])->middleware('auth')->name('assignments.view');
+Route::get('/courses/{course}/assignments/{assignment}/view', [AssignmentSubmissionController::class, 'view'])->middleware(['auth','role:admin|teacher'])->name('assignments.view');
 Route::post('/courses/{course}/assignments/{assignment}/submit', [AssignmentSubmissionController::class, 'submit'])->middleware('auth')->name('assignments.submit');
-Route::post('/courses/{course}/assignments/{assignment}/submissions/{submission}/grade', [AssignmentSubmissionController::class, 'grade'])->middleware('auth')->name('assignments.grade');
+Route::post('/courses/{course}/assignments/{assignment}/submissions/{submission}/grade', [AssignmentSubmissionController::class, 'grade'])->middleware(['auth','role:admin|teacher'])->name('assignments.grade');
 Route::get('/courses/{course}/assignments/{assignment}/submissions/{submission}/files/{file}/download', [AssignmentSubmissionController::class, 'downloadSubmissionFile'])->middleware('auth')->name('assignments.download-submission-file');
 Route::delete('/courses/{course}/assignments/{assignment}/submissions/{submission}/files/{file}', [AssignmentSubmissionController::class, 'deleteSubmissionFile'])->middleware('auth')->name('assignments.delete-submission-file');
 
@@ -175,14 +178,14 @@ Route::delete('/courses/{course}/assignments/{assignment}/submissions/{submissio
 Route::get('/courses/{course}/grades', [GradeReportController::class, 'courseGrades'])->middleware('auth')->name('courses.grades');
 
 // Подключение маршрутов аутентификации Laravel
-Route::post('/courses', [CourseController::class, 'store'])->middleware('auth')->name('courses.store');
+Route::post('/courses', [CourseController::class, 'store'])->middleware(['auth','role:admin|teacher'])->name('courses.store');
 
 
-Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->middleware('auth')->name('courses.edit'); // форма редактирования
-Route::put('/courses/{course}', [CourseController::class, 'update'])->middleware('auth')->name('courses.update');
-Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->middleware('auth')->name('courses.destroy');
+Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->middleware(['auth','role:admin|teacher'])->name('courses.edit'); // форма редактирования
+Route::put('/courses/{course}', [CourseController::class, 'update'])->middleware(['auth','role:admin|teacher'])->name('courses.update');
+Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->middleware(['auth','role:admin|teacher'])->name('courses.destroy');
 
-Route::post('/tests/{test}/add-from-bank', [TestController::class, 'addFromBank'])->name('tests.add_from_bank');
+Route::post('/tests/{test}/add-from-bank', [TestController::class, 'addFromBank'])->middleware(['auth','role:admin|teacher'])->name('tests.add_from_bank');
 
 Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     //для групп
@@ -247,16 +250,15 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::delete('/question-bank/{question}', [QuestionBankController::class, 'destroy'])->name('admin.question-bank.destroy');
 
     // Маршруты для управления тестами
-    Route::get('/tests', [TestManagementController::class, 'index'])->name('admin.tests.index');
-    Route::get('/tests/{test}/edit', [TestManagementController::class, 'edit'])->name('admin.tests.edit');
-    Route::put('/tests/{test}', [TestManagementController::class, 'update'])->name('admin.tests.update');
-    Route::delete('/tests/{test}', [TestManagementController::class, 'destroy'])->name('admin.tests.destroy');
-    Route::patch('/tests/{test}/archive', [TestManagementController::class, 'archive'])->name('admin.tests.archive');
-    Route::patch('/tests/{test}/restore', [TestManagementController::class, 'restore'])->name('admin.tests.restore');
-    Route::get('/tests/{id}/attempts', [TestController::class, 'attempts'])->name('admin.tests.attempts');
+    Route::get('/admin/tests', [TestManagementController::class, 'index'])->name('admin.tests.index');
+    Route::get('/admin/tests/{test}/edit', [TestManagementController::class, 'edit'])->name('admin.tests.edit');
+    Route::put('/admin/tests/{test}', [TestManagementController::class, 'update'])->name('admin.tests.update');
+    Route::delete('/admin/tests/{test}', [TestManagementController::class, 'destroy'])->name('admin.tests.destroy');
+    Route::patch('/admin/tests/{test}/archive', [TestManagementController::class, 'archive'])->name('admin.tests.archive');
+    Route::patch('/admin/tests/{test}/restore', [TestManagementController::class, 'restore'])->name('admin.tests.restore');
+    Route::get('/admin/tests/{id}/attempts', [TestController::class, 'attempts'])->name('admin.tests.attempts');
 
     Route::post('/questions/upload', [QuestionController::class, 'upload'])->name('questions.upload');
-
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
@@ -269,10 +271,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/reports/user-activity', [ReportController::class, 'userActivity'])->name('admin.reports.user-activity');
     Route::get('/reports/groups', [ReportController::class, 'groupsReport'])->name('admin.reports.groups');
     Route::get('/reports/courses', [ReportController::class, 'coursesReport'])->name('admin.reports.courses');
-
-
-
-
 });
 
 Route::get('/profile-update', function () {
@@ -280,8 +278,8 @@ Route::get('/profile-update', function () {
 })->middleware(['auth'])->name('profile.update-profile-information-form');
 
 // Редактирование полей теста (не вопросов) - ДОЛЖНЫ БЫТЬ ПЕРЕД /tests/{test}
-Route::get('/tests/{test}/edit', [TestController::class, 'edit'])->middleware('auth')->name('tests.edit-settings');
-Route::put('/tests/{test}', [TestController::class, 'update'])->middleware('auth')->name('tests.update-settings');
+Route::get('/tests/{test}/edit', [TestController::class, 'edit'])->middleware(['auth','role:admin|teacher'])->name('tests.edit-settings');
+Route::put('/tests/{test}', [TestController::class, 'update'])->middleware(['auth','role:admin|teacher'])->name('tests.update-settings');
 
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

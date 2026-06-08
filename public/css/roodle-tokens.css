@@ -383,12 +383,33 @@ body {
     margin-bottom: 4px;
 }
 
+
+.logo {
+    display: inline-flex;
+    vertical-align: middle;
+    align-items: center;
+    gap: 2px;
+    text-decoration: none;
+    margin-bottom: 8px;
+}
+
+.logo__name {
+    font-family: var(--font-display);
+    vertical-align: middle;
+    line-height: 1;
+    font-size: 26px;
+    color: var(--gray-800);
+}
+
+
+
 .page-header__title {
     font-family: var(--font-display);
     font-size: 32px;
     color: var(--gray-900);
     line-height: 1.15;
     letter-spacing: -0.5px;
+    font-weight: 300;
 }
 
 /* STATS ROW */
@@ -590,6 +611,10 @@ body {
     font-weight: 700;
     color: var(--gray-800);
     line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 1; /* сколько строк показывать */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .course-card__meta {
@@ -1356,14 +1381,20 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: var(--transition);
     color: var(--gray-600);
+    opacity: 0;
+    transition: opacity 0.2s ease;
 }
 
 .course-card-menu-btn:hover {
     background: #fff;
     color: var(--gray-800);
     box-shadow: var(--shadow-sm);
+    opacity:1;
+}
+
+.course-card:hover .course-card-menu-btn {
+    opacity: 1;
 }
 
 .course-card-menu {
@@ -1525,7 +1556,6 @@ body {
     .main {
         padding: 1rem;
     }
-
 
     .header__nav {
         display: none;

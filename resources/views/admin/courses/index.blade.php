@@ -21,6 +21,6 @@
 
     <!-- SCRIPTS -->
     @livewireScripts
-    
+
 </body>
 </html>

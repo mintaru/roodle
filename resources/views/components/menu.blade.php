@@ -2,7 +2,7 @@
     <div class="header__inner">
         <a class="logo" href="/" onclick="window.location.href='/'; return false;">
             <img src="{{ asset('images/roodle.png') }}" alt="Roodle" width="32" height="32">
-            <span class="logo__name">Roodle</span>
+            <span class="logo__name">oodle</span>
         </a>
 
         <nav class="header__nav">
