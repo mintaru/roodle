@@ -7,7 +7,6 @@
     <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
     @livewireStyles
-    <script defer src="{{ asset('js/alpine.min.js') }}"></script>
 </head>
 <body>
 

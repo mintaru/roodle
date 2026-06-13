@@ -236,7 +236,7 @@ class LectureController extends Controller
             $lecture->update(['title' => $request->title]);
         }
 
-        return redirect()->route('admin.lectures.index')->with('success', 'Лекция успешно обновлена!');
+        return redirect()->route('courses.show', $lecture->course_id)->with('success', 'Лекция успешно обновлена!');
     }
 
     public function destroy(Lecture $lecture)
