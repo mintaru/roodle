@@ -231,7 +231,7 @@
 </div>
 @endif
 
-<script src="https://unpkg.com/trianglify@4/dist/trianglify.bundle.js"></script>
+<script src="{{ asset('js/trianglify.bundle.js') }}"></script>
 <script>
 // ── Pattern generator ──────────────────────────────────────────────────────────
 (function() {

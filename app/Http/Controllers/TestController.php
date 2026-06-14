@@ -922,6 +922,25 @@ class TestController extends Controller
             $activeAttempt->update(['started_at' => now()]);
         }
 
+        $timeLimitExceeded = false;
+        if ($test->time_limit > 0 && $activeAttempt->started_at) {
+            $elapsedSeconds = now()->diffInSeconds($activeAttempt->started_at);
+            if ($elapsedSeconds > ($test->time_limit * 60)) {
+                $timeLimitExceeded = true;
+                // Mark attempt as ended if time limit passed
+                if (is_null($activeAttempt->ended_at)) {
+                    $activeAttempt->update(['ended_at' => now()]);
+                    // Redirect to result page if test ended by time limit
+                    return redirect()->route('tests.result', $test);
+                }
+            }
+        }
+
+        // Если попытка завершена (например, если timeLimitExceeded = true выше), то перенаправляем на страницу результатов
+        if ($activeAttempt->ended_at) {
+            return redirect()->route('tests.result', $test);
+        }
+
         // Загружаем вопросы с вариантами
         $test->load(['questions' => function ($query) {
             $query->with('options');
@@ -997,7 +1016,8 @@ class TestController extends Controller
                 'test' => $test,
                 'savedAnswers' => $savedAnswers,
                 'attempt' => $activeAttempt,
-                'lastQuestionIndex' => $activeAttempt->last_question_index ?? 0,  // ← добавить
+                'lastQuestionIndex' => $activeAttempt->last_question_index ?? 0,
+                'timeLimitExceeded' => $timeLimitExceeded,
             ]);
     }
 

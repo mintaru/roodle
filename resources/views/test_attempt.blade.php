@@ -4,8 +4,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="server-time" content="{{ now()->timestamp * 1000 }}">
     <meta name="last-question-index" content="{{ $lastQuestionIndex ?? 0 }}">
-    <meta name="test-start-time"
+        <meta name="test-start-time"
         content="{{ $attempt->started_at ? $attempt->started_at->timestamp * 1000 : now()->timestamp * 1000 }}">
+    <meta name="time-limit-exceeded" content="{{ $timeLimitExceeded ? 'true' : 'false' }}">
         <link rel="stylesheet" href="{{ asset('css/trix.min.css') }}">
         <script src="{{ asset('js/trix.min.js') }}"></script>
     <style>
@@ -1523,8 +1524,26 @@ document.getElementById('clearAnswerConfirmBtn').addEventListener('click', async
                 const timerPill = document.getElementById('timerPill');
                 const timeLimitMs = {{ $test->time_limit }} * 60 * 1000;
                 let timerInterval;
+                const timeLimitExceededOnLoad = document.querySelector('meta[name="time-limit-exceeded"]').content === 'true';
+
+                function disableTestInputs() {
+                    document.querySelectorAll('.answer-input, .text-answer-input, .rich-text-answer-input, .fill-in-dropdown-select-inline').forEach(input => {
+                        input.disabled = true;
+                    });
+                    document.getElementById('prevBtn').disabled = true;
+                    document.getElementById('nextBtn').disabled = true;
+                    document.getElementById('sidebarSubmitBtn').disabled = true;
+                }
 
                 function updateTimer() {
+                    if (timeLimitExceededOnLoad) {
+                        timerEl.textContent = '00:00';
+                        clearInterval(timerInterval);
+                        timerPill.classList.add('urgent');
+                        disableTestInputs();
+                        return;
+                    }
+
                     const elapsed = (serverTimeMeta + (Date.now() - clientTimeAtLoad)) - testStartTimeMeta;
                     const leftMs = Math.max(0, timeLimitMs - elapsed);
                     const leftSec = Math.round(leftMs / 1000);
@@ -1536,6 +1555,7 @@ document.getElementById('clearAnswerConfirmBtn').addEventListener('click', async
                         timerEl.textContent = '00:00';
                         clearInterval(timerInterval);
                         document.getElementById('testForm').submit();
+                        disableTestInputs();
                     }
                 }
 

@@ -1,0 +1,160 @@
+/* =============================================
+   LAYOUT — без сайдбара, на всю ширину
+============================================= */
+.lecture-layout {
+    max-width: 900px;
+    margin: 2rem auto 4rem;
+    padding: 0 2rem;
+}
+
+@media (max-width: 640px) {
+    .lecture-layout {
+        margin: 1rem auto 3rem;
+        padding: 0;
+    }
+}
+
+/* =============================================
+   ПРОГРЕСС-БАР
+============================================= */
+.lecture-progress {
+    margin-bottom: 2rem;
+    padding: 0 0.25rem;
+}
+
+@media (max-width: 640px) {
+    .lecture-progress {
+        padding: 0 1rem;
+    }
+}
+
+.lecture-progress__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.lecture-progress__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.lecture-progress__value {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+}
+
+.lecture-progress__bar {
+    height: 5px;
+    background: var(--gray-200);
+    border-radius: var(--r-full);
+    overflow: hidden;
+}
+
+.lecture-progress__fill {
+    height: 100%;
+    border-radius: var(--r-full);
+    background: linear-gradient(90deg, var(--gray-300), var(--teal-400));
+    transition: width 0.4s ease, background 0.4s ease;
+    width: 0%;
+}
+
+.lecture-progress__fill.done {
+    background: linear-gradient(90deg, var(--teal-400), var(--green-400));
+}
+
+/* =============================================
+   PDF VIEWER
+============================================= */
+.pdf-viewer-wrap {
+    border: 1px solid var(--color-border);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    background: var(--color-surface);
+}
+
+.pdf-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.pdf-toolbar__left,
+.pdf-toolbar__right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pdf-canvas-wrap {
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: 85vh;
+    display: flex;
+    justify-content: center;
+    background: var(--color-surface);
+    width: 100%;
+}
+
+.pdf-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    transition: background 0.15s;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.pdf-btn:hover {
+    background: var(--gray-100);
+}
+
+.pdf-page-info {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+#pdf-canvas {
+    display: block;
+}
+
+.pdf-btn--open {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .pdf-btn--open {
+        display: flex;
+    }
+
+    .pdf-viewer-wrap {
+        border-radius: var(--r-lg);
+        border-left: none;
+        border-right: none;
+    }
+
+    .pdf-canvas-wrap {
+        max-height: 75vh;
+    }
+}

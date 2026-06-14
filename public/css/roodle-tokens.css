@@ -612,7 +612,7 @@ body {
     color: var(--gray-800);
     line-height: 1.35;
     display: -webkit-box;
-    -webkit-line-clamp: 1; /* сколько строк показывать */
+    -webkit-line-clamp: 2; /* сколько строк показывать */
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
