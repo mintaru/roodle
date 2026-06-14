@@ -168,12 +168,12 @@
                                         </div>
                                         <a href="{{ route('tests.view', $item) }}"
                                             style="color: var(--teal-600); text-decoration: none; font-weight: 600; font-size: 14px;">{{ $item->title }}</a>
-                                            @if ($item->formattedPeriodEnd() != null)
+                                        @if ($item->formattedPeriodEnd() != null)
                                             <p style="font-size: 12px; color: var(--color-text-muted); margin: 4px 0;">
                                                 Доступен с {{ $item->formattedPeriodStart() ?? '—' }} до
                                                 {{ $item->formattedPeriodEnd() ?? '—' }}
                                             </p>
-                                            @endif
+                                        @endif
 
                                     </div>
                                     @if ($canManage)
@@ -305,10 +305,15 @@
         </div>
     @empty
         <div
-            style="padding: 24px; text-align: center; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--r-lg);">
-            <p style="color: var(--color-text-muted); font-size: 14px;">Секции еще не созданы. Создайте первую
-                секцию
-                для организации контента курса.</p>
+            style="padding: 32px 24px; text-align: center; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--r-lg);">
+            <p style="color: var(--color-text-muted); font-size: 14px; margin-bottom: 16px;">Секции еще не созданы.
+                Создайте первую секцию для организации контента курса.</p>
+            @if ($canManage)
+                <button type="button" onclick="openCreateModalAtSection()"
+                    style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; background: var(--teal-500); color: #fff; border: none; border-radius: var(--r-full); font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow-accent);">
+                    <span style="font-size: 18px; line-height: 1;">+</span> Создать секцию
+                </button>
+            @endif
         </div>
     @endforelse
 
@@ -609,6 +614,14 @@
                     document.body.style.overflow = 'hidden';
                 }
 
+                function openCreateModalAtSection() {
+                    // Сначала сбрасываем в исходное состояние, затем сразу переходим к шагу секции
+                    backToCreateType();
+                    document.getElementById('create-modal-overlay').style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                    selectCreateType('section');
+                }
+
                 function closeCreateModal() {
                     document.getElementById('create-modal-overlay').style.display = 'none';
                     document.body.style.overflow = '';
@@ -825,7 +838,11 @@
 
                     if (type === 'test') {
                         // grouped: { course:[], global:[], mine:[] }
-                        _aItems = (ATTACH_DATA[_aSectionId] && ATTACH_DATA[_aSectionId].tests) || { course: [], global: [], mine: [] };
+                        _aItems = (ATTACH_DATA[_aSectionId] && ATTACH_DATA[_aSectionId].tests) || {
+                            course: [],
+                            global: [],
+                            mine: []
+                        };
                         renderAItemsGrouped(_aItems);
                     } else {
                         _aItems = (ATTACH_DATA[_aSectionId] || {})[map[type].key] || [];
@@ -872,17 +889,20 @@
 
                 function renderAItemsGrouped(grouped) {
                     const list = document.getElementById('attach-item-list');
-                    const hasAny = (grouped.course && grouped.course.length) || (grouped.global && grouped.global.length) || (grouped.mine && grouped.mine.length);
+                    const hasAny = (grouped.course && grouped.course.length) || (grouped.global && grouped.global.length) || (
+                        grouped.mine && grouped.mine.length);
                     if (!hasAny) {
-                        list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--color-text-muted);font-size:13px;">Нет доступных элементов</div>';
+                        list.innerHTML =
+                            '<div style="padding:24px;text-align:center;color:var(--color-text-muted);font-size:13px;">Нет доступных элементов</div>';
                         return;
                     }
                     let html = '';
                     const section = (title, arr) => {
                         if (!arr || !arr.length) return '';
-                        return `<div style="font-size:13px;font-weight:700;color:var(--gray-700);margin:6px 0;">${title}</div>` + arr.map(item =>
-                            `<div onclick="selectAItem(${item.id},this)" data-id="${item.id}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--r-md);background:var(--color-surface-2);font-size:13px;color:var(--gray-700);cursor:pointer;"><div class="acheck" style="width:18px;height:18px;flex-shrink:0;border-radius:50%;border:1.5px solid var(--gray-300);display:flex;align-items:center;justify-content:center;font-size:11px;"></div><span>${item.title.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span></div>`
-                        ).join('');
+                        return `<div style="font-size:13px;font-weight:700;color:var(--gray-700);margin:6px 0;">${title}</div>` +
+                            arr.map(item =>
+                                `<div onclick="selectAItem(${item.id},this)" data-id="${item.id}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--color-border);border-radius:var(--r-md);background:var(--color-surface-2);font-size:13px;color:var(--gray-700);cursor:pointer;"><div class="acheck" style="width:18px;height:18px;flex-shrink:0;border-radius:50%;border:1.5px solid var(--gray-300);display:flex;align-items:center;justify-content:center;font-size:11px;"></div><span>${item.title.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span></div>`
+                            ).join('');
                     };
 
                     html += section('В этом курсе', grouped.course || []);

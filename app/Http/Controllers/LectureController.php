@@ -290,38 +290,39 @@ class LectureController extends Controller
     }
 
     public function serveFile(Course $course, Lecture $lecture)
-{
-    // Ensure course is accessible for current user
-    abort_if(! $course->isAvailable(), 404);
+    {
+        // Ensure course is accessible for current user
+        abort_if(! $course->isAvailable(), 404);
 
-    if (!$lecture->pdf_path) {
-        abort(404);
+        if (! $lecture->pdf_path) {
+            abort(404);
+        }
+
+        // Авторизация — только залогиненные
+        if (! \Illuminate\Support\Facades\Auth::check()) {
+            abort(403);
+        }
+
+        // Файл может быть на local или public диске
+        if (Storage::disk('local')->exists($lecture->pdf_path)) {
+            $fullPath = Storage::disk('local')->path($lecture->pdf_path);
+        } elseif (Storage::disk('public')->exists($lecture->pdf_path)) {
+            $fullPath = Storage::disk('public')->path($lecture->pdf_path);
+        } else {
+            abort(404);
+        }
+
+        $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+        $mimeTypes = [
+            'pdf' => 'application/pdf',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'doc' => 'application/msword',
+        ];
+        $mime = $mimeTypes[$extension] ?? 'application/octet-stream';
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="' . basename($fullPath) . '"',
+        ]);
     }
-
-    // Авторизация — только залогиненные
-    if (!\Illuminate\Support\Facades\Auth::check()) {
-        abort(403);
-    }
-
-    // Файл может быть на local или public диске
-    if (Storage::disk('local')->exists($lecture->pdf_path)) {
-        $fullPath = Storage::disk('local')->path($lecture->pdf_path);
-    } elseif (Storage::disk('public')->exists($lecture->pdf_path)) {
-        $fullPath = Storage::disk('public')->path($lecture->pdf_path);
-    } else {
-        abort(404);
-    }
-
-    $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
-    $mimeTypes = [
-        'pdf'  => 'application/pdf',
-        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'doc'  => 'application/msword',
-    ];
-    $mime = $mimeTypes[$extension] ?? 'application/octet-stream';
-
-    return response()->file($fullPath, [
-        'Content-Type' => $mime,
-    ]);
-}
 }
