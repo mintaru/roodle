@@ -19,12 +19,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        \Illuminate\Support\Facades\DB::listen(function ($query) {
-            if (str_contains($query->sql, 'test_attempts')) {
-                $msg = date('H:i:s').' SQL: '.$query->sql."\n"
-                    .'Bindings: '.json_encode($query->bindings)."\n\n";
-                file_put_contents('C:/Users/xDoodle/Desktop/sql_debug.log', $msg, FILE_APPEND);
-            }
-        });
+
     }
 }
