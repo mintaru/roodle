@@ -6,7 +6,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="server-time" content="{{ $serverTime }}">
     <meta name="test-start-time" content="{{ $activeAttempt->started_at->timestamp * 1000 }}">
-    {{-- DEBUG: initialTimeRemaining={{ $initialTimeRemaining }}, started_at={{ $activeAttempt->started_at ? $activeAttempt->started_at->toDateTimeString() : 'NULL' }}, attempt_id={{ $activeAttempt->id }} --}}
     <meta name="test-id" content="{{ $test->id }}">
     <meta name="total-questions" content="{{ $totalQuestions }}">
     <meta name="initial-question-index" content="{{ $lastQuestionIndex ?? 0 }}">
