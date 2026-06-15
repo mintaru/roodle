@@ -121,14 +121,14 @@
                             <div id="pattern-preview"
                                 style="width: 100%; height: 128px; border-radius: var(--r-md); margin-bottom: 10px; overflow: hidden; background: var(--gray-100); display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-border);">
                                 <span id="preview-placeholder"
-                                    style="font-size: 13px; color: var(--color-text-muted);">Паттерн появится
+                                    style="font-size: 13px; color: var(--color-text-muted);">Обложка появится
                                     здесь</span>
                             </div>
 
                             <div style="display: flex; gap: 8px; margin-bottom: 10px;">
                                 <button type="button" id="generate-pattern" class="btn btn-primary"
                                     style="font-size: 13px; padding: 7px 14px;">
-                                    🎲 Случайный паттерн
+                                    🎲 Случайная обложка
                                 </button>
                                 <button type="button" id="clear-pattern" class="btn btn-ghost"
                                     style="font-size: 13px; padding: 7px 14px; display: none;">
@@ -149,11 +149,17 @@
                             <label
                                 style="display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 8px;">Доступен
                                 с:</label>
-                            <input type="datetime-local" name="period_start"
-                                value="{{ old('period_start', $course->formatPeriodForInput('period_start')) }}"
-                                style="width: 100%; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--r-md); font-size: 14px; font-family: var(--font-body); color: var(--color-text-primary); background: var(--color-surface); transition: border-color 0.2s, box-shadow 0.2s; outline: none; box-sizing: border-box;"
-                                onfocus="this.style.borderColor='var(--teal-400)'; this.style.boxShadow='0 0 0 3px rgba(0,181,165,0.1)'"
-                                onblur="this.style.borderColor='var(--color-border)'; this.style.boxShadow='none'">
+                            <div style="display: flex; gap: 8px;">
+                                <input type="datetime-local" name="period_start"
+                                    value="{{ old('period_start', $course->formatPeriodForInput('period_start')) }}"
+                                    style="flex: 1; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--r-md); font-size: 14px; font-family: var(--font-body); color: var(--color-text-primary); background: var(--color-surface); transition: border-color 0.2s, box-shadow 0.2s; outline: none; box-sizing: border-box;"
+                                    onfocus="this.style.borderColor='var(--teal-400)'; this.style.boxShadow='0 0 0 3px rgba(0,181,165,0.1)'"
+                                    onblur="this.style.borderColor='var(--color-border)'; this.style.boxShadow='none'">
+                                <button type="button" onclick="setToday(this.previousElementSibling)"
+                                    style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border: 1px solid var(--color-border); border-radius: var(--r-md); background: var(--color-surface); font-size: 12px; color: var(--teal-600); cursor: pointer; font-family: var(--font-body); white-space: nowrap; transition: border-color 0.2s, background 0.2s, color 0.2s;"
+                                    onmouseover="this.style.borderColor='var(--teal-400)'; this.style.background='var(--teal-50)'; this.style.color='var(--teal-700)'"
+                                    onmouseout="this.style.borderColor='var(--color-border)'; this.style.background='var(--color-surface)'; this.style.color='var(--teal-600)'">Сегодня</button>
+                            </div>
                         </div>
                         <div style="margin-bottom: 1.5rem;">
                             <label
@@ -264,6 +270,11 @@
     <script src="{{ asset('js/trianglify.bundle.js') }}"></script>
 
     <script>
+        function setToday(el) {
+            var d = new Date();
+            el.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + 'T' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+        }
+
         // ── Pattern generator ──────────────────────────────────────────────────────────
         (function() {
             const useGeneratedInput = document.getElementById('use_generated_pattern');
@@ -386,7 +397,7 @@
             clearBtn.addEventListener('click', function() {
                 const preview = document.getElementById('pattern-preview');
                 preview.innerHTML =
-                    '<span id="preview-placeholder" style="font-size:13px;color:var(--color-text-muted);">Паттерн появится здесь</span>';
+                    '<span id="preview-placeholder" style="font-size:13px;color:var(--color-text-muted);">Обложка появится здесь</span>';
                 clearBtn.style.display = 'none';
                 useGeneratedInput.value = '0';
                 patternBlob = null;
@@ -474,11 +485,17 @@
                             <div style="margin-bottom:10px;margin-left:25px;display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                                 <div>
                                     <label style="display:block; font-size:12px; color:var(--color-text-muted); margin-bottom:5px;">Открыть с:</label>
-                                    <input type="datetime-local" value="${p.period_start || ''}"
-                                        onchange="setCourseGroupPeriod(${g.id}, 'period_start', this.value); checkPastDate(this)"
-                                        style="width:100%; padding:8px 10px; border:1px solid var(--color-border); border-radius:var(--r-md); font-size:13px; font-family:var(--font-body); color:var(--color-text-primary); background:var(--color-surface); outline:none; box-sizing:border-box; transition:border-color 0.2s, box-shadow 0.2s;"
-                                        onfocus="this.style.borderColor='var(--teal-400)';this.style.boxShadow='0 0 0 3px rgba(0,181,165,0.1)'"
-                                        onblur="this.style.borderColor='var(--color-border)';this.style.boxShadow='none'">
+                                    <div style="display:flex; gap:6px;">
+                                        <input type="datetime-local" value="${p.period_start || ''}"
+                                            onchange="setCourseGroupPeriod(${g.id}, 'period_start', this.value); checkPastDate(this)"
+                                            style="flex:1; padding:8px 10px; border:1px solid var(--color-border); border-radius:var(--r-md); font-size:13px; font-family:var(--font-body); color:var(--color-text-primary); background:var(--color-surface); outline:none; box-sizing:border-box; transition:border-color 0.2s, box-shadow 0.2s;"
+                                            onfocus="this.style.borderColor='var(--teal-400)';this.style.boxShadow='0 0 0 3px rgba(0,181,165,0.1)'"
+                                            onblur="this.style.borderColor='var(--color-border)';this.style.boxShadow='none'">
+                                        <button type="button" onclick="setToday(this.previousElementSibling); setCourseGroupPeriod(${g.id},'period_start',this.previousElementSibling.value)"
+                                            style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border:1px solid var(--color-border);border-radius:var(--r-md);background:var(--color-surface);font-size:11px;color:var(--teal-600);cursor:pointer;font-family:var(--font-body);white-space:nowrap;transition:border-color 0.2s,background 0.2s,color 0.2s;"
+                                            onmouseover="this.style.borderColor='var(--teal-400)';this.style.background='var(--teal-50)';this.style.color='var(--teal-700)'"
+                                            onmouseout="this.style.borderColor='var(--color-border)';this.style.background='var(--color-surface)';this.style.color='var(--teal-600)'">Сегодня</button>
+                                    </div>
                                 </div>
                                 <div>
                                     <label style="display:block; font-size:12px; color:var(--color-text-muted); margin-bottom:5px;">Закрыть до:</label>
@@ -576,13 +593,18 @@
             });
         });
 
+        function showModal(msg) {
+            document.getElementById('modalMessage').textContent = msg;
+            document.getElementById('alertModal').classList.add('active');
+        }
+
         // ── Past date validation ───────────────────────────────────────────────────────
         function checkPastDate(input) {
             if (!input.value) return;
             const selected = new Date(input.value);
             const now = new Date();
             if (selected < now) {
-                alert('Нельзя выбрать дату в прошлом');
+                showModal('Нельзя выбрать дату в прошлом');
                 input.value = '';
             }
         }
@@ -709,7 +731,7 @@
             clearBtn.addEventListener('click', function() {
                 const preview = document.getElementById('pattern-preview');
                 preview.innerHTML =
-                    '<span id="preview-placeholder" style="font-size:13px;color:var(--color-text-muted);">Паттерн появится здесь</span>';
+                    '<span id="preview-placeholder" style="font-size:13px;color:var(--color-text-muted);">Обложка появится здесь</span>';
                 clearBtn.style.display = 'none';
                 useGeneratedInput.value = '0';
                 patternBlob = null;
@@ -792,12 +814,18 @@
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
             <div>
                 <label style="display:block; font-size:12px; color:var(--color-text-muted); margin-bottom:5px;">Открыть с:</label>
-                <input type="datetime-local" name="group_period_start[${id}]"
-                    value="${pivotStart || ''}"
-                    onchange="checkPastDate(this)"
-                    style="width:100%; padding:8px 10px; border:1px solid var(--color-border); border-radius:var(--r-md); font-size:13px; font-family:var(--font-body); color:var(--color-text-primary); background:var(--color-surface); outline:none; box-sizing:border-box; transition:border-color 0.2s, box-shadow 0.2s;"
-                    onfocus="this.style.borderColor='var(--teal-400)';this.style.boxShadow='0 0 0 3px rgba(0,181,165,0.1)'"
-                    onblur="this.style.borderColor='var(--color-border)';this.style.boxShadow='none'">
+                <div style="display:flex; gap:6px;">
+                    <input type="datetime-local" name="group_period_start[${id}]"
+                        value="${pivotStart || ''}"
+                        onchange="checkPastDate(this)"
+                        style="flex:1; padding:8px 10px; border:1px solid var(--color-border); border-radius:var(--r-md); font-size:13px; font-family:var(--font-body); color:var(--color-text-primary); background:var(--color-surface); outline:none; box-sizing:border-box; transition:border-color 0.2s, box-shadow 0.2s;"
+                        onfocus="this.style.borderColor='var(--teal-400)';this.style.boxShadow='0 0 0 3px rgba(0,181,165,0.1)'"
+                        onblur="this.style.borderColor='var(--color-border)';this.style.boxShadow='none'">
+                    <button type="button" onclick="setToday(this.previousElementSibling)"
+                        style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border:1px solid var(--color-border);border-radius:var(--r-md);background:var(--color-surface);font-size:11px;color:var(--teal-600);cursor:pointer;font-family:var(--font-body);white-space:nowrap;transition:border-color 0.2s,background 0.2s,color 0.2s;"
+                        onmouseover="this.style.borderColor='var(--teal-400)';this.style.background='var(--teal-50)';this.style.color='var(--teal-700)'"
+                        onmouseout="this.style.borderColor='var(--color-border)';this.style.background='var(--color-surface)';this.style.color='var(--teal-600)'">Сегодня</button>
+                </div>
             </div>
             <div>
                 <label style="display:block; font-size:12px; color:var(--color-text-muted); margin-bottom:5px;">Закрыть до:</label>
@@ -846,7 +874,89 @@
                 transform: translateY(-6px);
             }
         }
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-backdrop.active { display: flex; }
+        .modal-box {
+            background: var(--color-surface, #fff);
+            border-radius: var(--r-2xl, 28px);
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, .2);
+            animation: modalIn .2s ease;
+            text-align: center;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(.95); }
+            to { opacity: 1; transform: none; }
+        }
+        .modal-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--r-xl, 20px);
+            background: #fff3e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+        }
+        .modal-box h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-800, #1e2530);
+            margin-bottom: .5rem;
+        }
+        .modal-box p {
+            font-size: 14px;
+            color: var(--color-text-secondary, #6b7a89);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        .modal-btn {
+            padding: 11px 32px;
+            border-radius: var(--r-full, 999px);
+            font-size: 14px;
+            font-weight: 700;
+            font-family: var(--font-body, 'Manrope', sans-serif);
+            border: none;
+            cursor: pointer;
+            transition: .2s ease;
+            background: var(--teal-500, #00b5a5);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(0, 181, 165, .3);
+        }
+        .modal-btn:hover {
+            background: var(--teal-600, #009e90);
+            transform: translateY(-1px);
+        }
     </style>
+
+<div class="modal-backdrop" id="alertModal">
+    <div class="modal-box">
+        <div class="modal-icon">
+            <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#e65100" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+        </div>
+        <h3>Внимание</h3>
+        <p id="modalMessage"></p>
+        <button class="modal-btn" onclick="document.getElementById('alertModal').classList.remove('active')">OK</button>
+    </div>
+</div>
+
+<script>
+    document.getElementById('alertModal').addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('active');
+    });
+</script>
 
 </body>
 

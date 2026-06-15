@@ -26,7 +26,9 @@
                          alt="{{ auth()->user()->name }}"
                          style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />
                 @else
-                    {{ substr(auth()->user()->name ?? 'U', 0, 1) }}{{ substr(auth()->user()->name ?? 'U', strpos(auth()->user()->name ?? 'U', ' ') + 1, 1) ?? '' }}
+                    <img src="{{ asset('images/profile.png') }}"
+                         alt="{{ auth()->user()->name }}"
+                         style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />
                 @endif
             </div>
 

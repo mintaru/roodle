@@ -7,27 +7,6 @@
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
     <script defer src="{{ asset('js/alpine.min.js') }}"></script>
     <style>
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--color-text-secondary);
-            text-decoration: none;
-            padding: 6px 12px;
-            border-radius: var(--r-sm);
-            border: 1px solid var(--color-border);
-            background: var(--color-surface);
-            margin-bottom: 1.5rem;
-            transition: var(--transition);
-        }
-
-        .back-link:hover {
-            color: var(--color-text-primary);
-            background: var(--color-surface-2);
-        }
-
         .page-title {
             font-size: 28px;
             font-weight: 700;
@@ -286,12 +265,82 @@
 
     @include('components.menu')
 
-    <div class="main" style="max-width: 720px; margin: 2rem auto; padding: 0 1.5rem;">
+    <div class="layout">
 
-        <x-back-button :url="route('admin.users.index')" text="К списку пользователей" />
+        {{-- Sidebar --}}
+        <aside class="sidebar">
 
-        <div class="page-title">Редактирование пользователя</div>
-        <div class="page-subtitle">{{ $user->name }}</div>
+            <p class="sidebar-section-title">
+                Навигация
+            </p>
+
+            <a href="{{ route('admin.users.index') }}" class="sidebar-link">
+
+                <svg width="16"
+                     height="16"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     viewBox="0 0 24 24">
+
+                    <path d="M19 12H5M12 5l-7 7 7 7"/>
+
+                </svg>
+
+                К списку пользователей
+
+            </a>
+
+        </aside>
+
+        {{-- Main content --}}
+        <main class="main">
+
+            {{-- Breadcrumb --}}
+            <nav style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 1.75rem;
+                font-size: 13px;
+                color: var(--color-text-muted);
+            ">
+
+                <a href="{{ route('admin.users.index') }}"
+                   style="
+                        color: var(--color-text-muted);
+                        text-decoration: none;
+                        transition: color 0.2s;
+                   "
+                   onmouseover="this.style.color='var(--teal-600)'"
+                   onmouseout="this.style.color='var(--color-text-muted)'">
+
+                    Пользователи
+
+                </a>
+
+                <svg width="14"
+                     height="14"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2"
+                     viewBox="0 0 24 24">
+
+                    <path d="M9 18l6-6-6-6"/>
+
+                </svg>
+
+                <span style="
+                    color: var(--gray-600);
+                    font-weight: 500;
+                ">
+                    Редактирование
+                </span>
+
+            </nav>
+
+            <div class="page-title">Редактирование пользователя</div>
+            <div class="page-subtitle">{{ $user->name }}</div>
 
         <div class="form-card">
             @if ($errors->any())
@@ -474,7 +523,10 @@
             </form>
         </div>
 
+        </main>
+
     </div>
+
     {{-- ===== STUDENT GROUP MODAL ===== --}}
     <div id="student-group-modal-overlay"
         style="display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.4); align-items: center; justify-content: center; padding: 1rem;"

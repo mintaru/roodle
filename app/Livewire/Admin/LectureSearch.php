@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\Group;
+use App\Models\Lecture;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 
-class GroupSearch extends BaseAdminSearch
+class LectureSearch extends BaseAdminSearch
 {
     public string $sortColumn = 'id';
     public string $sortDirection = 'asc';
@@ -15,15 +15,15 @@ class GroupSearch extends BaseAdminSearch
 
     protected function getQuery(): Builder
     {
-        return Group::withCount('users');
+        return Lecture::with('course');
     }
 
     public function getSearchColumns(): array
     {
         return [
-            'name'        => 'Название группы',
-            'id'          => 'ID',
-            'users_count' => 'Количество студентов',
+            'title'   => 'Название',
+            'course'  => 'Курс',
+            'content' => 'Содержание',
         ];
     }
 
@@ -53,27 +53,34 @@ class GroupSearch extends BaseAdminSearch
         $this->page = $page;
     }
 
+    protected function getView(): string
+    {
+        return 'livewire.admin.lectures';
+    }
+
     public function render()
     {
         $query = $this->getQuery();
 
         if ($this->searchValue) {
-            if ($this->searchColumn === 'users_count') {
-                $query->having('users_count', '=', (int) $this->searchValue);
-            } else {
-                $query->where($this->searchColumn, 'like', "%{$this->searchValue}%");
-            }
-        }
-
-        $sortCol = $this->sortColumn;
-
-        if ($sortCol === 'users_count') {
-            $query->orderBy('users_count', $this->sortDirection);
-        } else {
-            $query->orderBy($sortCol, $this->sortDirection);
+            match($this->searchColumn) {
+                'title' => $query->where('title', 'like', "%{$this->searchValue}%"),
+                'course' => $query->whereHas('course', fn($q) => $q->where('title', 'like', "%{$this->searchValue}%")),
+                'content' => $query->where('content', 'like', "%{$this->searchValue}%"),
+                default => null,
+            };
         }
 
         $allItems = $query->get();
+
+        $sortCol = $this->sortColumn;
+        $sortDir = $this->sortDirection === 'asc' ? 'asc' : 'desc';
+
+        if ($sortCol === 'course') {
+            $allItems = $allItems->sortBy(fn($l) => $l->course?->title ?? '', SORT_REGULAR, $sortDir === 'desc');
+        } elseif (in_array($sortCol, ['title', 'id'])) {
+            $allItems = $allItems->sortBy($sortCol, SORT_REGULAR, $sortDir === 'desc');
+        }
 
         $perPage = 15;
         $currentPage = max(1, $this->page);
@@ -86,10 +93,5 @@ class GroupSearch extends BaseAdminSearch
         );
 
         return view($this->getView(), ['items' => $items]);
-    }
-
-    protected function getView(): string
-    {
-        return 'livewire.admin.groups';
     }
 }

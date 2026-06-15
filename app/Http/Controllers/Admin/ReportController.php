@@ -17,8 +17,9 @@ class ReportController extends Controller
     public function userActivity()
     {
         $users = User::with('groups', 'testAttempts')
-            ->get()
-            ->map(function ($user) {
+            ->orderBy('name')
+            ->paginate(15)
+            ->through(function ($user) {
                 return [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -39,8 +40,9 @@ class ReportController extends Controller
     public function groupsReport()
     {
         $groups = Group::with('users', 'courses')
-            ->get()
-            ->map(function ($group) {
+            ->orderBy('name')
+            ->paginate(15)
+            ->through(function ($group) {
                 // Вычисляем средний балл по тестам для пользователей в этой группе
                 $userIds = $group->users->pluck('id')->toArray();
                 $averageScore = TestAttempt::whereIn('user_id', $userIds)
@@ -64,8 +66,9 @@ class ReportController extends Controller
     public function coursesReport()
     {
         $courses = Course::with('lectures', 'tests', 'groups')
-            ->get()
-            ->map(function ($course) {
+            ->orderBy('title')
+            ->paginate(15)
+            ->through(function ($course) {
                 // Получаем всех пользователей, связанных с курсом через группы
                 $groupIds = $course->groups->pluck('id')->toArray();
                 $usersCount = DB::table('group_user')

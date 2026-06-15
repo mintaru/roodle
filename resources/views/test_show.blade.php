@@ -1159,6 +1159,21 @@
     </div>
 
 
+    {{-- ═══ MODAL: уведомление ═══ --}}
+    <div class="modal-overlay" id="modal-notification" onclick="overlayClick(event,'modal-notification')">
+        <div class="modal modal--sm" style="text-align:center;padding:2rem 1.5rem;">
+            <div style="width:52px;height:52px;border-radius:20px;background:#fff3e0;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+                <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#e65100" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+            </div>
+            <h3 style="font-size:18px;font-weight:700;color:var(--gray-800);margin-bottom:.5rem;">Внимание</h3>
+            <p style="font-size:14px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:1.5rem;" id="notifMessage"></p>
+            <button class="btn-primary" onclick="closeModal('modal-notification')" style="margin:0 auto;">OK</button>
+        </div>
+    </div>
+
+
     {{-- ═══ MODAL: подтверждение удаления ═══ --}}
     <div class="modal-overlay" id="modal-delete" onclick="overlayClick(event,'modal-delete')">
         <div class="modal modal--sm">
@@ -1227,12 +1242,11 @@
         const Q_DATA = @json($qData);
     </script>
 
-<script src="{{ asset('js/trix.min.js') }}"></script>
     <script>
 
 async function generateQuestion() {
     const prompt = document.getElementById('ai-prompt').value.trim();
-    if (!prompt) { alert('Введите промпт'); return; }
+    if (!prompt) { showNotification('Введите промпт'); return; }
 
     const btn = document.getElementById('ai-gen-btn');
     const status = document.getElementById('ai-status');
@@ -1314,6 +1328,10 @@ async function generateQuestion() {
 
         function overlayClick(e, id) {
             if (e.target === e.currentTarget) closeModal(id);
+        }
+        function showNotification(msg) {
+            document.getElementById('notifMessage').textContent = msg;
+            openModal('modal-notification');
         }
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList
@@ -1573,7 +1591,7 @@ async function generateQuestion() {
                         href: d.location
                     });
                 })
-                .catch(() => alert('Ошибка загрузки изображения'));
+                .catch(() => showNotification('Ошибка загрузки изображения'));
         }
 
         document.getElementById('question-form').addEventListener('submit', function(e) {

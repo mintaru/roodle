@@ -1,5 +1,9 @@
 @php
     $questionDisplay = $question->question_text;
+    // strip inline text-align from Trix content
+    $questionDisplay = preg_replace('/text-align\s*:\s*[^;"]+/i', '', $questionDisplay);
+    $questionDisplay = preg_replace('/style\s*=\s*"\s*"/i', '', $questionDisplay);
+    $questionDisplay = preg_replace("/style\s*=\s*'\s*'/i", '', $questionDisplay);
     if ($question->question_type === 'fill_in_dropdown') {
         $dropdownsByBlank = [];
         foreach ($question->options as $option) {
@@ -32,7 +36,7 @@
 <div class="question-card" data-question-id="{{ $question->id }}">
     <div class="question-card__header">
         <div class="question-badge">{{ $questionIndex + 1 }}</div>
-        <p class="question-text">{!! $questionDisplay !!}</p>
+        <div class="question-text">{!! $questionDisplay !!}</div>
         <button type="button" class="clearCurrentBtn" data-question-id="{{ $question->id }}"
             title="Очистить ответ на этот вопрос">
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24"

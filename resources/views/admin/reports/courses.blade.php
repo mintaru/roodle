@@ -65,6 +65,12 @@
             </tbody>
         </table>
     </div>
+
+    @if($courses->hasPages())
+        <div class="mt-6">
+            {{ $courses->links() }}
+        </div>
+    @endif
 </div>
 
 </body>

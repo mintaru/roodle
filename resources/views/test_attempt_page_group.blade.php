@@ -335,10 +335,11 @@
         .question-text {
             font-size: 16px;
             font-weight: 600;
-            color: var(--gray-800, #1e2530);
+            color: var(--color-text-primary, #111720);
             line-height: 1.55;
             flex: 1;
             margin-top: 6px;
+            text-align: left;
         }
         /* ── CLEAR BTN (trash) in question header ── */
         .clearCurrentBtn {
@@ -728,6 +729,10 @@
                     @foreach ($questions as $indexOnPage => $question)
                         @php
                             $questionDisplay = $question->question_text;
+                            // strip inline text-align from Trix content
+                            $questionDisplay = preg_replace('/text-align\s*:\s*[^;"]+/i', '', $questionDisplay);
+                            $questionDisplay = preg_replace('/style\s*=\s*"\s*"/i', '', $questionDisplay);
+                            $questionDisplay = preg_replace("/style\s*=\s*'\s*'/i", '', $questionDisplay);
                             if ($question->question_type === 'fill_in_dropdown') {
                                 $dropdownsByBlank = [];
                                 foreach ($question->options as $option) {
@@ -760,7 +765,7 @@
                         <div class="question-card" data-question-id="{{ $question->id }}">
                             <div class="question-card__header">
                                 <div class="question-badge">{{ $globalIndexMap[$question->id] ?? ($indexOnPage + 1) }}</div>
-                                <p class="question-text">{!! $questionDisplay !!}</p>
+                                <div class="question-text">{!! $questionDisplay !!}</div>
                                 {{-- Trash / clear button --}}
                                 <button type="button" class="clearCurrentBtn" data-question-id="{{ $question->id }}"
                                     title="Очистить ответ на этот вопрос">

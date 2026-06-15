@@ -60,6 +60,12 @@
                     @else
                         <p class="text-gray-500 text-center py-8">Учителей не найдено</p>
                     @endif
+
+                    @if($teachers->hasPages())
+                        <div class="mt-4">
+                            {{ $teachers->links() }}
+                        </div>
+                    @endif
                 </div>
             </div>
 

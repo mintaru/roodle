@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\CourseSectionItem;
 use App\Models\Question;
 use App\Models\TemporaryAnswer;
 use App\Models\Test;
@@ -131,6 +132,16 @@ class TestController extends Controller
 
         $user = Auth::user();
 
+        // Resolve course through direct relation or section items
+        $course = $test->course;
+        if (! $course) {
+            $sectionItem = CourseSectionItem::where('item_type', Test::class)
+                ->where('item_id', $test->id)
+                ->with('section.course')
+                ->first();
+            $course = $sectionItem?->section?->course;
+        }
+
         // Количество попыток пользователя
         $userAttemptsCount = $test->attempts()
             ->where('user_id', $user->id)
@@ -159,10 +170,43 @@ class TestController extends Controller
                 ->where('user_id', $user->id)
                 ->whereNull('ended_at')
                 ->first();
+
+            // Если время на попытку истекло — завершаем её автоматически
+            if ($test->time_limit > 0 && $activeAttempt->started_at) {
+                $deadline = $activeAttempt->started_at->timestamp + ($test->time_limit * 60);
+                if (time() > $deadline) {
+                    DB::transaction(function () use ($activeAttempt, $test) {
+                        $scoreData = $this->calculateScoreForAttempt($test, $activeAttempt);
+                        $activeAttempt->update([
+                            'ended_at' => now(),
+                            'score' => round($scoreData['score']),
+                        ]);
+                        TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
+                            ->update(['is_active' => false]);
+                    });
+
+                    $hasActiveAttempt = false;
+                    $activeAttempt = null;
+
+                    // Пересчитываем количество завершённых попыток
+                    $userAttemptsCount = $test->attempts()
+                        ->where('user_id', $user->id)
+                        ->whereNotNull('ended_at')
+                        ->count();
+                    $userAttempts = $test->attempts()
+                        ->where('user_id', $user->id)
+                        ->whereNotNull('ended_at')
+                        ->get();
+                    $remaining = $isUnlimited
+                        ? '∞'
+                        : max(0, $maxAttemptsForUser - $userAttemptsCount);
+                }
+            }
         }
 
         return view('tests.view', compact(
             'test',
+            'course',
             'userAttemptsCount',
             'userAttempts',
             'remaining',
@@ -355,16 +399,7 @@ class TestController extends Controller
 
         // Если попытка уже завершена — просто показываем результат без пересчёта
         if ($attempt->ended_at) {
-            $scoreData = $this->calculateScoreForAttempt($test, $attempt);
-
-            return view('layout', [
-                'content' => view('test_result', [
-                    'test' => $test,
-                    'score' => $attempt->score,
-                    'correctAnswers' => $scoreData['correctAnswers'],
-                    'totalQuestions' => $scoreData['totalQuestions'],
-                ]),
-            ]);
+            return redirect()->route('test-attempts.details', $attempt);
         }
 
         // Иначе — завершаем попытку
@@ -380,14 +415,7 @@ class TestController extends Controller
                 ->update(['is_active' => false]);
         });
 
-        return view('layout', [
-            'content' => view('test_result', [
-                'test' => $test,
-                'score' => round($score),
-                'correctAnswers' => $scoreData['correctAnswers'],
-                'totalQuestions' => $scoreData['totalQuestions'],
-            ]),
-        ]);
+        return redirect()->route('test-attempts.details', $attempt);
     }
 
     /**
@@ -443,9 +471,19 @@ class TestController extends Controller
         $user = Auth::user();
 
         $course = $test->course;
+        if (! $course) {
+            $sectionItem = \App\Models\CourseSectionItem::where('item_type', Test::class)
+                ->where('item_id', $test->id)
+                ->with('section.course')
+                ->first();
+            $course = $sectionItem?->section?->course;
+        }
 
         // If teacher/admin — show results for course users or for users who attempted the test when no course
         if ($user && $user->can('edit courses')) {
+            $groups = $course ? $course->groups()->get() : collect();
+            $courseGroupIds = $groups->pluck('id');
+
             if ($course) {
                 $usersInCourse = $course->groups()
                     ->with('users')
@@ -487,11 +525,10 @@ class TestController extends Controller
                         $timeSpent = now()->diffInSeconds($activeAttempt->started_at);
                     }
 
-                    // Определяем текущий вопрос
-                    $answeredQuestions = \App\Models\TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
-                        ->distinct()
-                        ->count('question_id');
-                    $currentQuestion = $answeredQuestions + 1;
+                    // Определяем текущий вопрос по last_question_index (сохраняется при навигации)
+                    $currentQuestion = $activeAttempt->last_question_index !== null
+                        ? $activeAttempt->last_question_index + 1
+                        : 1;
                     if ($currentQuestion > $totalQuestions) {
                         $currentQuestion = $totalQuestions;
                     }
@@ -510,19 +547,24 @@ class TestController extends Controller
                     'completedAttempts' => $completedAttempts,
                     'lastCompletedAttempt' => $lastCompletedAttempt,
                     'timeSpent' => $timeSpent,
-                    'currentQuestion' => $currentQuestion,
+                    'current_question' => $currentQuestion,
                     'totalQuestions' => $totalQuestions,
                     'current_attempt_number' => $currentAttemptNumber,
+                    'group_ids' => $courseGroupIds->isNotEmpty()
+                        ? $user->groups()->whereIn('groups.id', $courseGroupIds)->pluck('groups.id')->toArray()
+                        : [],
                 ];
             }
 
-            return view('tests.results', compact('test', 'studentsData', 'course'));
+            return view('tests.results', compact('test', 'studentsData', 'course', 'groups'));
         }
 
         // Non-teacher: allow students to view only their own results
         if (! $user) {
             abort(403, 'Unauthorized');
         }
+
+        $groups = $course ? $course->groups()->get() : collect();
 
         $attempts = $test->attempts()
             ->where('user_id', $user->id)
@@ -536,7 +578,7 @@ class TestController extends Controller
 
         $status = 'не начинали';
         $timeSpent = null;
-        $currentQuestion = null;
+        $current_question = null;
         $totalQuestions = $test->questions()->count();
 
         if ($activeAttempt) {
@@ -544,12 +586,11 @@ class TestController extends Controller
             if ($activeAttempt->started_at) {
                 $timeSpent = now()->diffInSeconds($activeAttempt->started_at);
             }
-            $answeredQuestions = \App\Models\TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
-                ->distinct()
-                ->count('question_id');
-            $currentQuestion = $answeredQuestions + 1;
-            if ($currentQuestion > $totalQuestions) {
-                $currentQuestion = $totalQuestions;
+            $current_question = $activeAttempt->last_question_index !== null
+                ? $activeAttempt->last_question_index + 1
+                : 1;
+            if ($current_question > $totalQuestions) {
+                $current_question = $totalQuestions;
             }
         } elseif ($completedAttempts->count() > 0) {
             $status = 'завершили';
@@ -566,12 +607,13 @@ class TestController extends Controller
             'completedAttempts' => $completedAttempts,
             'lastCompletedAttempt' => $lastCompletedAttempt,
             'timeSpent' => $timeSpent,
-            'currentQuestion' => $currentQuestion,
+            'current_question' => $current_question,
             'totalQuestions' => $totalQuestions,
             'current_attempt_number' => $currentAttemptNumber,
+            'group_ids' => [],
         ]];
 
-        return view('tests.results', compact('test', 'studentsData', 'course'));
+        return view('tests.results', compact('test', 'studentsData', 'course', 'groups'));
     }
 
     /**
@@ -579,9 +621,23 @@ class TestController extends Controller
      */
     public function viewAttemptDetails(TestAttempt $attempt)
     {
+        // Не показываем детали незавершённой попытки
+        if (! $attempt->ended_at) {
+            abort(403, 'Попытка ещё не завершена');
+        }
+
         $test = $attempt->test;
         $user = $attempt->user;
+
+        // Resolve course through direct relation or section items (same as view())
         $course = $test->course;
+        if (! $course) {
+            $sectionItem = CourseSectionItem::where('item_type', Test::class)
+                ->where('item_id', $test->id)
+                ->with('section.course')
+                ->first();
+            $course = $sectionItem?->section?->course;
+        }
 
         $authUser = Auth::user();
 
@@ -959,16 +1015,16 @@ class TestController extends Controller
                     $activeAttempt->update(['ended_at' => now()]);
                     error_log('[ATTEMPT_DEBUG] ended_at set, redirecting to result...');
 
-                    // Redirect to result page if test ended by time limit
-                    return redirect()->route('tests.result', $test);
+                    // Redirect to attempt details if test ended by time limit
+                    return redirect()->route('test-attempts.details', $activeAttempt);
                 }
             }
         }
 
-        // Если попытка завершена (например, если timeLimitExceeded = true выше), то перенаправляем на страницу результатов
+        // Если попытка завершена (например, если timeLimitExceeded = true выше), то перенаправляем на страницу деталей попытки
         if ($activeAttempt->ended_at) {
-            error_log('[ATTEMPT_DEBUG] Attempt already has ended_at, redirecting to result...');
-            return redirect()->route('tests.result', $test);
+            error_log('[ATTEMPT_DEBUG] Attempt already has ended_at, redirecting to attempt details...');
+            return redirect()->route('test-attempts.details', $activeAttempt);
         }
 
         $initialTimeRemaining = $test->time_limit * 60; // в секундах
@@ -1072,6 +1128,37 @@ class TestController extends Controller
         ]);
 
 
+    }
+
+    /**
+     * Закрывает просроченную попытку (по таймеру) и возвращает на страницу теста.
+     */
+    public function closeExpiredAttempt(Test $test)
+    {
+        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin', 'teacher']))) {
+            abort_if(! $test->isAvailable(), 404);
+        }
+
+        $user = Auth::user();
+
+        $activeAttempt = $test->attempts()
+            ->where('user_id', $user->id)
+            ->whereNull('ended_at')
+            ->first();
+
+        if ($activeAttempt) {
+            DB::transaction(function () use ($activeAttempt, $test) {
+                $scoreData = $this->calculateScoreForAttempt($test, $activeAttempt);
+                $activeAttempt->update([
+                    'ended_at' => now(),
+                    'score' => round($scoreData['score']),
+                ]);
+                TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
+                    ->update(['is_active' => false]);
+            });
+        }
+
+        return redirect()->route('tests.view', $test);
     }
 
     /**

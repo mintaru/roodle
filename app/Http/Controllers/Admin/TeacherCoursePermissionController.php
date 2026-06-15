@@ -24,7 +24,7 @@ class TeacherCoursePermissionController extends Controller
         })
         ->with(['coursePermissions.course'])
         ->orderBy('name')
-        ->get();
+        ->paginate(15);
 
         return view('admin.teacher-permissions.index', [
             'teachers' => $teachers,

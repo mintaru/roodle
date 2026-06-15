@@ -22,10 +22,9 @@
                                  style="width: 100%; height: 100%; object-fit: cover;" />
                         @else
                             <img id="avatar-preview"
-                                 src=""
+                                 src="{{ asset('images/profile.png') }}"
                                  alt="Аватар"
-                                 style="width: 100%; height: 100%; object-fit: cover; display: none;" />
-                            <span id="avatar-placeholder" style="font-size: 28px; color: #fff; line-height: 1;">👤</span>
+                                 style="width: 100%; height: 100%; object-fit: cover;" />
                         @endif
                     </div>
 

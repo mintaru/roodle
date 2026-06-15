@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CourseSectionItem;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -65,6 +66,16 @@ class Test extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function sectionItems()
+    {
+        return $this->morphMany(CourseSectionItem::class, 'item');
+    }
+
+    public function getLinkedCoursesAttribute()
+    {
+        return $this->sectionItems->map(fn($si) => $si->section->course)->filter()->unique('id')->values();
     }
 
     public function user()

@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\User;
+use App\Models\Course;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 
-class UserSearch extends BaseAdminSearch
+class CourseSearch extends BaseAdminSearch
 {
     public string $sortColumn = 'id';
     public string $sortDirection = 'asc';
@@ -15,16 +15,16 @@ class UserSearch extends BaseAdminSearch
 
     protected function getQuery(): Builder
     {
-        return User::with(['roles', 'groups']);
+        return Course::with('groups', 'author');
     }
 
     public function getSearchColumns(): array
     {
         return [
-            'name'     => 'Имя',
-            'username' => 'Логин',
-            'role'     => 'Роль',
-            'group'    => 'Группа',
+            'title'  => 'Название',
+            'status' => 'Статус',
+            'author' => 'Автор',
+            'group'  => 'Группа',
         ];
     }
 
@@ -56,7 +56,7 @@ class UserSearch extends BaseAdminSearch
 
     protected function getView(): string
     {
-        return 'livewire.admin.users';
+        return 'livewire.admin.courses';
     }
 
     public function render()
@@ -64,12 +64,27 @@ class UserSearch extends BaseAdminSearch
         $query = $this->getQuery();
 
         if ($this->searchValue) {
-            match($this->searchColumn) {
-                'name', 'username' => $query->where($this->searchColumn, 'like', "%{$this->searchValue}%"),
-                'role'  => $query->whereHas('roles',  fn($q) => $q->where('name', 'like', "%{$this->searchValue}%")),
-                'group' => $query->whereHas('groups', fn($q) => $q->where('name', 'like', "%{$this->searchValue}%")),
-                default => null,
-            };
+            if ($this->searchColumn === 'status') {
+                $statusMap = ['активен' => 'active', 'активный' => 'active', 'архив' => 'archived', 'в архиве' => 'archived'];
+                $found = false;
+                foreach ($statusMap as $ru => $en) {
+                    if (str_contains(mb_strtolower($this->searchValue), $ru)) {
+                        $query->where('status', $en);
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $query->where('status', 'like', "%{$this->searchValue}%");
+                }
+            } else {
+                match($this->searchColumn) {
+                    'title' => $query->where('title', 'like', "%{$this->searchValue}%"),
+                    'author' => $query->whereHas('author', fn($q) => $q->where('name', 'like', "%{$this->searchValue}%")),
+                    'group'  => $query->whereHas('groups', fn($q) => $q->where('name', 'like', "%{$this->searchValue}%")),
+                    default => null,
+                };
+            }
         }
 
         $allItems = $query->get();
@@ -77,11 +92,11 @@ class UserSearch extends BaseAdminSearch
         $sortCol = $this->sortColumn;
         $sortDir = $this->sortDirection === 'asc' ? 'asc' : 'desc';
 
-        if ($sortCol === 'role') {
-            $allItems = $allItems->sortBy(fn($u) => $u->roles->pluck('name')->join(', '), SORT_REGULAR, $sortDir === 'desc');
+        if ($sortCol === 'author') {
+            $allItems = $allItems->sortBy(fn($c) => $c->author?->name ?? '', SORT_REGULAR, $sortDir === 'desc');
         } elseif ($sortCol === 'group') {
-            $allItems = $allItems->sortBy(fn($u) => $u->groups->pluck('name')->join(', '), SORT_REGULAR, $sortDir === 'desc');
-        } elseif (in_array($sortCol, ['name', 'username'])) {
+            $allItems = $allItems->sortBy(fn($c) => $c->groups->pluck('name')->join(', '), SORT_REGULAR, $sortDir === 'desc');
+        } elseif (in_array($sortCol, ['title', 'status', 'id'])) {
             $allItems = $allItems->sortBy($sortCol, SORT_REGULAR, $sortDir === 'desc');
         }
 

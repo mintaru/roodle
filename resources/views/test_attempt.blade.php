@@ -513,6 +513,7 @@
             line-height: 1.55;
             flex: 1;
             margin-top: 6px;
+            text-align: left;
         }
 
         .clearCurrentBtn {
