@@ -2,111 +2,284 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Список лекций</title>
-    <link href="{{ asset('css/tailwind.min.css') }}" rel="stylesheet">
+    <title>Лекции</title>
+    <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
 </head>
-<body class="bg-gray-100 p-8">
 
-<div class="max-w-6xl mx-auto bg-white p-6 rounded shadow">
-    <div class="mb-4">
-        <x-back-button :url="route('admin.dashboard')" text="В админ-панель" />
-    </div>
-    <h1 class="text-2xl font-bold mb-4">Список лекций</h1>
+<body>
+    @include('components.menu')
 
-    @if(session('success'))
-        <div class="p-3 bg-green-200 text-green-800 rounded mb-4">
-            {{ session('success') }}
+    <style>
+        .admin-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .admin-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-card h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 1.5rem;
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            color: #2e7d32;
+            font-size: 14px;
+        }
+
+        .search-box {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-box form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .search-box form > div {
+            flex: 1;
+        }
+
+        .search-box label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-box select,
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        .search-box select:focus,
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-search,
+        .btn-reset {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Manrope', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .btn-search {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-reset {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-reset:hover {
+            background: #d0d0d0;
+        }
+
+        .groups-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .groups-table thead {
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .groups-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .groups-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .groups-table tbody tr:hover {
+            background: #fafafa;
+        }
+
+        .table-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .table-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .btn-danger {
+            color: #e74c3c;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        .btn-danger:hover {
+            text-decoration: underline;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-box {
+            background: #fff;
+            border-radius: 28px;
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, .2);
+        }
+
+        .modal-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .modal-icon--delete {
+            background: #ffebee;
+        }
+
+        .modal-box h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e2530;
+            margin: 0 0 .5rem;
+        }
+
+        .modal-box p {
+            font-size: 14px;
+            color: #6b7a89;
+            line-height: 1.6;
+            margin: 0 0 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 11px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Manrope', sans-serif;
+            border: none;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        .modal-btn--cancel {
+            background: #f0f3f5;
+            color: #4a5668;
+        }
+
+        .modal-btn--cancel:hover {
+            background: #e2e8ed;
+        }
+
+        .modal-btn--confirm-danger {
+            background: #e74c3c;
+            color: #fff;
+        }
+
+        .modal-btn--confirm-danger:hover {
+            background: #c62828;
+        }
+
+        @media (max-width: 1024px) {
+            .admin-container {
+                padding: 1rem;
+            }
+
+            .admin-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+
+    <div class="admin-container">
+        <div class="admin-card">
+
+            <h1>Лекции</h1>
+
+            @if(session('success'))
+                <div class="success-message">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @livewire('admin.lecture-search')
+
         </div>
-    @endif
-
-    <!-- Search Form -->
-    <div class="mb-6 p-4 bg-gray-50 rounded border">
-        <form method="GET" action="{{ route('admin.lectures.index') }}" class="flex gap-3 items-end flex-wrap">
-            <div class="flex-1 min-w-xs">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Искать по колонке:</label>
-                <select name="search_column" id="search_column" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="title" {{ $searchColumn === 'title' ? 'selected' : '' }}>Название</option>
-                    <option value="id" {{ $searchColumn === 'id' ? 'selected' : '' }}>ID</option>
-                    <option value="course" {{ $searchColumn === 'course' ? 'selected' : '' }}>Курс</option>
-                    <option value="content" {{ $searchColumn === 'content' ? 'selected' : '' }}>Содержание</option>
-                </select>
-            </div>
-            <div class="flex-1 min-w-xs">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Поисковый запрос:</label>
-                <input type="text" name="search_value" placeholder="Введите текст для поиска..." value="{{ $searchValue }}" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Поиск</button>
-            <a href="{{ route('admin.lectures.index') }}" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Очистить</a>
-        </form>
     </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full border">
-            <thead>
-            <tr class="bg-gray-200">
-                <th class="p-2 border">ID</th>
-                <th class="p-2 border">Название</th>
-                <th class="p-2 border">Курс</th>
-                <th class="p-2 border">PDF файл</th>
-                <th class="p-2 border">Статус</th>
-                <th class="p-2 border">Действия</th>
-            </tr>
-            </thead>
-            <tbody>
-            @forelse($lectures as $lecture)
-                <tr>
-                    <td class="p-2 border">{{ $lecture->id }}</td>
-                    <td class="p-2 border">{{ $lecture->title }}</td>
-                    <td class="p-2 border">{{ $lecture->course->title ?? 'Неизвестен' }}</td>
-                    <td class="p-2 border">
-                        @if($lecture->pdf_path)
-                            <a href="{{ asset('storage/' . $lecture->pdf_path) }}" target="_blank" class="text-blue-600 hover:underline">
-                                Скачать
-                            </a>
-                        @else
-                            <span class="text-gray-500">Нет файла</span>
-                        @endif
-                    </td>
-                    <td class="p-2 border">
-                        @if($lecture->status === \App\Models\Lecture::STATUS_ARCHIVED)
-                            <span class="text-yellow-700">В архиве</span>
-                        @else
-                            <span class="text-green-700">Активна</span>
-                        @endif
-                    </td>
-                    <td class="p-2 border">
-                        <div class="flex gap-2">
-                            <a href="{{ route('admin.lectures.edit', $lecture) }}" class="text-blue-600 hover:underline">Редактировать</a>
-                            @if($lecture->status === \App\Models\Lecture::STATUS_ACTIVE)
-                                <form action="{{ route('admin.lectures.archive', $lecture) }}" method="POST" style="display:inline">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="text-yellow-700 hover:underline" onclick="return confirm('Отправить лекцию в архив?')">Архивировать</button>
-                                </form>
-                            @else
-                                <form action="{{ route('admin.lectures.restore', $lecture) }}" method="POST" style="display:inline">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="text-green-700 hover:underline" onclick="return confirm('Восстановить лекцию из архива?')">Восстановить</button>
-                                </form>
-                            @endif
-                            <form action="{{ route('admin.lectures.destroy', $lecture) }}" method="POST" style="display:inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:underline" onclick="return confirm('Вы уверены, что хотите удалить эту лекцию?')">Удалить</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="5" class="p-2 border text-center text-gray-500">Лекции не найдены</td>
-                </tr>
-            @endforelse
-            </tbody>
-        </table>
-    </div>
-</div>
 
 </body>
 </html>

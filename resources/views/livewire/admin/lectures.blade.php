@@ -1,120 +1,46 @@
-<div x-data="{ deleteGroupId: null }">
+<div x-data="{ deleteLectureId: null }">
     <x-admin-search-bar :searchColumns="$this->getSearchColumns()" />
 
     <style>
-        .groups-table th:not(:nth-child(2)),
-        .groups-table td:not(:nth-child(2)) {
+        .groups-table th:not(:first-child),
+        .groups-table td:not(:first-child) {
             text-align: center;
-        }
-
-        .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, .45);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-box {
-            background: #fff;
-            border-radius: 28px;
-            padding: 2rem;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, .2);
-        }
-
-        .modal-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 20px;
-            background: #ffebee;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1.25rem;
-        }
-
-        .modal-box h3 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1e2530;
-            margin: 0 0 .5rem;
-        }
-
-        .modal-box p {
-            font-size: 14px;
-            color: #6b7a89;
-            line-height: 1.6;
-            margin: 0 0 1.5rem;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .modal-btn {
-            flex: 1;
-            padding: 11px;
-            border-radius: 999px;
-            font-size: 14px;
-            font-weight: 700;
-            font-family: 'Manrope', sans-serif;
-            border: none;
-            cursor: pointer;
-            transition: .2s ease;
-        }
-
-        .modal-btn--cancel {
-            background: #f0f3f5;
-            color: #4a5668;
-        }
-
-        .modal-btn--cancel:hover {
-            background: #e2e8ed;
-        }
-
-        .modal-btn--confirm {
-            background: #e74c3c;
-            color: #fff;
-        }
-
-        .modal-btn--confirm:hover {
-            background: #c62828;
         }
     </style>
 
     <table class="groups-table">
         <thead>
             <tr>
-                <th wire:click="sortBy('id')" style="cursor:pointer; user-select:none;">
-                    ID
-                    <span style="font-size:11px; display:inline-block; width:12px; text-align:center;">@if ($sortColumn === 'id'){{ $sortDirection === 'asc' ? '↑' : '↓' }}@endif</span>
+                <th wire:click="sortBy('title')" style="cursor:pointer; user-select:none;">
+                    Название
+                    <span style="font-size:11px; display:inline-block; width:12px; text-align:center;">@if ($sortColumn === 'title'){{ $sortDirection === 'asc' ? '↑' : '↓' }}@endif</span>
                 </th>
-                <th wire:click="sortBy('name')" style="cursor:pointer; user-select:none;">
-                    Название группы
-                    <span style="font-size:11px; display:inline-block; width:12px; text-align:center;">@if ($sortColumn === 'name'){{ $sortDirection === 'asc' ? '↑' : '↓' }}@endif</span>
+                <th wire:click="sortBy('course')" style="cursor:pointer; user-select:none;">
+                    Курс
+                    <span style="font-size:11px; display:inline-block; width:12px; text-align:center;">@if ($sortColumn === 'course'){{ $sortDirection === 'asc' ? '↑' : '↓' }}@endif</span>
                 </th>
-                <th wire:click="sortBy('users_count')" style="cursor:pointer; user-select:none;">
-                    Количество студентов
-                    <span style="font-size:11px; display:inline-block; width:12px; text-align:center;">@if ($sortColumn === 'users_count'){{ $sortDirection === 'asc' ? '↑' : '↓' }}@endif</span>
-                </th>
+                <th>PDF файл</th>
                 <th style="width:60px;">Действия</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($items as $group)
+            @foreach($items as $lecture)
                 <tr>
-                    <td>{{ $group->id }}</td>
                     <td>
-                        <a href="{{ route('admin.groups.show', $group) }}" class="table-link">
-                            {{ $group->name }}
+                        <a href="{{ route('admin.lectures.edit', $lecture) }}" class="table-link">
+                            {{ $lecture->title }}
                         </a>
                     </td>
-                    <td>{{ $group->users_count }}</td>
+                    <td>{{ $lecture->course?->title ?? '—' }}</td>
+                    <td>
+                        @if($lecture->pdf_path)
+                            <a href="{{ asset('storage/' . $lecture->pdf_path) }}" target="_blank" class="table-link">
+                                Скачать
+                            </a>
+                        @else
+                            <span style="color:#999;">Нет файла</span>
+                        @endif
+                    </td>
                     <td style="position:relative;">
                         <div x-data="{ open: false }" @click.outside="open = false"
                             style="display:inline-flex; position:relative;">
@@ -131,7 +57,7 @@
                                        background:#fff; border:1px solid #e0e0e0;
                                        border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.12);
                                        min-width:170px; padding:4px 0; white-space:nowrap;">
-                                <a href="{{ route('admin.groups.show', $group) }}"
+                                <a href="{{ route('admin.lectures.edit', $lecture) }}"
                                     @click="open = false"
                                     style="display:flex; align-items:center; gap:8px; padding:7px 14px; font-size:13px; color:#667eea; text-decoration:none;"
                                     @mouseenter="$el.style.background='#f5f5f5'"
@@ -141,7 +67,7 @@
                                 </a>
                                 <div style="border-top:1px solid #e0e0e0; margin:4px 0;"></div>
                                 <button type="button"
-                                    @click="deleteGroupId = {{ $group->id }}; open = false"
+                                    @click="deleteLectureId = {{ $lecture->id }}; open = false"
                                     style="display:flex; align-items:center; gap:8px; width:100%; text-align:left; padding:7px 14px; font-size:13px; color:#e74c3c; background:none; border:none; cursor:pointer;"
                                     @mouseenter="$el.style.background='#f5f5f5'"
                                     @mouseleave="$el.style.background='#fff'">
@@ -188,28 +114,28 @@
 
     {{-- Modal подтверждения удаления --}}
     <template x-teleport="body">
-        <div x-show="deleteGroupId !== null" x-cloak class="modal-backdrop" @click.self="deleteGroupId = null">
+        <div x-show="deleteLectureId !== null" x-cloak class="modal-backdrop" @click.self="deleteLectureId = null">
             <div class="modal-box">
-                <div class="modal-icon">
+                <div class="modal-icon modal-icon--delete">
                     <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#c62828" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                 </div>
-                <h3>Удалить группу?</h3>
-                <p>Вы уверены, что хотите удалить эту группу? Студенты, привязанные к ней, будут откреплены.<br>Это действие нельзя отменить.</p>
+                <h3>Удалить лекцию?</h3>
+                <p>Вы уверены, что хотите удалить эту лекцию?<br>Это действие нельзя отменить.</p>
                 <div class="modal-actions">
-                    <button class="modal-btn modal-btn--cancel" @click="deleteGroupId = null">Отмена</button>
-                    <button class="modal-btn modal-btn--confirm"
-                        @click="deleteGroupId && document.getElementById('delete-form-' + deleteGroupId).submit()">Удалить</button>
+                    <button class="modal-btn modal-btn--cancel" @click="deleteLectureId = null">Отмена</button>
+                    <button class="modal-btn modal-btn--confirm-danger"
+                        @click="deleteLectureId && document.getElementById('delete-form-' + deleteLectureId).submit()">Удалить</button>
                 </div>
             </div>
         </div>
     </template>
 
-    {{-- Скрытые формы удаления (по одной на группу) --}}
-    @foreach($items as $group)
-        <form id="delete-form-{{ $group->id }}" action="{{ route('admin.groups.destroy', $group) }}" method="POST" style="display:none;">
+    {{-- Скрытые формы удаления --}}
+    @foreach($items as $lecture)
+        <form id="delete-form-{{ $lecture->id }}" action="{{ route('admin.lectures.destroy', $lecture) }}" method="POST" style="display:none;">
             @csrf
             @method('DELETE')
         </form>

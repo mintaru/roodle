@@ -416,13 +416,20 @@
                     <div class="date-grid">
                         <div class="field" style="margin-bottom:0;">
                             <label for="period_start">Доступен с</label>
-                            <input
-                                type="datetime-local"
-                                id="period_start"
-                                name="period_start"
-                                value="{{ now()->format('Y-m-d\TH:i') }}"
-                                class="input"
-                            >
+                            <div style="display: flex; gap: 6px;">
+                                <input
+                                    type="datetime-local"
+                                    id="period_start"
+                                    name="period_start"
+                                    value="{{ now()->format('Y-m-d\TH:i') }}"
+                                    class="input"
+                                    style="flex: 1;"
+                                >
+                                <button type="button" onclick="setToday(document.getElementById('period_start'))"
+                                    style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--color-border);border-radius:var(--r-md);background:var(--color-surface);font-size:12px;color:var(--teal-600);cursor:pointer;font-family:var(--font-body);white-space:nowrap;transition:border-color 0.2s,background 0.2s,color 0.2s;"
+                                    onmouseover="this.style.borderColor='var(--teal-400)';this.style.background='var(--teal-50)';this.style.color='var(--teal-700)'"
+                                    onmouseout="this.style.borderColor='var(--color-border)';this.style.background='var(--color-surface)';this.style.color='var(--teal-600)'">Сегодня</button>
+                            </div>
                         </div>
                         <div class="field" style="margin-bottom:0;">
                             <label for="period_end">Доступен до</label>
@@ -461,6 +468,11 @@
 </div>
 
 <script>
+    function setToday(el) {
+        var d = new Date();
+        el.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + 'T' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    }
+
     // Unlimited attempts toggle
     const unlimitedCheckbox = document.getElementById('unlimited_attempts');
     const maxAttemptsInput = document.getElementById('max_attempts');

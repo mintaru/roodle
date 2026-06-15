@@ -21,6 +21,7 @@ class TestAttempt extends Model
         'ended_at' => 'datetime',
     ];
 
+
     public function test()
     {
         return $this->belongsTo(Test::class);

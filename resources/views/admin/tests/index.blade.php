@@ -3,132 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <title>Список тестов</title>
-    <link href="{{ asset('css/tailwind.min.css') }}" rel="stylesheet">
+    <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
 </head>
-<body class="bg-gray-100 p-8">
 
-<div class="max-w-6xl mx-auto bg-white p-6 rounded shadow">
-    <div class="mb-4">
-        <x-back-button :url="route('admin.dashboard')" text="В админ-панель" />
-    </div>
-    <h1 class="text-2xl font-bold mb-4">Список тестов</h1>
+<body>
+    @include('components.menu')
 
-    @if(session('success'))
-        <div class="p-3 bg-green-200 text-green-800 rounded mb-4">
-            {{ session('success') }}
+    <style>
+        .admin-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .admin-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-card h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 1.5rem;
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            color: #2e7d32;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            padding: 10px 18px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-box {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-box form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .search-box form > div {
+            flex: 1;
+        }
+
+        .search-box label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-box select,
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        .search-box select:focus,
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-search,
+        .btn-reset {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Manrope', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .btn-search {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-reset {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-reset:hover {
+            background: #d0d0d0;
+        }
+
+        .groups-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .groups-table thead {
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .groups-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .groups-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .groups-table tbody tr:hover {
+            background: #fafafa;
+        }
+
+        .table-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .table-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .btn-danger {
+            color: #e74c3c;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        .btn-danger:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 1024px) {
+            .search-box form {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-container {
+                padding: 1rem;
+            }
+
+            .admin-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+
+    <div class="admin-container">
+        <div class="admin-card">
+
+            <h1>Список тестов</h1>
+
+            @if(session('success'))
+                <div class="success-message">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @livewire('admin.test-search')
+
         </div>
-    @endif
-
-    @if($errors->any())
-        <div class="p-3 bg-red-200 text-red-800 rounded mb-4">
-            <ul>
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <!-- Search Form -->
-    <div class="mb-6 p-4 bg-gray-50 rounded border">
-        <form method="GET" action="{{ route('admin.tests.index') }}" class="flex gap-3 items-end flex-wrap">
-            <div class="flex-1 min-w-xs">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Искать по колонке:</label>
-                <select name="search_column" id="search_column" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="title" {{ $searchColumn === 'title' ? 'selected' : '' }}>Название</option>
-                    <option value="id" {{ $searchColumn === 'id' ? 'selected' : '' }}>ID</option>
-                    <option value="course" {{ $searchColumn === 'course' ? 'selected' : '' }}>Курс</option>
-                    <option value="description" {{ $searchColumn === 'description' ? 'selected' : '' }}>Описание</option>
-                    <option value="max_attempts" {{ $searchColumn === 'max_attempts' ? 'selected' : '' }}>Макс. попыток</option>
-                </select>
-            </div>
-            <div class="flex-1 min-w-xs">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Поисковый запрос:</label>
-                <input type="text" name="search_value" placeholder="Введите текст для поиска..." value="{{ $searchValue }}" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Поиск</button>
-            <a href="{{ route('admin.tests.index') }}" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Очистить</a>
-        </form>
     </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full border">
-            <thead>
-            <tr class="bg-gray-200">
-                <th class="p-2 border">ID</th>
-                <th class="p-2 border">Название</th>
-                <th class="p-2 border">Курс</th>
-                <th class="p-2 border">Вопросов</th>
-                <th class="p-2 border">Макс. попыток</th>
-                <th class="p-2 border">Статус</th>
-                <th class="p-2 border">Действия</th>
-            </tr>
-            </thead>
-            <tbody>
-            @forelse($tests as $test)
-                <tr>
-                    <td class="p-2 border">{{ $test->id }}</td>
-                    <td class="p-2 border">
-                        <div class="max-w-xs truncate" title="{{ $test->title }}">
-                            {{ substr($test->title, 0, 50) }}{{ strlen($test->title) > 50 ? '...' : '' }}
-                        </div>
-                    </td>
-                    <td class="p-2 border">{{ $test->course->title ?? 'Без курса' }}</td>
-                    <td class="p-2 border text-center">{{ $test->questions->count() }}</td>
-                    <td class="p-2 border text-center">
-                        @if($test->max_attempts == 0)
-                            <span class="text-gray-600">∞</span>
-                        @else
-                            {{ $test->max_attempts }}
-                        @endif
-                    </td>
-                    <td class="p-2 border text-center">
-                        @if($test->status === \App\Models\Test::STATUS_ARCHIVED)
-                            <span class="text-yellow-700">В архиве</span>
-                        @else
-                            <span class="text-green-700">Активен</span>
-                        @endif
-                    </td>
-                    <td class="p-2 border">
-                        <div class="flex gap-2">
-                            <a href="{{ route('admin.tests.edit', $test) }}" class="text-blue-600 hover:underline">Редактировать</a>
-                            @if($test->status === \App\Models\Test::STATUS_ACTIVE)
-                                <form action="{{ route('admin.tests.archive', $test) }}" method="POST" style="display:inline">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="text-yellow-700 hover:underline" onclick="return confirm('Отправить тест в архив?')">Архивировать</button>
-                                </form>
-                            @else
-                                <form action="{{ route('admin.tests.restore', $test) }}" method="POST" style="display:inline">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="text-green-700 hover:underline" onclick="return confirm('Восстановить тест из архива?')">Восстановить</button>
-                                </form>
-                            @endif
-                            <form action="{{ route('admin.tests.destroy', $test) }}" method="POST" style="display:inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:underline" onclick="return confirm('Вы уверены, что хотите удалить этот тест? Все данные о попытках прохождения будут потеряны.')">Удалить</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="6" class="p-2 border text-center text-gray-500">Тесты не найдены</td>
-                </tr>
-            @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination -->
-    @if($tests->hasPages())
-        <div class="mt-6">
-            {{ $tests->links() }}
-        </div>
-    @endif
-</div>
 
 </body>
 </html>

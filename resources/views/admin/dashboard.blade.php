@@ -158,10 +158,7 @@
                 <p class="admin-card-description">Управляйте всеми пользователями</p>
             </a>
 
-            <a href="{{ route('courses.archived') }}" class="admin-card sky">
-                <h2 class="admin-card-title">📦 Архивированные курсы</h2>
-                <p class="admin-card-description">Просмотрите архивированные курсы</p>
-            </a>
+
 
 
 

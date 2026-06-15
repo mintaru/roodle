@@ -3,103 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <title>Банк вопросов</title>
-    <link href="{{ asset('css/tailwind.min.css') }}" rel="stylesheet">
+    <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
 </head>
-<body class="bg-gray-100 p-8">
 
-<div class="max-w-6xl mx-auto bg-white p-6 rounded shadow">
-    <div class="mb-4">
-        <x-back-button :url="route('admin.dashboard')" text="В админ-панель" />
-    </div>
-    <h1 class="text-2xl font-bold mb-4">Банк вопросов</h1>
+<body>
+    @include('components.menu')
 
-    @if(session('success'))
-        <div class="p-3 bg-green-200 text-green-800 rounded mb-4">
-            {{ session('success') }}
+    <style>
+        .admin-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .admin-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-card h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 1.5rem;
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            color: #2e7d32;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            padding: 10px 18px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-box {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-box label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-box select,
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        .search-box select:focus,
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .groups-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .groups-table thead {
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .groups-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .groups-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .groups-table tbody tr:hover {
+            background: #fafafa;
+        }
+
+        .table-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .table-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .btn-danger {
+            color: #e74c3c;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        .btn-danger:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 1024px) {
+            .admin-container {
+                padding: 1rem;
+            }
+
+            .admin-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+
+    <div class="admin-container">
+        <div class="admin-card">
+
+            <h1>Банк вопросов</h1>
+
+            @if(session('success'))
+                <div class="success-message">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @livewire('admin.question-search')
+
         </div>
-    @endif
-
-    @if($errors->any())
-        <div class="p-3 bg-red-200 text-red-800 rounded mb-4">
-            <ul>
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <!-- Search Form -->
-    <div class="mb-6 p-4 bg-gray-50 rounded border">
-        <form method="GET" action="{{ route('admin.question-bank.index') }}" class="flex gap-3 items-end flex-wrap">
-            <div class="flex-1 min-w-xs">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Искать по колонке:</label>
-                <select name="search_column" id="search_column" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="question_text" {{ $searchColumn === 'question_text' ? 'selected' : '' }}>Текст вопроса</option>
-                    <option value="id" {{ $searchColumn === 'id' ? 'selected' : '' }}>ID</option>
-                    <option value="question_type" {{ $searchColumn === 'question_type' ? 'selected' : '' }}>Тип вопроса</option>
-                </select>
-            </div>
-            <div class="flex-1 min-w-xs">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Поисковый запрос:</label>
-                <input type="text" name="search_value" placeholder="Введите текст для поиска..." value="{{ $searchValue }}" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Поиск</button>
-            <a href="{{ route('admin.question-bank.index') }}" class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Очистить</a>
-        </form>
     </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full border">
-            <thead>
-            <tr class="bg-gray-200">
-                <th class="p-2 border">ID</th>
-                <th class="p-2 border">Текст вопроса</th>
-                <th class="p-2 border">Тип</th>
-                <th class="p-2 border">Ответы</th>
-                <th class="p-2 border">В тестах</th>
-                <th class="p-2 border">Действия</th>
-            </tr>
-            </thead>
-            <tbody>
-            @forelse($questions as $question)
-                <tr>
-                    <td class="p-2 border">{{ $question->id }}</td>
-                    <td class="p-2 border">
-                        <div class="max-w-xs truncate" title="{!! $question->question_text !!}">
-                            {{ substr($question->question_text, 0, 50) }}{{ strlen($question->question_text) > 50 ? '...' : '' }}
-                        </div>
-                    </td>
-                    <td class="p-2 border text-sm">{{ ucfirst(str_replace('_', ' ', $question->question_type)) }}</td>
-                    <td class="p-2 border text-center">{{ $question->options->count() }}</td>
-                    <td class="p-2 border text-center">{{ $question->tests->count() }}</td>
-                    <td class="p-2 border">
-                        <div class="flex gap-2">
-                            <a href="{{ route('admin.question-bank.edit', $question) }}" class="text-blue-600 hover:underline">Редактировать</a>
-                            <form action="{{ route('admin.question-bank.destroy', $question) }}" method="POST" style="display:inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:underline" onclick="return confirm('Вы уверены, что хотите удалить этот вопрос? Он будет удалён из всех тестов.')">Удалить</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="6" class="p-2 border text-center text-gray-500">Вопросы не найдены</td>
-                </tr>
-            @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination -->
-    @if($questions->hasPages())
-        <div class="mt-6">
-            {{ $questions->links() }}
-        </div>
-    @endif
-</div>
 
 </body>
 </html>

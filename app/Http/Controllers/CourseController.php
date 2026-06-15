@@ -14,16 +14,16 @@ class CourseController extends Controller
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
-        if (!$user) {
+        if (!Auth::user()) {
             return redirect()->route('login');
         }
-        if ($user->hasRole('admin')) {
-            return view('admin.courses.index');
-        }
-        else {
-            return view('courses');
-        }
+
+        return view('courses');
+    }
+
+    public function adminIndex()
+    {
+        return view('admin.courses.index');
     }
 
     /**

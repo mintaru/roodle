@@ -217,6 +217,5 @@
         </div>
     </div>
 
-    <script defer src="{{ asset('js/alpine.min.js') }}"></script>
 </body>
 </html>

@@ -408,7 +408,7 @@
                             type="datetime-local"
                             id="due_date"
                             name="due_date"
-                            value="{{ old('due_date') }}"
+                            value="{{ old('due_date', now()->format('Y-m-d\TH:i')) }}"
                             style="
                                 width: 100%;
                                 padding: 10px 14px;

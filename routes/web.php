@@ -283,9 +283,21 @@ Route::get('/tests/{test}/attempt', [TestController::class, 'attempt'])
     ->middleware('auth')
     ->name('tests.attempt');
 
+Route::post('/tests/{test}/attempt/force-new', [TestController::class, 'forceNewAttempt'])
+    ->middleware('auth')
+    ->name('tests.attempt.force-new');
+
+Route::post('/tests/{test}/attempt/close-expired', [TestController::class, 'closeExpiredAttempt'])
+    ->middleware('auth')
+    ->name('tests.attempt.close-expired');
+
 Route::get('/tests/{test}/attempt/{questionIndex?}', [TestController::class, 'attemptPage'])
     ->middleware('auth')
     ->name('tests.attempt.page');
+
+// Загрузка вопроса через AJAX (stream-режим)
+Route::get('/tests/{test}/question/{questionIndex}', [TestController::class, 'getQuestion'])
+    ->middleware('auth');
 
 // Обработка сохранения временного ответа (AJAX)
 Route::post('/tests/{test}/save-answer', [TestController::class, 'saveAnswer'])
@@ -303,6 +315,11 @@ Route::post('/tests/{test}/clear-answer', [TestController::class, 'clearAnswer']
 Route::get('/tests/{test}/timer-sync', [TestController::class, 'timerSync'])
     ->middleware('auth')
     ->name('tests.timer_sync');
+
+// Получение прошедшего времени с сервера для синхронизации таймера
+Route::get('/tests/{test}/elapsed-time', [TestController::class, 'getElapsedTime'])
+    ->middleware('auth')
+    ->name('tests.elapsed_time');
 
 // Обработка отправки ответов и подсчета результатов
 Route::post('/tests/{test}/result', [TestController::class, 'result'])
@@ -359,6 +376,9 @@ Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->middle
 
 Route::post('/tests/{test}/add-from-bank', [TestController::class, 'addFromBank'])->middleware(['auth','role:admin|teacher'])->name('tests.add_from_bank');
 
+//админ панель курсов (только админ)
+Route::get('/admin/courses', [CourseController::class, 'adminIndex'])->middleware(['auth', 'role:admin'])->name('admin.courses.index');
+
 Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     //для групп
     Route::get('/admin/groups', [GroupUserController::class, 'index'])->name('admin.groups.index');
@@ -385,8 +405,7 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::get('/admin/teacher-permissions/{course}/edit-course', [TeacherCoursePermissionController::class, 'editCourse'])->name('admin.teacher-permissions.edit-course');
     Route::put('/admin/teacher-permissions/{course}/update-course', [TeacherCoursePermissionController::class, 'updateCourse'])->name('admin.teacher-permissions.update-course');
 
-    //для курсов
-    Route::get('/admin/courses', [CourseController::class, 'index'])->name('admin.courses.index');
+    //для курсов (удаление)
     Route::delete('/admin/courses/{course}', [CourseController::class, 'destroy'])->name('admin.courses.destroy');
 
     //АРХИВИРОВАНИЕ

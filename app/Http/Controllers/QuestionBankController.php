@@ -11,27 +11,9 @@ class QuestionBankController extends Controller
     /**
      * Display a listing of all questions.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $searchColumn = $request->input('search_column', 'question_text');
-        $searchValue = $request->input('search_value', '');
-
-        $query = Question::with('options', 'tests');
-
-        // Apply search filter
-        if ($searchValue) {
-            if ($searchColumn === 'question_text') {
-                $query->where('question_text', 'like', '%' . $searchValue . '%');
-            } elseif ($searchColumn === 'id') {
-                $query->where('id', 'like', '%' . $searchValue . '%');
-            } elseif ($searchColumn === 'question_type') {
-                $query->where('question_type', 'like', '%' . $searchValue . '%');
-            }
-        }
-
-        $questions = $query->paginate(15);
-
-        return view('question-bank.index', compact('questions', 'searchColumn', 'searchValue'));
+        return view('question-bank.index');
     }
 
     /**

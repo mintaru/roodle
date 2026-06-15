@@ -129,6 +129,69 @@
             padding: 1.5rem;
             background: var(--gray-50);
         }
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-backdrop.active { display: flex; }
+        .modal-box {
+            background: var(--color-surface, #fff);
+            border-radius: var(--r-2xl, 28px);
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, .2);
+            animation: modalIn .2s ease;
+            text-align: center;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(.95); }
+            to { opacity: 1; transform: none; }
+        }
+        .modal-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--r-xl, 20px);
+            background: #fff3e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.25rem;
+        }
+        .modal-box h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-800, #1e2530);
+            margin-bottom: .5rem;
+        }
+        .modal-box p {
+            font-size: 14px;
+            color: var(--color-text-secondary, #6b7a89);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        .modal-btn {
+            padding: 11px 32px;
+            border-radius: var(--r-full, 999px);
+            font-size: 14px;
+            font-weight: 700;
+            font-family: var(--font-body, 'Manrope', sans-serif);
+            border: none;
+            cursor: pointer;
+            transition: .2s ease;
+            background: var(--teal-500, #00b5a5);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(0, 181, 165, .3);
+        }
+        .modal-btn:hover {
+            background: var(--teal-600, #009e90);
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 
@@ -576,7 +639,7 @@
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.umd.min.js"></script>
+<script src="{{ asset('js/trix.min.js') }}"></script>
 
 <script>
 document.addEventListener('trix-initialize', function () {
@@ -708,7 +771,7 @@ document.addEventListener('trix-initialize', function () {
 
             console.error('Upload error:', error);
 
-            alert('Ошибка при загрузке изображения');
+            showModal('Ошибка при загрузке изображения');
         });
     });
 });
@@ -783,14 +846,38 @@ document.addEventListener('DOMContentLoaded', function() {
             ) {
 
                 e.preventDefault();
-
-                alert('Введите текст лекции.');
+                showModal('Введите текст лекции.');
 
                 return false;
+
             }
         }
     });
 });
+
+function showModal(msg) {
+    document.getElementById('modalMessage').textContent = msg;
+    document.getElementById('alertModal').classList.add('active');
+}
+</script>
+
+<div class="modal-backdrop" id="alertModal">
+    <div class="modal-box">
+        <div class="modal-icon">
+            <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#e65100" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+        </div>
+        <h3>Внимание</h3>
+        <p id="modalMessage"></p>
+        <button class="modal-btn" onclick="document.getElementById('alertModal').classList.remove('active')">OK</button>
+    </div>
+</div>
+
+<script>
+    document.getElementById('alertModal').addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('active');
+    });
 </script>
 
 </body>

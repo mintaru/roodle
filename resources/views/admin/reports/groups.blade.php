@@ -59,6 +59,12 @@
             </tbody>
         </table>
     </div>
+
+    @if($groups->hasPages())
+        <div class="mt-6">
+            {{ $groups->links() }}
+        </div>
+    @endif
 </div>
 
 </body>
