@@ -600,13 +600,7 @@
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.umd.min.js"></script>
-
 <script>
-document.addEventListener('trix-initialize', function () {
-
-    const editor = document.querySelector('trix-editor.lecture-trix');
-
     const COLORS = [
         '#e74c3c',
         '#e67e22',
@@ -619,9 +613,7 @@ document.addEventListener('trix-initialize', function () {
     ];
 
     COLORS.forEach(color => {
-
         const key = 'color' + color.replace('#', '');
-
         Trix.config.textAttributes[key] = {
             style: { color },
             inheritable: true,
@@ -629,113 +621,78 @@ document.addEventListener('trix-initialize', function () {
         };
     });
 
-    function clearColors() {
+    function initTrixColorToolbar() {
+        const editor = document.querySelector('trix-editor.lecture-trix');
+        if (!editor) return;
 
-        COLORS.forEach(color => {
-            editor.editor.deactivateAttribute(
-                'color' + color.replace('#', '')
-            );
-        });
+        function clearColors() {
+            COLORS.forEach(color => {
+                editor.editor.deactivateAttribute('color' + color.replace('#', ''));
+            });
+            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+        }
 
-        document.querySelectorAll('.color-swatch')
-            .forEach(s => s.classList.remove('active'));
-    }
+        function applyColor(color) {
+            clearColors();
+            editor.editor.activateAttribute('color' + color.replace('#', ''));
+            const btn = document.querySelector(`.color-swatch[data-color="${color}"]`);
+            if (btn) btn.classList.add('active');
+        }
 
-    function applyColor(color) {
-
-        clearColors();
-
-        editor.editor.activateAttribute(
-            'color' + color.replace('#', '')
-        );
-
-        const btn = document.querySelector(
-            `.color-swatch[data-color="${color}"]`
-        );
-
-        if (btn) btn.classList.add('active');
-    }
-
-    document.querySelectorAll('.color-swatch')
-        .forEach(btn => {
-
+        document.querySelectorAll('.color-swatch').forEach(btn => {
             btn.addEventListener('click', (e) => {
-
                 e.preventDefault();
-
                 applyColor(btn.dataset.color);
             });
         });
 
-    document.getElementById('reset-color')
-        .addEventListener('click', (e) => {
-
+        document.getElementById('reset-color').addEventListener('click', (e) => {
             e.preventDefault();
-
             clearColors();
         });
 
-    const customPicker = document.getElementById('custom-color');
-
-    customPicker.addEventListener('input', (e) => {
-
-        const hex = e.target.value;
-
-        const key = 'color' + hex.replace('#', '');
-
-        if (!Trix.config.textAttributes[key]) {
-
-            Trix.config.textAttributes[key] = {
-                style: { color: hex },
-                inheritable: true,
-                parser: el => el.style.color === hex
-            };
-        }
-
-        clearColors();
-
-        editor.editor.activateAttribute(key);
-    });
-
-    document.addEventListener('trix-file-accept', function(e) {
-
-        if (!e.file.type.startsWith('image/')) {
-            return;
-        }
-
-        e.preventDefault();
-
-        const formData = new FormData();
-
-        formData.append('attachment', e.file);
-
-        formData.append(
-            '_token',
-            document.querySelector('input[name="_token"]').value
-        );
-
-        fetch('{{ route("lectures.upload-attachment") }}', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(result => {
-
-            if (result.url) {
-
-                editor.editor.insertHTML(
-                    '<figure class="attachment attachment--preview attachment--image"><img src="' + result.url + '" alt="' + e.file.name + '" /></figure>'
-                );
+        const customPicker = document.getElementById('custom-color');
+        customPicker.addEventListener('input', (e) => {
+            const hex = e.target.value;
+            const key = 'color' + hex.replace('#', '');
+            if (!Trix.config.textAttributes[key]) {
+                Trix.config.textAttributes[key] = {
+                    style: { color: hex },
+                    inheritable: true,
+                    parser: el => el.style.color === hex
+                };
             }
-        })
-        .catch(error => {
-
-            console.error('Upload error:', error);
-
-            alert('Ошибка при загрузке изображения');
+            clearColors();
+            editor.editor.activateAttribute(key);
         });
-    });
-});
+
+        document.addEventListener('trix-file-accept', function(e) {
+            if (!e.file.type.startsWith('image/')) return;
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('attachment', e.file);
+            formData.append('_token', document.querySelector('input[name="_token"]').value);
+            fetch('{{ route("lectures.upload-attachment") }}', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.url) {
+                    editor.editor.insertHTML(
+                        '<figure class="attachment attachment--preview attachment--image"><img src="' + result.url + '" alt="' + e.file.name + '" /></figure>'
+                    );
+                }
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                alert('Ошибка при загрузке изображения');
+            });
+        });
+    }
+
+    initTrixColorToolbar();
+    document.addEventListener('trix-initialize', initTrixColorToolbar);
 
 document.addEventListener('DOMContentLoaded', function() {
 

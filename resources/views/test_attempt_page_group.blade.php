@@ -1,5 +1,7 @@
-@extends('layout')
+{{-- test_attempt_page_group.blade.php --}}
 
+
+@extends('layout')
 @section('head')
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="server-time" content="{{ $serverTime }}">
@@ -14,21 +16,18 @@
         *::after {
             box-sizing: border-box;
         }
-
         body {
             font-family: var(--font-body, 'Manrope', sans-serif);
             background: var(--color-bg, #f8fafb);
             color: var(--color-text-primary, #111720);
             line-height: 1.6;
         }
-
         /* ── LAYOUT ── */
         .test-shell {
             display: flex;
             min-height: 100vh;
             flex-direction: column;
         }
-
         /* ── TOPBAR ── */
         .test-topbar {
             position: sticky;
@@ -44,7 +43,6 @@
             padding: 0 1.5rem;
             gap: 1rem;
         }
-
         .test-topbar__title {
             font-size: 15px;
             font-weight: 700;
@@ -55,7 +53,6 @@
             text-overflow: ellipsis;
             z-index: 50;
         }
-
         .test-topbar__desc {
             font-size: 12px;
             color: var(--color-text-muted, #9eaab7);
@@ -63,13 +60,11 @@
             display: none;
             z-index: 50;
         }
-
         @media (min-width: 640px) {
             .test-topbar__desc {
                 display: block;
             }
         }
-
         /* ── TIMER ── */
         .timer-pill {
             display: flex;
@@ -81,12 +76,10 @@
             padding: 5px 14px;
             flex-shrink: 0;
         }
-
         .timer-pill svg {
             color: #e65100;
             flex-shrink: 0;
         }
-
         .timer-pill__value {
             font-size: 15px;
             font-weight: 800;
@@ -96,18 +89,15 @@
             min-width: 48px;
             text-align: center;
         }
-
         .timer-pill.urgent {
             background: #ffebee;
             border-color: #ef5350;
             animation: pulse-border 1s ease infinite;
         }
-
         @keyframes pulse-border {
             0%, 100% { border-color: #ef5350; }
             50% { border-color: #c62828; }
         }
-
         /* ── SIDEBAR TOGGLE BTN ── */
         .sidebar-toggle-btn {
             display: flex;
@@ -123,20 +113,17 @@
             flex-shrink: 0;
             color: var(--gray-600, #4a5668);
         }
-
         .sidebar-toggle-btn:hover {
             border-color: var(--teal-400, #26c6b8);
             color: var(--teal-600, #009e90);
             background: var(--teal-50, #e0f7f4);
         }
-
         /* ── BODY ── */
         .test-body {
             display: flex;
             flex: 1;
             position: relative;
         }
-
         /* ── SIDEBAR ── */
         .test-sidebar {
             width: 280px;
@@ -152,14 +139,12 @@
             transition: width .3s ease, opacity .3s ease, transform .3s ease;
             z-index: 100;
         }
-
         .test-sidebar.collapsed {
             width: 0;
             opacity: 0;
             pointer-events: none;
             overflow: hidden;
         }
-
         @media (max-width: 768px) {
             .test-sidebar {
                 position: fixed;
@@ -170,7 +155,6 @@
                 box-shadow: 4px 0 24px rgba(0, 0, 0, .12);
                 transform: translateX(0);
             }
-
             .test-sidebar.collapsed {
                 width: 280px;
                 opacity: 0;
@@ -178,7 +162,6 @@
                 pointer-events: none;
             }
         }
-
         .sidebar-inner {
             padding: 1.25rem;
             display: flex;
@@ -186,7 +169,6 @@
             gap: 1.25rem;
             min-width: 280px;
         }
-
         .sidebar-section-label {
             font-size: 10px;
             font-weight: 700;
@@ -195,49 +177,45 @@
             color: var(--color-text-muted, #9eaab7);
             margin-bottom: .25rem;
         }
-
-        /* Page navigation in sidebar */
-        .page-nav-list {
-            display: flex;
-            flex-direction: column;
+        /* ── PAGE NAV GRID (same style as question grid in single-page version) ── */
+        .p-nav-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
             gap: 6px;
         }
-
-        .page-nav-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
+        .p-nav-btn {
+            aspect-ratio: 1;
             border-radius: var(--r-md, 12px);
             border: 1.5px solid var(--color-border, #e2e8ed);
             background: var(--color-surface, #fff);
             font-size: 13px;
             font-weight: 600;
             color: var(--gray-600, #4a5668);
-            text-decoration: none;
+            cursor: pointer;
             transition: .2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-family: var(--font-body, 'Manrope', sans-serif);
         }
-
-        .page-nav-item:hover {
+        .p-nav-btn:hover {
             border-color: var(--teal-400, #26c6b8);
             color: var(--teal-700, #00837a);
             background: var(--teal-50, #e0f7f4);
         }
-
-        .page-nav-item.active {
+        .p-nav-btn.active {
             background: var(--teal-500, #00b5a5);
             border-color: var(--teal-500, #00b5a5);
             color: #fff;
             box-shadow: 0 2px 8px rgba(0, 181, 165, .35);
         }
-
         /* Progress in sidebar */
         .sidebar-progress {
             background: var(--gray-100, #f0f3f5);
             border-radius: var(--r-lg, 16px);
             padding: 1rem;
         }
-
         .sidebar-progress__nums {
             display: flex;
             justify-content: space-between;
@@ -246,26 +224,22 @@
             color: var(--gray-700, #333d4a);
             margin-bottom: 8px;
         }
-
         .sidebar-progress__bar {
             height: 6px;
             background: var(--gray-200, #e2e8ed);
             border-radius: 999px;
             overflow: hidden;
         }
-
         .sidebar-progress__fill {
             height: 100%;
             background: linear-gradient(90deg, var(--teal-400, #26c6b8), var(--sky-400, #29aff5));
             border-radius: 999px;
         }
-
         .sidebar-progress__label {
             font-size: 11px;
             color: var(--color-text-muted, #9eaab7);
             margin-top: 6px;
         }
-
         /* Submit btn in sidebar */
         .sidebar-submit-btn {
             display: flex;
@@ -285,20 +259,17 @@
             transition: .2s ease;
             box-shadow: 0 4px 16px rgba(0, 181, 165, .3);
         }
-
         .sidebar-submit-btn:hover {
             background: var(--teal-600, #009e90);
             transform: translateY(-1px);
             box-shadow: 0 6px 20px rgba(0, 181, 165, .4);
         }
-
         /* Legend */
         .sidebar-legend {
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
-
         .legend-item {
             display: flex;
             align-items: center;
@@ -306,22 +277,18 @@
             font-size: 12px;
             color: var(--color-text-secondary, #6b7a89);
         }
-
         .legend-dot {
             width: 10px;
             height: 10px;
             border-radius: var(--r-sm, 8px);
             flex-shrink: 0;
         }
-
         .legend-dot--current {
             background: var(--teal-500, #00b5a5);
         }
-
         .legend-dot--other {
             background: var(--gray-200, #e2e8ed);
         }
-
         /* ── MAIN CONTENT ── */
         .test-main {
             flex: 1;
@@ -330,7 +297,6 @@
             margin: 0 auto;
             width: 100%;
         }
-
         /* ── QUESTION CARD ── */
         .question-card {
             background: var(--color-surface, #fff);
@@ -341,12 +307,10 @@
             margin-bottom: 1.5rem;
             animation: slideIn .22s ease;
         }
-
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: none; }
         }
-
         .question-card__header {
             padding: 1.5rem 1.75rem 1.25rem;
             border-bottom: 1px solid var(--color-border, #e2e8ed);
@@ -355,7 +319,6 @@
             align-items: flex-start;
             gap: 1rem;
         }
-
         .question-badge {
             display: flex;
             align-items: center;
@@ -369,7 +332,6 @@
             font-weight: 700;
             flex-shrink: 0;
         }
-
         .question-text {
             font-size: 16px;
             font-weight: 600;
@@ -378,18 +340,36 @@
             flex: 1;
             margin-top: 6px;
         }
-
+        /* ── CLEAR BTN (trash) in question header ── */
+        .clearCurrentBtn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: var(--r-md, 12px);
+            border: 1.5px solid var(--color-border, #e2e8ed);
+            background: var(--color-surface, #fff);
+            color: var(--gray-500, #6b7a89);
+            cursor: pointer;
+            transition: .2s ease;
+            flex-shrink: 0;
+            padding: 0;
+        }
+        .clearCurrentBtn:hover {
+            border-color: #ef5350;
+            color: #c62828;
+            background: #ffebee;
+        }
         .question-card__body {
             padding: 1.5rem 1.75rem;
         }
-
         /* ── OPTIONS ── */
         .option-list {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-
         .option-label {
             display: flex;
             align-items: center;
@@ -402,12 +382,10 @@
             user-select: none;
             background: var(--color-surface, #fff);
         }
-
         .option-label:hover {
             border-color: var(--teal-300, #80cbc4);
             background: var(--teal-50, #e0f7f4);
         }
-
         .option-label input[type="radio"],
         .option-label input[type="checkbox"] {
             width: 18px;
@@ -416,18 +394,15 @@
             flex-shrink: 0;
             cursor: pointer;
         }
-
         .option-label:has(input:checked) {
             border-color: var(--teal-500, #00b5a5);
             background: var(--teal-50, #e0f7f4);
         }
-
         .option-label span {
             font-size: 14.5px;
             color: var(--gray-700, #333d4a);
             line-height: 1.5;
         }
-
         /* ── SHORT ANSWER ── */
         .short-answer-wrap label {
             display: block;
@@ -438,7 +413,6 @@
             letter-spacing: .7px;
             margin-bottom: 8px;
         }
-
         .short-answer-input {
             width: 100%;
             padding: 12px 16px;
@@ -450,13 +424,11 @@
             background: var(--color-surface, #fff);
             transition: .2s ease;
         }
-
         .short-answer-input:focus {
             outline: none;
             border-color: var(--teal-400, #26c6b8);
             box-shadow: 0 0 0 3px rgba(0, 181, 165, .12);
         }
-
         /* ── RICH TEXT ── */
         .rich-text-wrap label {
             display: block;
@@ -467,7 +439,6 @@
             letter-spacing: .7px;
             margin-bottom: 8px;
         }
-
         trix-editor.rich-text-answer-input {
             min-height: 160px;
             width: 100%;
@@ -478,13 +449,11 @@
             font-family: var(--font-body, 'Manrope', sans-serif);
             transition: .2s ease;
         }
-
         trix-editor.rich-text-answer-input:focus {
             outline: none;
             border-color: var(--teal-400, #26c6b8);
             box-shadow: 0 0 0 3px rgba(0, 181, 165, .12);
         }
-
         trix-editor ul,
         trix-editor ol,
         .trix-content ul,
@@ -493,11 +462,9 @@
             list-style-position: outside;
             margin-left: 1.5rem;
         }
-
         trix-toolbar {
             border-radius: var(--r-md, 12px) var(--r-md, 12px) 0 0;
         }
-
         /* ── FILL DROPDOWN ── */
         .fill-in-dropdown-select-inline {
             display: inline-block;
@@ -514,12 +481,10 @@
             outline: none;
             transition: .2s ease;
         }
-
         .fill-in-dropdown-select-inline:focus {
             border-color: var(--teal-500, #00b5a5);
             box-shadow: 0 0 0 2px rgba(0, 181, 165, .15);
         }
-
         /* ── PAGE NAV BUTTONS ── */
         .question-nav {
             display: flex;
@@ -527,7 +492,6 @@
             justify-content: space-between;
             margin-top: 1.5rem;
         }
-
         .nav-btn {
             display: inline-flex;
             align-items: center;
@@ -544,26 +508,22 @@
             transition: .2s ease;
             text-decoration: none;
         }
-
         .nav-btn:hover {
             border-color: var(--teal-400, #26c6b8);
             color: var(--teal-700, #00837a);
             background: var(--teal-50, #e0f7f4);
         }
-
         .nav-btn--primary {
             background: var(--teal-500, #00b5a5);
             border-color: var(--teal-500, #00b5a5);
             color: #fff;
             box-shadow: 0 2px 10px rgba(0, 181, 165, .25);
         }
-
         .nav-btn--primary:hover {
             background: var(--teal-600, #009e90);
             border-color: var(--teal-600, #009e90);
             color: #fff;
         }
-
         /* ── MOBILE OVERLAY ── */
         .sidebar-overlay {
             display: none;
@@ -573,13 +533,11 @@
             background: rgba(0, 0, 0, .35);
             z-index: 99;
         }
-
         @media (max-width: 768px) {
             .sidebar-overlay.active {
                 display: block;
             }
         }
-
         /* ── CONFIRM MODAL ── */
         .modal-backdrop {
             display: none;
@@ -590,11 +548,9 @@
             align-items: center;
             justify-content: center;
         }
-
         .modal-backdrop.active {
             display: flex;
         }
-
         .modal-box {
             background: var(--color-surface, #fff);
             border-radius: var(--r-2xl, 28px);
@@ -604,12 +560,10 @@
             box-shadow: 0 24px 60px rgba(0, 0, 0, .2);
             animation: modalIn .2s ease;
         }
-
         @keyframes modalIn {
             from { opacity: 0; transform: scale(.95); }
             to { opacity: 1; transform: none; }
         }
-
         .modal-icon {
             width: 52px;
             height: 52px;
@@ -620,26 +574,22 @@
             justify-content: center;
             margin-bottom: 1.25rem;
         }
-
         .modal-box h3 {
             font-size: 18px;
             font-weight: 700;
             color: var(--gray-800, #1e2530);
             margin-bottom: .5rem;
         }
-
         .modal-box p {
             font-size: 14px;
             color: var(--color-text-secondary, #6b7a89);
             line-height: 1.6;
             margin-bottom: 1.5rem;
         }
-
         .modal-actions {
             display: flex;
             gap: 10px;
         }
-
         .modal-btn {
             flex: 1;
             padding: 11px;
@@ -651,27 +601,22 @@
             cursor: pointer;
             transition: .2s ease;
         }
-
         .modal-btn--cancel {
             background: var(--gray-100, #f0f3f5);
             color: var(--gray-600, #4a5668);
         }
-
         .modal-btn--cancel:hover {
             background: var(--gray-200, #e2e8ed);
         }
-
         .modal-btn--confirm {
             background: var(--teal-500, #00b5a5);
             color: #fff;
             box-shadow: 0 4px 14px rgba(0, 181, 165, .3);
         }
-
         .modal-btn--confirm:hover {
             background: var(--teal-600, #009e90);
             transform: translateY(-1px);
         }
-
         /* ── SCROLLBAR ── */
         .test-sidebar::-webkit-scrollbar { width: 4px; }
         .test-sidebar::-webkit-scrollbar-track { background: transparent; }
@@ -683,7 +628,6 @@
     @php
         $totalQuestions = $test->questions->count();
     @endphp
-
     <div class="test-shell">
 
         {{-- ─────────── TOP BAR ─────────── --}}
@@ -693,27 +637,23 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
-
             <h1 class="test-topbar__title">{{ $test->title }}</h1>
-
             @if ($test->description)
                 <span class="test-topbar__desc">{{ Str::limit($test->description, 60) }}</span>
             @endif
-
             @if ($test->time_limit > 0)
                 <div class="timer-pill" id="timerPill">
                     <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2" />
                     </svg>
-                    <span class="timer-pill__value" id="timer">{{ floor($test->time_limit) }}:00</span>
+                    <span class="timer-pill__value" id="timer">{{ $initialTimeRemaining }}:00</span>
                 </div>
             @endif
         </header>
 
         {{-- ─────────── BODY ─────────── --}}
         <div class="test-body">
-
             <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
             {{-- ─────────── SIDEBAR ─────────── --}}
@@ -742,20 +682,14 @@
                         </div>
                     </div>
 
-                    {{-- Page navigation --}}
+                    {{-- Page navigation grid --}}
                     <div>
                         <div class="sidebar-section-label">Страницы</div>
-                        <div class="page-nav-list">
+                        <div class="p-nav-grid">
                             @for ($p = 1; $p <= $totalPages; $p++)
                                 <a href="{{ route('tests.attempt.page', [$test->id, $p]) }}"
-                                   class="page-nav-item {{ $p === $pageIndex ? 'active' : '' }}">
-                                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor" stroke-width="2" style="flex-shrink:0">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Страница {{ $p }}
-                                </a>
+                                   class="p-nav-btn {{ $p === $pageIndex ? 'active' : '' }}"
+                                   title="Страница {{ $p }}">{{ $p }}</a>
                             @endfor
                         </div>
                     </div>
@@ -775,15 +709,13 @@
                         </div>
                     </div>
 
-                    {{-- Submit (only on last page) --}}
-                    @if ((int)$pageIndex === (int)$totalPages)
+                    {{-- Submit — always visible in sidebar --}}
                     <button type="button" class="sidebar-submit-btn" id="sidebarSubmitBtn">
-                        <span>Завершить</span>
                         <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
+                        Завершить тест
                     </button>
-                    @endif
 
                 </div>
             </aside>
@@ -808,13 +740,11 @@
                                         'text' => $data['text'],
                                     ];
                                 }
-
                                 foreach ($dropdownsByBlank as $blankId => $options) {
                                     $savedValue = '';
                                     if (isset($savedAnswers[$question->id]) && is_array($savedAnswers[$question->id])) {
                                         $savedValue = $savedAnswers[$question->id][$blankId] ?? '';
                                     }
-
                                     $selectHTML = '<select class="fill-in-dropdown-select-inline" data-question-id="' . $question->id . '" data-blank-id="' . $blankId . '">';
                                     $selectHTML .= '<option value="">—выберите—</option>';
                                     foreach ($options as $option) {
@@ -822,20 +752,27 @@
                                         $selectHTML .= '<option value="' . $option['id'] . '" ' . $selectedAttr . '>' . htmlspecialchars($option['text'], ENT_QUOTES, 'UTF-8') . '</option>';
                                     }
                                     $selectHTML .= '</select>';
-
                                     $questionDisplay = str_replace('{' . $blankId . '}', $selectHTML, $questionDisplay);
                                 }
                             }
                         @endphp
 
-                        <div class="question-card">
+                        <div class="question-card" data-question-id="{{ $question->id }}">
                             <div class="question-card__header">
                                 <div class="question-badge">{{ $globalIndexMap[$question->id] ?? ($indexOnPage + 1) }}</div>
                                 <p class="question-text">{!! $questionDisplay !!}</p>
+                                {{-- Trash / clear button --}}
+                                <button type="button" class="clearCurrentBtn" data-question-id="{{ $question->id }}"
+                                    title="Очистить ответ на этот вопрос">
+                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
                             </div>
 
                             <div class="question-card__body">
-
                                 @if ($question->question_type === 'short_answer')
                                     @php
                                         $savedText = '';
@@ -901,7 +838,6 @@
                                         @endforeach
                                     </div>
                                 @endif
-
                             </div>
                         </div>
                     @endforeach
@@ -918,11 +854,9 @@
                         @else
                             <span></span>
                         @endif
-
                         <span style="font-size:13px;color:var(--color-text-muted);">
                             Страница <strong>{{ $pageIndex }}</strong> из <strong>{{ $totalPages }}</strong>
                         </span>
-
                         @if ((int)$pageIndex < (int)$totalPages)
                             <a href="{{ route('tests.attempt.page', [$test->id, $pageIndex + 1]) }}" class="nav-btn nav-btn--primary">
                                 <span>Следующая</span>
@@ -932,7 +866,7 @@
                             </a>
                         @else
                             <button type="button" class="nav-btn nav-btn--primary" id="pageSubmitBtn">
-                                <span>Завершить</span>
+                                <span>Завершить тест</span>
                                 <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
@@ -942,11 +876,10 @@
 
                 </form>
             </main>
-
         </div>
     </div>
 
-    {{-- ─────────── CONFIRM MODAL ─────────── --}}
+    {{-- ─────────── CONFIRM MODAL (submit) ─────────── --}}
     <div class="modal-backdrop" id="confirmModal">
         <div class="modal-box">
             <div class="modal-icon">
@@ -960,6 +893,24 @@
             <div class="modal-actions">
                 <button class="modal-btn modal-btn--cancel" id="modalCancelBtn">Вернуться</button>
                 <button class="modal-btn modal-btn--confirm" id="modalConfirmBtn">Завершить</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ─────────── CLEAR ANSWER MODAL ─────────── --}}
+    <div class="modal-backdrop" id="clearAnswerModal">
+        <div class="modal-box">
+            <div class="modal-icon">
+                <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#e65100" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+            <h3>Очистить ответ?</h3>
+            <p>Вы уверены, что хотите удалить ответ на этот вопрос? Это действие нельзя отменить.</p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn--cancel" id="clearCancelBtn">Отмена</button>
+                <button class="modal-btn modal-btn--confirm" id="clearConfirmBtn">Очистить</button>
             </div>
         </div>
     </div>
@@ -982,7 +933,6 @@
                     sidebar.classList.add('collapsed');
                 }
             }
-
             applySidebarState();
 
             toggleBtn.addEventListener('click', () => {
@@ -994,7 +944,6 @@
                     overlay.classList.remove('active');
                 }
             });
-
             overlay.addEventListener('click', () => {
                 sidebarOpen = false;
                 applySidebarState();
@@ -1015,11 +964,7 @@
                         }
                         await fetch(`/tests/{{ $test->id }}/save-answer`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken,
-                                'Accept': 'application/json'
-                            },
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
                             body: JSON.stringify({ question_id: questionId, option_id: optionIds })
                         });
                     } catch (e) { console.error(e); }
@@ -1032,11 +977,7 @@
                     try {
                         await fetch(`/tests/{{ $test->id }}/save-answer`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken,
-                                'Accept': 'application/json'
-                            },
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
                             body: JSON.stringify({ question_id: this.dataset.questionId, answer_text: this.value })
                         });
                     } catch (e) { console.error(e); }
@@ -1051,11 +992,7 @@
                         const val = document.getElementById(inputId).value;
                         await fetch(`/tests/{{ $test->id }}/save-answer`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken,
-                                'Accept': 'application/json'
-                            },
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
                             body: JSON.stringify({ question_id: this.dataset.questionId, rich_text_answer: val })
                         });
                     } catch (e) { console.error(e); }
@@ -1074,11 +1011,7 @@
                             });
                         await fetch(`/tests/{{ $test->id }}/save-answer`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken,
-                                'Accept': 'application/json'
-                            },
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
                             body: JSON.stringify({ question_id: questionId, fill_in_dropdown_answers: filledAnswers })
                         });
                     } catch (e) { console.error(e); }
@@ -1089,88 +1022,93 @@
             document.addEventListener('trix-file-accept', e => e.preventDefault());
             document.addEventListener('trix-attachment-add', e => { if (e.attachment) e.attachment.remove(); });
 
-            // ── Submit modal (last page) ──
+            // ── Submit modal ──
             const sidebarSubmitBtn = document.getElementById('sidebarSubmitBtn');
-            const pageSubmitBtn = document.getElementById('pageSubmitBtn');
-            const confirmModal = document.getElementById('confirmModal');
+            const pageSubmitBtn    = document.getElementById('pageSubmitBtn');
+            const confirmModal     = document.getElementById('confirmModal');
 
-            if (sidebarSubmitBtn) {
-                sidebarSubmitBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    openModal();
-                });
-            }
-
-            if (pageSubmitBtn) {
-                pageSubmitBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    openModal();
-                });
-            }
+            if (sidebarSubmitBtn) sidebarSubmitBtn.addEventListener('click', e => { e.preventDefault(); openModal(); });
+            if (pageSubmitBtn)    pageSubmitBtn.addEventListener('click',    e => { e.preventDefault(); openModal(); });
 
             if (confirmModal) {
-                confirmModal.addEventListener('click', function (e) {
-                    if (e.target === this) closeModal();
+                confirmModal.addEventListener('click', e => { if (e.target === confirmModal) closeModal(); });
+                confirmModal.querySelector('.modal-box').addEventListener('click', e => e.stopPropagation());
+                document.getElementById('modalCancelBtn').addEventListener('click',  e => { e.preventDefault(); closeModal(); });
+                document.getElementById('modalConfirmBtn').addEventListener('click', e => {
+                    e.preventDefault();
+                    document.getElementById('testForm').submit();
                 });
-
-                // Предотвращаем клик внутри modal-box от закрытия модали
-                const modalBox = confirmModal.querySelector('.modal-box');
-                if (modalBox) {
-                    modalBox.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                    });
-                }
-
-                // Обработчики кнопок в модале
-                const modalCancelBtn = document.getElementById('modalCancelBtn');
-                const modalConfirmBtn = document.getElementById('modalConfirmBtn');
-
-                if (modalCancelBtn) {
-                    modalCancelBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        closeModal();
-                    });
-                }
-
-                if (modalConfirmBtn) {
-                    modalConfirmBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const form = document.getElementById('testForm');
-                        if (form) {
-                            form.submit();
-                        } else {
-                            console.error('✗ Форма testForm не найдена');
-                        }
-                    });
-                }
             }
+
+            // ── Clear answer modal ──
+            const clearModal      = document.getElementById('clearAnswerModal');
+            const clearConfirmBtn = document.getElementById('clearConfirmBtn');
+            const clearCancelBtn  = document.getElementById('clearCancelBtn');
+            let pendingClearQuestionId = null;
+
+            document.querySelectorAll('.clearCurrentBtn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    pendingClearQuestionId = this.dataset.questionId;
+                    clearModal.classList.add('active');
+                });
+            });
+
+            clearModal.addEventListener('click', e => { if (e.target === clearModal) clearModal.classList.remove('active'); });
+            clearModal.querySelector('.modal-box').addEventListener('click', e => e.stopPropagation());
+            clearCancelBtn.addEventListener('click', () => { clearModal.classList.remove('active'); pendingClearQuestionId = null; });
+
+            clearConfirmBtn.addEventListener('click', async function () {
+                clearModal.classList.remove('active');
+                if (!pendingClearQuestionId) return;
+                const qId = pendingClearQuestionId;
+                pendingClearQuestionId = null;
+
+                const card = document.querySelector(`.question-card[data-question-id="${qId}"]`);
+                if (!card) return;
+
+                // Clear radio/checkbox
+                card.querySelectorAll('.answer-input').forEach(i => i.checked = false);
+
+                // Clear short text
+                const textInput = card.querySelector('.text-answer-input');
+                if (textInput) textInput.value = '';
+
+                // Clear Trix editor
+                const richEditor = card.querySelector('.rich-text-answer-input');
+                if (richEditor) {
+                    const hiddenId = richEditor.getAttribute('input');
+                    document.getElementById(hiddenId).value = '';
+                    richEditor.editor.setSelectedRange([0, richEditor.editor.getDocument().getLength()]);
+                    richEditor.editor.deleteInDirection('forward');
+                }
+
+                // Clear dropdowns
+                card.querySelectorAll('.fill-in-dropdown-select-inline').forEach(s => s.value = '');
+
+                try {
+                    await fetch(`/tests/{{ $test->id }}/clear-answer`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                        body: JSON.stringify({ question_id: qId })
+                    });
+                } catch (e) { console.error(e); }
+            });
         });
 
         function openModal() {
-            const modal = document.getElementById('confirmModal');
-            if (modal) {
-                modal.classList.add('active');
-                console.log('✓ Модал открыт');
-            } else {
-                console.error('✗ Элемент confirmModal не найден');
-            }
+            document.getElementById('confirmModal').classList.add('active');
         }
-
         function closeModal() {
-            const modal = document.getElementById('confirmModal');
-            if (modal) {
-                modal.classList.remove('active');
-                console.log('✓ Модал закрыт');
-            }
+            document.getElementById('confirmModal').classList.remove('active');
         }
 
         // ── Timer ──
         @if ($test->time_limit > 0)
-            const testId = document.querySelector('meta[name="test-id"]')?.content;
-            const serverTimeMeta = parseInt(document.querySelector('meta[name="server-time"]')?.content || 0);
-            const testStartTimeMeta = parseInt(document.querySelector('meta[name="test-start-time"]')?.content || 0);
+            const testId           = document.querySelector('meta[name="test-id"]')?.content;
+            const serverTimeMeta   = parseInt(document.querySelector('meta[name="server-time"]')?.content || 0);
+            const testStartTimeMeta = parseInt(document.querySelector('meta[name="test-start-time"]')?.content || 0) / 1000;
             const clientTimeAtLoad = Date.now() / 1000;
-            const timerEl = document.getElementById('timer');
+            const timerEl   = document.getElementById('timer');
             const timerPill = document.getElementById('timerPill');
             const timeLimitSeconds = {{ $test->time_limit }} * 60;
             let serverTimeOffset = 0;
@@ -1197,10 +1135,7 @@
             async function syncWithServer() {
                 try {
                     const response = await fetch(`/tests/${testId}/timer-sync`, {
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                            'Accept': 'application/json'
-                        }
+                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content, 'Accept': 'application/json' }
                     });
                     if (response.ok) {
                         const data = await response.json();

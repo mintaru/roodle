@@ -158,3 +158,113 @@
         max-height: 75vh;
     }
 }
+
+/* =============================================
+   ТЕКСТОВЫЙ КОНТЕНТ ЛЕКЦИИ
+============================================= */
+.lecture-content {
+    padding: 1.5rem 0;
+    line-height: 1.8;
+    font-size: 16px;
+    color: var(--color-text);
+}
+
+.lecture-content__text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.lecture-content h1,
+.lecture-content h2,
+.lecture-content h3,
+.lecture-content h4 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--gray-900);
+}
+
+.lecture-content h1 { font-size: 1.5rem; }
+.lecture-content h2 { font-size: 1.3rem; }
+.lecture-content h3 { font-size: 1.15rem; }
+
+.lecture-content p {
+    margin-bottom: 1em;
+}
+
+.lecture-content ul,
+.lecture-content ol {
+    margin-bottom: 1em;
+    padding-left: 1.5em;
+}
+
+.lecture-content li {
+    margin-bottom: 0.3em;
+}
+
+.lecture-content blockquote {
+    margin: 1em 0;
+    padding: 0.5em 1em;
+    border-left: 4px solid var(--teal-400);
+    background: var(--gray-50);
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+.lecture-content code {
+    background: var(--gray-100);
+    padding: 0.15em 0.4em;
+    border-radius: var(--r-sm);
+    font-size: 0.9em;
+}
+
+.lecture-content pre {
+    background: var(--gray-900);
+    color: var(--gray-100);
+    padding: 1rem;
+    border-radius: var(--r-lg);
+    overflow-x: auto;
+    margin-bottom: 1em;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.lecture-content pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+}
+
+.lecture-content img {
+    max-width: 100%;
+    border-radius: var(--r-lg);
+    margin: 1em 0;
+}
+
+.lecture-content a {
+    color: var(--teal-600);
+    text-decoration: underline;
+}
+
+.lecture-content a:hover {
+    color: var(--teal-700);
+}
+
+.lecture-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1em;
+}
+
+.lecture-content th,
+.lecture-content td {
+    padding: 0.5em 0.75em;
+    border: 1px solid var(--color-border);
+    text-align: left;
+}
+
+.lecture-content th {
+    background: var(--gray-50);
+    font-weight: 600;
+}

@@ -1227,7 +1227,7 @@
         const Q_DATA = @json($qData);
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/trix@2.1.16/dist/trix.umd.min.js"></script>
+<script src="{{ asset('js/trix.min.js') }}"></script>
     <script>
 
 async function generateQuestion() {

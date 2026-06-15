@@ -219,6 +219,14 @@
             });
         </script>
         @endif
+    @elseif ($lecture->content)
+        <div class="lecture-content">
+            @if ($lecture->content_type === 'html')
+                {!! $lecture->content !!}
+            @else
+                <div class="lecture-content__text">{{ $lecture->content }}</div>
+            @endif
+        </div>
     @endif
 
 </div>

@@ -1,14 +1,18 @@
+{{-- test_attempt.blade.php --}}
+
 @extends('layout')
 
 @section('head')
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="server-time" content="{{ now()->timestamp * 1000 }}">
-    <meta name="last-question-index" content="{{ $lastQuestionIndex ?? 0 }}">
-        <meta name="test-start-time"
-        content="{{ $attempt->started_at ? $attempt->started_at->timestamp * 1000 : now()->timestamp * 1000 }}">
-    <meta name="time-limit-exceeded" content="{{ $timeLimitExceeded ? 'true' : 'false' }}">
-        <link rel="stylesheet" href="{{ asset('css/trix.min.css') }}">
-        <script src="{{ asset('js/trix.min.js') }}"></script>
+    <meta name="server-time" content="{{ $serverTime }}">
+    <meta name="test-start-time" content="{{ $activeAttempt->started_at->timestamp * 1000 }}">
+    {{-- DEBUG: initialTimeRemaining={{ $initialTimeRemaining }}, started_at={{ $activeAttempt->started_at ? $activeAttempt->started_at->toDateTimeString() : 'NULL' }}, attempt_id={{ $activeAttempt->id }} --}}
+    <meta name="test-id" content="{{ $test->id }}">
+    <meta name="total-questions" content="{{ $totalQuestions }}">
+    <meta name="initial-question-index" content="{{ $lastQuestionIndex ?? 0 }}">
+
+    <link rel="stylesheet" href="{{ asset('css/trix.min.css') }}">
+    <script src="{{ asset('js/trix.min.js') }}"></script>
     <style>
         /* ── RESET & BASE ── */
         *,
@@ -58,7 +62,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
             z-index: 50;
-
         }
 
         .test-topbar__desc {
@@ -67,7 +70,6 @@
             flex-shrink: 0;
             display: none;
             z-index: 50;
-
         }
 
         @media (min-width: 640px) {
@@ -143,7 +145,7 @@
             background: var(--teal-50, #e0f7f4);
         }
 
-        /* ── BODY (sidebar + content) ── */
+        /* ── BODY ── */
         .test-body {
             display: flex;
             flex: 1;
@@ -173,7 +175,6 @@
             overflow: hidden;
         }
 
-        /* On mobile: overlay sidebar */
         @media (max-width: 768px) {
             .test-sidebar {
                 position: fixed;
@@ -210,7 +211,7 @@
             margin-bottom: .25rem;
         }
 
-        /* Question number grid */
+        /* Question grid */
         .q-nav-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -265,10 +266,10 @@
         }
 
         .q-nav-btn.active.answered::after {
-            background: rgba(255, 204, 0, 0.7);
+            background: rgba(255, 204, 0, .7);
         }
 
-        /* Progress in sidebar */
+        /* Progress */
         .sidebar-progress {
             background: var(--gray-100, #f0f3f5);
             border-radius: var(--r-lg, 16px);
@@ -304,7 +305,7 @@
             margin-top: 6px;
         }
 
-        /* Submit btn in sidebar */
+        /* Submit btn */
         .sidebar-submit-btn {
             display: flex;
             align-items: center;
@@ -328,6 +329,12 @@
             background: var(--teal-600, #009e90);
             transform: translateY(-1px);
             box-shadow: 0 6px 20px rgba(0, 181, 165, .4);
+        }
+
+        .sidebar-submit-btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         /* Legend */
@@ -364,14 +371,13 @@
             background: var(--teal-500, #00b5a5);
         }
 
-        /* ── MAIN CONTENT ── */
+        /* ── MAIN ── */
         .test-main {
             flex: 1;
             padding: 2rem 1.5rem;
             max-width: 1250px;
             margin: 0 auto;
             width: 100%;
-            transition: .3s ease;
         }
 
         /* ── QUESTION CARD ── */
@@ -381,12 +387,7 @@
             border-radius: var(--r-xl, 20px);
             box-shadow: 0 4px 20px rgba(0, 0, 0, .06);
             overflow: hidden;
-            display: none;
             animation: slideIn .22s ease;
-        }
-
-        .question-card.visible {
-            display: block;
         }
 
         @keyframes slideIn {
@@ -398,6 +399,87 @@
             to {
                 opacity: 1;
                 transform: none;
+            }
+        }
+
+        /* Skeleton loader */
+        .question-skeleton {
+            background: var(--color-surface, #fff);
+            border: 1px solid var(--color-border, #e2e8ed);
+            border-radius: var(--r-xl, 20px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .06);
+            overflow: hidden;
+            display: none;
+        }
+
+        .question-skeleton.visible {
+            display: block;
+        }
+
+        .skeleton-header {
+            padding: 1.5rem 1.75rem 1.25rem;
+            border-bottom: 1px solid var(--color-border, #e2e8ed);
+            background: var(--gray-50, #f8fafb);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .skeleton-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--r-md, 12px);
+            background: var(--gray-200, #e2e8ed);
+            flex-shrink: 0;
+            animation: shimmer 1.2s ease infinite;
+        }
+
+        .skeleton-lines {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 6px;
+        }
+
+        .skeleton-line {
+            height: 14px;
+            border-radius: 6px;
+            background: var(--gray-200, #e2e8ed);
+            animation: shimmer 1.2s ease infinite;
+        }
+
+        .skeleton-line:nth-child(1) {
+            width: 85%;
+        }
+
+        .skeleton-line:nth-child(2) {
+            width: 60%;
+        }
+
+        .skeleton-body {
+            padding: 1.5rem 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .skeleton-option {
+            height: 48px;
+            border-radius: var(--r-lg, 16px);
+            background: var(--gray-100, #f0f3f5);
+            animation: shimmer 1.2s ease infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .5;
             }
         }
 
@@ -433,11 +515,33 @@
             margin-top: 6px;
         }
 
+        .clearCurrentBtn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: var(--r-md, 12px);
+            border: 1.5px solid var(--color-border, #e2e8ed);
+            background: var(--color-surface, #fff);
+            color: var(--gray-500, #6b7a89);
+            cursor: pointer;
+            transition: .2s ease;
+            flex-shrink: 0;
+            padding: 0;
+        }
+
+        .clearCurrentBtn:hover {
+            border-color: #ef5350;
+            color: #c62828;
+            background: #ffebee;
+        }
+
         .question-card__body {
             padding: 1.5rem 1.75rem;
         }
 
-        /* ── OPTIONS ── */
+        /* Options */
         .option-list {
             display: flex;
             flex-direction: column;
@@ -482,9 +586,7 @@
             line-height: 1.5;
         }
 
-        /* ── SHORT ANSWER ── */
-        .short-answer-wrap {}
-
+        /* Short answer */
         .short-answer-wrap label {
             display: block;
             font-size: 13px;
@@ -513,7 +615,7 @@
             box-shadow: 0 0 0 3px rgba(0, 181, 165, .12);
         }
 
-        /* ── RICH TEXT ── */
+        /* Rich text */
         .rich-text-wrap label {
             display: block;
             font-size: 13px;
@@ -554,7 +656,7 @@
             border-radius: var(--r-md, 12px) var(--r-md, 12px) 0 0;
         }
 
-        /* ── FILL DROPDOWN ── */
+        /* Fill dropdown */
         .fill-in-dropdown-select-inline {
             display: inline-block;
             padding: 4px 10px;
@@ -576,17 +678,7 @@
             box-shadow: 0 0 0 2px rgba(0, 181, 165, .15);
         }
 
-        .original-text-hint {
-            margin-top: 12px;
-            font-size: 12px;
-            color: var(--color-text-muted, #9eaab7);
-            background: var(--gray-100, #f0f3f5);
-            border-radius: var(--r-md, 12px);
-            padding: 8px 12px;
-            line-height: 1.5;
-        }
-
-        /* ── NAV BUTTONS ── */
+        /* Nav buttons */
         .question-nav {
             display: flex;
             align-items: center;
@@ -633,10 +725,12 @@
         }
 
         .nav-btn--primary:hover:not(:disabled) {
+            background: var(--teal-600, #009e90);
             border-color: var(--teal-600, #009e90);
+            color: #fff;
         }
 
-        /* ── MOBILE OVERLAY ── */
+        /* Mobile overlay */
         .sidebar-overlay {
             display: none;
             position: fixed;
@@ -652,7 +746,7 @@
             }
         }
 
-        /* ── CONFIRM MODAL ── */
+        /* Modals */
         .modal-backdrop {
             display: none;
             position: fixed;
@@ -779,7 +873,7 @@
             transform: translateY(-1px);
         }
 
-        /* ── SCROLLBAR ── */
+        /* Scrollbar */
         .test-sidebar::-webkit-scrollbar {
             width: 4px;
         }
@@ -796,31 +890,20 @@
 @endsection
 
 @section('content')
-    @php
-        $totalQuestions = $test->questions->count();
-    @endphp
-
     <div class="test-shell">
 
-        {{-- ─────────── TOP BAR ─────────── --}}
+        {{-- ─────────── TOPBAR ─────────── --}}
         <header class="test-topbar">
-            {{-- sidebar toggle --}}
             <button class="sidebar-toggle-btn" id="sidebarToggle" title="Навигация по вопросам">
                 <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                     stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
-
-            {{-- title --}}
             <h1 class="test-topbar__title">{{ $test->title }}</h1>
-
-            {{-- description (desktop) --}}
             @if ($test->description)
                 <span class="test-topbar__desc">{{ Str::limit($test->description, 60) }}</span>
             @endif
-
-            {{-- timer --}}
             @if ($test->time_limit > 0)
                 <div class="timer-pill" id="timerPill">
                     <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -828,67 +911,74 @@
                         <circle cx="12" cy="12" r="10" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2" />
                     </svg>
-                    <span class="timer-pill__value" id="timer">{{ floor($test->time_limit) }}:00</span>
+                    @php
+                    $timerM = floor($initialTimeRemaining / 60);
+                    $timerS = $initialTimeRemaining % 60;
+                @endphp
+                <span class="timer-pill__value" id="timer">{{ $timerM }}:{{ str_pad($timerS, 2, '0', STR_PAD_LEFT) }}</span>
                 </div>
             @endif
         </header>
 
         {{-- ─────────── BODY ─────────── --}}
         <div class="test-body">
-
-            {{-- Mobile overlay --}}
             <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
             {{-- ─────────── SIDEBAR ─────────── --}}
             <aside class="test-sidebar" id="testSidebar">
                 <div class="sidebar-inner">
 
-                    {{-- Progress --}}
                     <div>
                         <div class="sidebar-section-label">Прогресс</div>
                         <div class="sidebar-progress">
                             <div class="sidebar-progress__nums">
-                                <span>Отвечено: <strong id="answeredCount">0</strong></span>
+                                <span>Отвечено: <strong id="answeredCount">{{ $initialAnsweredCount }}</strong></span>
                                 <span>Всего: <strong>{{ $totalQuestions }}</strong></span>
                             </div>
                             <div class="sidebar-progress__bar">
-                                <div class="sidebar-progress__fill" id="progressFill" style="width: 0%"></div>
+                                <div class="sidebar-progress__fill" id="progressFill"
+                                    style="width: {{ $totalQuestions > 0 ? round(($initialAnsweredCount / $totalQuestions) * 100) : 0 }}%">
+                                </div>
                             </div>
-                            <div class="sidebar-progress__label" id="progressLabel">Ответьте на все вопросы</div>
+                            <div class="sidebar-progress__label" id="progressLabel">
+                                @if ($initialAnsweredCount === $totalQuestions && $totalQuestions > 0)
+                                    Все вопросы отвечены ✓
+                                @else
+                                    Осталось: {{ $totalQuestions - $initialAnsweredCount }}
+                                @endif
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Questions grid --}}
                     <div>
                         <div class="sidebar-section-label">Вопросы</div>
                         <div class="q-nav-grid" id="qNavGrid">
-                            @foreach ($test->questions as $i => $question)
-                                <button class="q-nav-btn {{ $i === 0 ? 'active' : '' }}" data-q-index="{{ $i }}"
+                            @for ($i = 0; $i < $totalQuestions; $i++)
+                                <button
+                                    class="q-nav-btn
+                                    {{ $i === ($lastQuestionIndex ?? 0) ? 'active' : '' }}
+                                    {{ in_array($i, $answeredIndices) ? 'answered' : '' }}"
+                                    data-q-index="{{ $i }}"
                                     title="Вопрос {{ $i + 1 }}">{{ $i + 1 }}</button>
-                            @endforeach
+                            @endfor
                         </div>
                     </div>
 
-                    {{-- Legend --}}
                     <div>
                         <div class="sidebar-section-label">Обозначения</div>
                         <div class="sidebar-legend">
                             <div class="legend-item">
-                                <div class="legend-dot legend-dot--empty"></div>
-                                <span>Не отвечено</span>
+                                <div class="legend-dot legend-dot--empty"></div><span>Не отвечено</span>
                             </div>
                             <div class="legend-item">
-                                <div class="legend-dot legend-dot--answered"></div>
-                                <span>Отвечено</span>
+                                <div class="legend-dot legend-dot--answered"></div><span>Отвечено</span>
                             </div>
                             <div class="legend-item">
-                                <div class="legend-dot legend-dot--active"></div>
-                                <span>Текущий вопрос</span>
+                                <div class="legend-dot legend-dot--active"></div><span>Текущий вопрос</span>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Submit --}}
                     <button class="sidebar-submit-btn" id="sidebarSubmitBtn" type="button">
                         <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                             stroke-width="2.5">
@@ -896,183 +986,58 @@
                         </svg>
                         Завершить тест
                     </button>
-
                 </div>
             </aside>
 
             {{-- ─────────── MAIN ─────────── --}}
             <main class="test-main">
-                <form action="/tests/{{ $test->id }}/result" method="POST" id="testForm">
-                    @csrf
 
-                    @foreach ($test->questions as $i => $question)
-                        @php
-                            $questionDisplay = $question->question_text;
-                            if ($question->question_type === 'fill_in_dropdown') {
-                                $dropdownsByBlank = [];
-                                foreach ($question->options as $option) {
-                                    $data = json_decode($option->option_text, true);
-                                    if (!isset($dropdownsByBlank[$data['blank_id']])) {
-                                        $dropdownsByBlank[$data['blank_id']] = [];
-                                    }
-                                    $dropdownsByBlank[$data['blank_id']][] = [
-                                        'id' => $option->id,
-                                        'text' => $data['text'],
-                                    ];
-                                }
-
-                                foreach ($dropdownsByBlank as $blankId => $options) {
-                                    $savedValue = '';
-                                    if (isset($savedAnswers[$question->id]) && is_array($savedAnswers[$question->id])) {
-                                        $savedValue = $savedAnswers[$question->id][$blankId] ?? '';
-                                    }
-
-                                    $selectHTML =
-                                        '<select class="fill-in-dropdown-select-inline" data-question-id="' .
-                                        $question->id .
-                                        '" data-blank-id="' .
-                                        $blankId .
-                                        '">';
-                                    $selectHTML .= '<option value="">—выберите—</option>';
-                                    foreach ($options as $option) {
-                                        $selectedAttr = $savedValue == $option['id'] ? 'selected' : '';
-                                        $selectHTML .=
-                                            '<option value="' .
-                                            $option['id'] .
-                                            '" ' .
-                                            $selectedAttr .
-                                            '>' .
-                                            htmlspecialchars($option['text'], ENT_QUOTES, 'UTF-8') .
-                                            '</option>';
-                                    }
-                                    $selectHTML .= '</select>';
-
-                                    $questionDisplay = str_replace('{' . $blankId . '}', $selectHTML, $questionDisplay);
-                                }
-                            }
-                        @endphp
-
-                        <div class="question-card {{ $i === 0 ? 'visible' : '' }}" data-q-index="{{ $i }}"
-                            id="question-{{ $i }}">
-                            <div class="question-card__header">
-                                <div class="question-badge">{{ $i + 1 }}</div>
-                                <p class="question-text">{!! $questionDisplay !!}</p>
-                                <button type="button" class="nav-btn clearCurrentBtn"
-                                    title="Очистить ответ на текущий вопрос">
-                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <div class="question-card__body">
-
-                                {{-- SHORT ANSWER --}}
-                                @if ($question->question_type === 'short_answer')
-                                    @php
-                                        $savedText = $savedAnswers[$question->id] ?? '';
-                                    @endphp
-                                    <div class="short-answer-wrap">
-                                        <label>Ваш ответ</label>
-                                        <input type="text" name="text_answers[{{ $question->id }}]"
-                                            class="short-answer-input text-answer-input" placeholder="Введите ответ..."
-                                            value="{{ $savedText }}" data-question-id="{{ $question->id }}"
-                                            data-q-index="{{ $i }}">
-                                    </div>
-
-                                    {{-- RICH TEXT --}}
-                                @elseif ($question->question_type === 'rich_text_answer')
-                                    @php
-                                        $savedRichText =
-                                            isset($savedAnswers[$question->id]) &&
-                                            is_string($savedAnswers[$question->id])
-                                                ? $savedAnswers[$question->id]
-                                                : '';
-                                    @endphp
-                                    <div class="rich-text-wrap">
-                                        <label>Развёрнутый ответ</label>
-                                        <input type="hidden" id="rich_text_answer_{{ $question->id }}"
-                                            name="rich_text_answers[{{ $question->id }}]" value="{{ $savedRichText }}">
-                                        <trix-editor input="rich_text_answer_{{ $question->id }}"
-                                            data-question-id="{{ $question->id }}" data-q-index="{{ $i }}"
-                                            class="rich-text-answer-input"></trix-editor>
-                                    </div>
-
-                                    {{-- FILL IN DROPDOWN --}}
-                                @elseif ($question->question_type === 'fill_in_dropdown')
-                                    @if ($question->description ?? false)
-                                        <div class="original-text-hint">
-                                            <strong>Исходный текст:</strong> {{ $question->question_text }}
-                                        </div>
-                                    @endif
-
-                                    {{-- SINGLE / MULTIPLE CHOICE --}}
-                                @else
-                                    <div class="option-list">
-                                        @foreach ($question->options as $option)
-                                            @php
-                                                $isChecked = false;
-                                                if (
-                                                    isset($savedAnswers[$question->id]) &&
-                                                    is_array($savedAnswers[$question->id])
-                                                ) {
-                                                    if ($question->question_type === 'single_choice') {
-                                                        $isChecked = $savedAnswers[$question->id][0] == $option->id;
-                                                    } else {
-                                                        $isChecked = in_array(
-                                                            $option->id,
-                                                            $savedAnswers[$question->id],
-                                                        );
-                                                    }
-                                                }
-                                            @endphp
-                                            <label class="option-label">
-                                                <input
-                                                    type="{{ $question->question_type === 'single_choice' ? 'radio' : 'checkbox' }}"
-                                                    name="answers[{{ $question->id }}]{{ $question->question_type === 'multiple_choice' ? '[]' : '' }}"
-                                                    value="{{ $option->id }}" class="answer-input"
-                                                    data-question-id="{{ $question->id }}"
-                                                    data-q-index="{{ $i }}" {{ $isChecked ? 'checked' : '' }}>
-                                                <span>{{ $option->option_text }}</span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                @endif
-
-                            </div>
+                {{-- Skeleton shown during AJAX loads --}}
+                <div class="question-skeleton" id="questionSkeleton">
+                    <div class="skeleton-header">
+                        <div class="skeleton-badge"></div>
+                        <div class="skeleton-lines">
+                            <div class="skeleton-line"></div>
+                            <div class="skeleton-line"></div>
                         </div>
-                    @endforeach
-
-                    {{-- Navigation buttons --}}
-                    <div class="question-nav">
-                        <button type="button" class="nav-btn" id="prevBtn">
-                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                            Предыдущий
-                        </button>
-
-
-
-                        <span style="font-size:13px;color:var(--color-text-muted);" id="qCounterLabel">
-                            Вопрос <strong id="qCounterCurrent">1</strong> из <strong>{{ $totalQuestions }}</strong>
-                        </span>
-
-                        <button type="button" class="nav-btn nav-btn--primary" id="nextBtn">
-                            <span id="nextBtnText">Следующий</span>
-                            <svg id="nextBtnArrow" width="16" height="16" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
                     </div>
+                    <div class="skeleton-body">
+                        <div class="skeleton-option"></div>
+                        <div class="skeleton-option"></div>
+                        <div class="skeleton-option"></div>
+                    </div>
+                </div>
 
+                {{-- Question container — filled via AJAX --}}
+                <div id="questionContainer"></div>
+
+                {{-- Hidden form for final submission --}}
+                <form action="{{ route('tests.result', $test->id) }}" method="POST" id="testForm"
+                    style="display:none;">
+                    @csrf
                 </form>
-            </main>
 
+                {{-- Navigation --}}
+                <div class="question-nav">
+                    <button type="button" class="nav-btn" id="prevBtn" disabled>
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Предыдущий
+                    </button>
+                    <span style="font-size:13px;color:var(--color-text-muted);">
+                        Вопрос <strong id="qCounterCurrent">1</strong> из <strong>{{ $totalQuestions }}</strong>
+                    </span>
+                    <button type="button" class="nav-btn nav-btn--primary" id="nextBtn">
+                        <span id="nextBtnText">Следующий</span>
+                        <svg id="nextBtnArrow" width="16" height="16" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            </main>
         </div>
     </div>
 
@@ -1103,16 +1068,18 @@
                 </div>
             </div>
             <div class="modal-actions">
-                <button class="modal-btn modal-btn--cancel" onclick="closeModal()">Вернуться</button>
-                <button class="modal-btn modal-btn--confirm" onclick="submitTest()">Завершить</button>
+                <button class="modal-btn modal-btn--cancel" id="modalCancelBtn">Вернуться</button>
+                <button class="modal-btn modal-btn--confirm" id="modalConfirmBtn">Завершить</button>
             </div>
         </div>
     </div>
 
+    {{-- ─────────── CLEAR MODAL ─────────── --}}
     <div class="modal-backdrop" id="clearAnswerModal">
         <div class="modal-box">
             <div class="modal-icon">
-                <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#e65100" stroke-width="2">
+                <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#e65100"
+                    stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
@@ -1120,69 +1087,55 @@
             <h3>Очистить ответ?</h3>
             <p>Вы уверены, что хотите удалить ответ на текущий вопрос? Это действие нельзя отменить.</p>
             <div class="modal-actions">
-                <button class="modal-btn modal-btn--cancel" onclick="closeClearModal()">Отмена</button>
-                <button class="modal-btn modal-btn--confirm" id="clearAnswerConfirmBtn">Очистить</button>
+                <button class="modal-btn modal-btn--cancel" id="clearCancelBtn">Отмена</button>
+                <button class="modal-btn modal-btn--confirm" id="clearConfirmBtn">Очистить</button>
             </div>
         </div>
     </div>
 
     <script>
-        // ── Shared state (must be global so onclick="..." handlers can access it) ──
-        const TestApp = {
-            TOTAL: {{ $totalQuestions }},
-            currentQ: 0,
-            answeredSet: new Set(),
-        };
+        (function() {
+            'use strict';
 
-        function openModal() {
-            document.getElementById('modalAnswered').textContent = TestApp.answeredSet.size;
-            document.getElementById('modalUnanswered').textContent = TestApp.TOTAL - TestApp.answeredSet.size;
-            document.getElementById('confirmModal').classList.add('active');
-        }
+            /* ── Constants from server ── */
+            const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+            const TEST_ID = parseInt(document.querySelector('meta[name="test-id"]').content);
+            const TOTAL = parseInt(document.querySelector('meta[name="total-questions"]').content);
+            const SERVER_TIME = parseInt(document.querySelector('meta[name="server-time"]').content); // seconds
+            const START_TIME = parseInt(document.querySelector('meta[name="test-start-time"]').content) /
+                1000; // convert ms → seconds
+            const INITIAL_IDX = parseInt(document.querySelector('meta[name="initial-question-index"]').content) || 0;
 
-        function closeModal() {
-            document.getElementById('confirmModal').classList.remove('active');
-        }
+            /* ── State ── */
+            let currentQ = INITIAL_IDX;
+            let isLoading = false;
+            let inputsDisabled = false;
 
-        function openClearModal() {
-    document.getElementById('clearAnswerModal').classList.add('active');
-}
-function closeClearModal() {
-    document.getElementById('clearAnswerModal').classList.remove('active');
-}
+            /* Answered set — initialised from server-rendered sidebar buttons */
+            const answeredSet = new Set(
+                Array.from(document.querySelectorAll('.q-nav-btn.answered'))
+                .map(b => parseInt(b.dataset.qIndex))
+            );
 
-        function submitTest() {
-            document.getElementById('testForm').submit();
-        }
-
-        function navigateQ(dir) {
-            if (_goToQuestion) _goToQuestion(TestApp.currentQ + dir);
-        }
-
-        // goToQuestion is defined inside DOMContentLoaded but exposed via wrapper above
-        let _goToQuestion = null;
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const TOTAL = TestApp.TOTAL;
-            let currentQ = TestApp.currentQ;
-            const answeredSet = TestApp.answeredSet;
-
-            // Pre-mark answered questions from saved answers
-            @foreach ($test->questions as $i => $question)
-                @if (isset($savedAnswers[$question->id]))
-                    @php $ans = $savedAnswers[$question->id]; @endphp
-                    @if (is_array($ans) && count($ans) > 0)
-                        answeredSet.add({{ $i }});
-                    @elseif (is_string($ans) && strlen($ans) > 0)
-                        answeredSet.add({{ $i }});
-                    @endif
-                @endif
-            @endforeach
-
-            // ── Sidebar toggle ──
+            /* ── DOM refs ── */
             const sidebar = document.getElementById('testSidebar');
             const overlay = document.getElementById('sidebarOverlay');
             const toggleBtn = document.getElementById('sidebarToggle');
+            const qNavGrid = document.getElementById('qNavGrid');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const nextBtnText = document.getElementById('nextBtnText');
+            const nextBtnArrow = document.getElementById('nextBtnArrow');
+            const qCounter = document.getElementById('qCounterCurrent');
+            const answeredCount = document.getElementById('answeredCount');
+            const progressFill = document.getElementById('progressFill');
+            const progressLabel = document.getElementById('progressLabel');
+            const questionContainer = document.getElementById('questionContainer');
+            const questionSkeleton = document.getElementById('questionSkeleton');
+            const confirmModal = document.getElementById('confirmModal');
+            const clearModal = document.getElementById('clearAnswerModal');
+
+            /* ── Sidebar toggle ── */
             let sidebarOpen = window.innerWidth > 768;
 
             function applySidebarState() {
@@ -1193,375 +1146,434 @@ function closeClearModal() {
                     sidebar.classList.add('collapsed');
                 }
             }
-
             applySidebarState();
 
             toggleBtn.addEventListener('click', () => {
                 sidebarOpen = !sidebarOpen;
                 applySidebarState();
-                if (sidebarOpen && window.innerWidth <= 768) {
-                    overlay.classList.add('active');
-                } else {
-                    overlay.classList.remove('active');
-                }
+                if (sidebarOpen && window.innerWidth <= 768) overlay.classList.add('active');
+                else overlay.classList.remove('active');
             });
-
             overlay.addEventListener('click', () => {
                 sidebarOpen = false;
                 applySidebarState();
                 overlay.classList.remove('active');
             });
 
-            // ── Navigation ──
-            const cards = document.querySelectorAll('.question-card');
-            const navBtns = document.querySelectorAll('.q-nav-btn');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const qCounterCurrent = document.getElementById('qCounterCurrent');
-
-            function goToQuestion(index) {
-                if (index < 0 || index >= TOTAL) return;
-
-                cards[currentQ].classList.remove('visible');
-                navBtns[currentQ].classList.remove('active');
-
-                currentQ = index;
-                TestApp.currentQ = index;
-
-                cards[currentQ].classList.add('visible');
-                navBtns[currentQ].classList.add('active');
-
-                qCounterCurrent.textContent = currentQ + 1;
-                prevBtn.disabled = currentQ === 0;
-
-                // Update next button based on question position
-                const isLastQuestion = currentQ === TOTAL - 1;
-                if (isLastQuestion) {
-                    document.getElementById('nextBtnText').textContent = 'Завершить';
-                    document.getElementById('nextBtnArrow').style.display = 'none';
-                } else {
-                    document.getElementById('nextBtnText').textContent = 'Следующий';
-                    document.getElementById('nextBtnArrow').style.display = 'inline';
-                }
-
-                // On mobile, close sidebar after nav
-                if (window.innerWidth <= 768 && sidebarOpen) {
-                    sidebarOpen = false;
-                    applySidebarState();
-                    overlay.classList.remove('active');
-                }
-                fetch(`/tests/{{ $test->id }}/save-progress`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        question_index: index
-                    })
-                }).catch(e => console.error(e));
-            }
-
-            _goToQuestion = goToQuestion;
-
-            navBtns.forEach((btn, i) => {
-                btn.addEventListener('click', () => goToQuestion(i));
-            });
-
-            // Initial state
-            const savedQIndex = parseInt(
-                document.querySelector('meta[name="last-question-index"]')?.content || 0
-            );
-            prevBtn.disabled = currentQ === 0;
-
-            if (savedQIndex > 0) {
-                goToQuestion(savedQIndex);
-            }
-            prevBtn.addEventListener('click', function() {
-                navigateQ(-1);
-            });
-
-            if (TOTAL > 1) {
-                nextBtn.disabled = false;
-                nextBtn.addEventListener('click', function() {
-                    if (currentQ === TOTAL - 1) {
-                        openModal();
-                    } else {
-                        navigateQ(1);
-                    }
-                });
-            } else {
-                nextBtn.disabled = true;
-            }
-            updateProgress();
-            renderNavBtns();
-
-            // ── Mark answered ──
-            function markAnswered(qIndex) {
-                answeredSet.add(qIndex);
-                updateProgress();
-                renderNavBtns();
-            }
-
+            /* ── Progress UI ── */
             function updateProgress() {
                 const count = answeredSet.size;
-                document.getElementById('answeredCount').textContent = count;
+                answeredCount.textContent = count;
                 const pct = TOTAL > 0 ? Math.round((count / TOTAL) * 100) : 0;
-                document.getElementById('progressFill').style.width = pct + '%';
-                if (count === TOTAL) {
-                    document.getElementById('progressLabel').textContent = 'Все вопросы отвечены ✓';
-                } else {
-                    document.getElementById('progressLabel').textContent = `Осталось: ${TOTAL - count}`;
-                }
+                progressFill.style.width = pct + '%';
+                progressLabel.textContent = count === TOTAL ?
+                    'Все вопросы отвечены ✓' :
+                    `Осталось: ${TOTAL - count}`;
             }
 
             function renderNavBtns() {
-                navBtns.forEach((btn, i) => {
+                document.querySelectorAll('.q-nav-btn').forEach((btn, i) => {
                     btn.classList.toggle('answered', answeredSet.has(i));
+                    btn.classList.toggle('active', i === currentQ);
                 });
             }
 
-            // ── Answer listeners ──
-            document.querySelectorAll('.answer-input').forEach(input => {
-                if (answeredSet.has(parseInt(input.dataset.qIndex))) {
-                    // already answered — no need to re-add
-                }
-                input.addEventListener('change', async function() {
-                    markAnswered(parseInt(this.dataset.qIndex));
-                    try {
-                        const questionId = this.dataset.questionId;
-                        let optionIds;
-                        if (this.type === 'radio') {
-                            optionIds = this.value;
-                        } else {
-                            const checked = document.querySelectorAll(
-                                `input[name="answers[${questionId}][]"]:checked`);
-                            optionIds = Array.from(checked).map(cb => cb.value);
+            function updateNavControls() {
+                qCounter.textContent = currentQ + 1;
+                prevBtn.disabled = currentQ === 0;
+                const isLast = currentQ === TOTAL - 1;
+                nextBtnText.textContent = isLast ? 'Завершить' : 'Следующий';
+                nextBtnArrow.style.display = isLast ? 'none' : 'inline';
+            }
+
+            /* ── Load question via AJAX ── */
+            async function loadQuestion(index) {
+                if (isLoading) return;
+                if (index < 0 || index >= TOTAL) return;
+
+                isLoading = true;
+
+                // Show skeleton, hide old card
+                questionContainer.innerHTML = '';
+                questionSkeleton.classList.add('visible');
+
+                try {
+                    const res = await fetch(`/tests/${TEST_ID}/question/${index}`, {
+                        headers: {
+                            'X-CSRF-TOKEN': CSRF,
+                            'Accept': 'application/json'
                         }
-                        await fetch(`/tests/{{ $test->id }}/save-answer`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector(
-                                    'meta[name="csrf-token"]').content
-                            },
-                            body: JSON.stringify({
-                                question_id: questionId,
-                                option_id: optionIds
-                            })
-                        });
-                    } catch (e) {
-                        console.error(e);
+                    });
+
+                    if (!res.ok) throw new Error('Failed to load question');
+
+                    const data = await res.json();
+
+                    questionSkeleton.classList.remove('visible');
+                    questionContainer.innerHTML = data.html;
+
+                    // Re-init Trix editors that appeared in the injected HTML
+                    // (Trix auto-inits on connectedCallback, nothing extra needed)
+
+                    currentQ = index;
+                    updateNavControls();
+                    renderNavBtns();
+                    attachAnswerListeners();
+
+                    // Pre-close mobile sidebar
+                    if (window.innerWidth <= 768 && sidebarOpen) {
+                        sidebarOpen = false;
+                        applySidebarState();
+                        overlay.classList.remove('active');
                     }
+
+                    // Save progress
+                    fetch(`/tests/${TEST_ID}/save-progress`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': CSRF
+                        },
+                        body: JSON.stringify({
+                            question_index: index
+                        })
+                    }).catch(() => {});
+
+                } catch (e) {
+                    console.error(e);
+                    questionSkeleton.classList.remove('visible');
+                    questionContainer.innerHTML =
+                        '<p style="padding:2rem;color:#c62828;">Не удалось загрузить вопрос. Попробуйте ещё раз.</p>';
+                } finally {
+                    isLoading = false;
+                }
+            }
+
+            /* ── Answer listeners (re-attached on each AJAX load) ── */
+            function attachAnswerListeners() {
+                if (inputsDisabled) {
+                    questionContainer.querySelectorAll('input, select, trix-editor, button').forEach(el => {
+                        el.disabled = true;
+                    });
+                    return;
+                }
+
+                // Radio / Checkbox
+                questionContainer.querySelectorAll('.answer-input').forEach(input => {
+                    input.addEventListener('change', async function() {
+                        answeredSet.add(currentQ);
+                        updateProgress();
+                        renderNavBtns();
+                        try {
+                            const questionId = this.dataset.questionId;
+                            let optionIds;
+                            if (this.type === 'radio') {
+                                optionIds = this.value;
+                            } else {
+                                const checked = questionContainer.querySelectorAll(
+                                    `input[name="answers[${questionId}][]"]:checked`);
+                                optionIds = Array.from(checked).map(cb => cb.value);
+                            }
+                            await fetch(`/tests/${TEST_ID}/save-answer`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': CSRF,
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    question_id: questionId,
+                                    option_id: optionIds
+                                })
+                            });
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    });
                 });
+
+                // Short text
+                questionContainer.querySelectorAll('.text-answer-input').forEach(input => {
+                    input.addEventListener('input', function() {
+                        if (this.value.trim()) {
+                            answeredSet.add(currentQ);
+                            updateProgress();
+                            renderNavBtns();
+                        }
+                    });
+                    input.addEventListener('change', async function() {
+                        try {
+                            await fetch(`/tests/${TEST_ID}/save-answer`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': CSRF,
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    question_id: this.dataset.questionId,
+                                    answer_text: this.value
+                                })
+                            });
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    });
+                });
+
+                // Rich text
+                questionContainer.querySelectorAll('.rich-text-answer-input').forEach(editor => {
+                    editor.addEventListener('trix-change', async function() {
+                        const inputId = this.getAttribute('input');
+                        const val = document.getElementById(inputId)?.value || '';
+                        if (val && val !== '<div></div>') {
+                            answeredSet.add(currentQ);
+                            updateProgress();
+                            renderNavBtns();
+                        }
+                        try {
+                            await fetch(`/tests/${TEST_ID}/save-answer`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': CSRF,
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    question_id: this.dataset.questionId,
+                                    rich_text_answer: val
+                                })
+                            });
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    });
+                });
+
+                // Fill dropdown
+                questionContainer.querySelectorAll('.fill-in-dropdown-select-inline').forEach(select => {
+                    select.addEventListener('change', async function() {
+                        answeredSet.add(currentQ);
+                        updateProgress();
+                        renderNavBtns();
+                        try {
+                            const questionId = this.dataset.questionId;
+                            const filledAnswers = {};
+                            questionContainer.querySelectorAll(
+                                    `.fill-in-dropdown-select-inline[data-question-id="${questionId}"]`
+                                )
+                                .forEach(sel => {
+                                    if (sel.value) filledAnswers[sel.dataset.blankId] =
+                                        parseInt(sel.value);
+                                });
+                            await fetch(`/tests/${TEST_ID}/save-answer`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': CSRF,
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    question_id: questionId,
+                                    fill_in_dropdown_answers: filledAnswers
+                                })
+                            });
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    });
+                });
+
+                // Clear button
+                questionContainer.querySelectorAll('.clearCurrentBtn').forEach(btn => {
+                    btn.addEventListener('click', () => clearModal.classList.add('active'));
+                });
+
+                // Block Trix file uploads
+                document.addEventListener('trix-file-accept', e => e.preventDefault(), {
+                    once: false
+                });
+                document.addEventListener('trix-attachment-add', e => {
+                    if (e.attachment) e.attachment.remove();
+                }, {
+                    once: false
+                });
+            }
+
+            /* ── Sidebar question nav ── */
+            qNavGrid.addEventListener('click', e => {
+                const btn = e.target.closest('.q-nav-btn');
+                if (btn) loadQuestion(parseInt(btn.dataset.qIndex));
             });
 
-            document.querySelectorAll('.text-answer-input').forEach(input => {
-                input.addEventListener('input', function() {
-                    if (this.value.trim()) markAnswered(parseInt(this.dataset.qIndex));
-                });
-                input.addEventListener('change', async function() {
-                    try {
-                        await fetch(`/tests/{{ $test->id }}/save-answer`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector(
-                                    'meta[name="csrf-token"]').content
-                            },
-                            body: JSON.stringify({
-                                question_id: this.dataset.questionId,
-                                answer_text: this.value
-                            })
-                        });
-                    } catch (e) {
-                        console.error(e);
-                    }
-                });
+            /* ── Prev / Next ── */
+            prevBtn.addEventListener('click', () => {
+                if (currentQ > 0) loadQuestion(currentQ - 1);
+            });
+            nextBtn.addEventListener('click', () => {
+                if (currentQ === TOTAL - 1) openModal();
+                else loadQuestion(currentQ + 1);
             });
 
-            document.querySelectorAll('.rich-text-answer-input').forEach(editor => {
-                editor.addEventListener('trix-change', async function() {
-                    const qIndex = parseInt(this.dataset.qIndex);
-                    const inputId = this.getAttribute('input');
-                    const val = document.getElementById(inputId).value;
-                    if (val && val !== '<div></div>') markAnswered(qIndex);
-                    try {
-                        await fetch(`/tests/{{ $test->id }}/save-answer`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector(
-                                    'meta[name="csrf-token"]').content
-                            },
-                            body: JSON.stringify({
-                                question_id: this.dataset.questionId,
-                                rich_text_answer: val
-                            })
-                        });
-                    } catch (e) {
-                        console.error(e);
-                    }
-                });
+            /* ── Submit modal ── */
+            function openModal() {
+                document.getElementById('modalAnswered').textContent = answeredSet.size;
+                document.getElementById('modalUnanswered').textContent = TOTAL - answeredSet.size;
+                confirmModal.classList.add('active');
+            }
+            confirmModal.addEventListener('click', e => {
+                if (e.target === confirmModal) confirmModal.classList.remove('active');
             });
-
-            document.querySelectorAll('.fill-in-dropdown-select-inline').forEach(select => {
-                select.addEventListener('change', async function() {
-                    const questionId = this.dataset.questionId;
-                    // find q-index from the card
-                    const card = this.closest('.question-card');
-                    if (card) markAnswered(parseInt(card.dataset.qIndex));
-
-                    const filledAnswers = {};
-                    document.querySelectorAll(
-                            `.fill-in-dropdown-select-inline[data-question-id="${questionId}"]`)
-                        .forEach(sel => {
-                            if (sel.value) filledAnswers[sel.dataset.blankId] = parseInt(sel
-                                .value);
-                        });
-                    try {
-                        await fetch(`/tests/{{ $test->id }}/save-answer`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector(
-                                    'meta[name="csrf-token"]').content
-                            },
-                            body: JSON.stringify({
-                                question_id: questionId,
-                                fill_in_dropdown_answers: filledAnswers
-                            })
-                        });
-                    } catch (e) {
-                        console.error(e);
-                    }
-                });
+            confirmModal.querySelector('.modal-box').addEventListener('click', e => e.stopPropagation());
+            document.getElementById('modalCancelBtn').addEventListener('click', () => confirmModal.classList.remove(
+                'active'));
+            document.getElementById('modalConfirmBtn').addEventListener('click', () => {
+                document.getElementById('testForm').submit();
             });
-
-            // Block file attachments in Trix
-            document.addEventListener('trix-file-accept', e => e.preventDefault());
-            document.addEventListener('trix-attachment-add', e => {
-                if (e.attachment) e.attachment.remove();
-            });
-
-            // ── Clear current answer ──
-let _pendingClearHandler = null;
-
-document.getElementById('clearAnswerModal').addEventListener('click', function(e) {
-    if (e.target === this) closeClearModal();
-});
-
-document.querySelectorAll('.clearCurrentBtn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        openClearModal();
-    });
-});
-
-document.getElementById('clearAnswerConfirmBtn').addEventListener('click', async function() {
-    closeClearModal();
-
-    const currentCard = cards[currentQ];
-    const questionId = currentCard.querySelector(
-        '.answer-input, .text-answer-input, .rich-text-answer-input, .fill-in-dropdown-select-inline'
-    )?.dataset.questionId;
-
-    // Clear radio buttons and checkboxes
-    currentCard.querySelectorAll('.answer-input').forEach(input => {
-        input.checked = false;
-    });
-
-    // Clear text input
-    const textInput = currentCard.querySelector('.text-answer-input');
-    if (textInput) textInput.value = '';
-
-    // Clear Trix editor
-    const richEditor = currentCard.querySelector('.rich-text-answer-input');
-    if (richEditor) {
-        const inputId = richEditor.getAttribute('input');
-        document.getElementById(inputId).value = '';
-        richEditor.editor.setSelectedRange([0, richEditor.editor.getDocument().getLength()]);
-        richEditor.editor.deleteInDirection('forward');
-    }
-
-    // Clear dropdowns
-    currentCard.querySelectorAll('.fill-in-dropdown-select-inline').forEach(select => {
-        select.value = '';
-    });
-
-    // Remove from answered set
-    answeredSet.delete(currentQ);
-    updateProgress();
-    renderNavBtns();
-
-    try {
-        await fetch(`/tests/{{ $test->id }}/clear-answer`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({ question_id: questionId })
-        });
-    } catch (e) {
-        console.error(e);
-    }
-});
-
-            // ── Submit modal ──
             document.getElementById('sidebarSubmitBtn').addEventListener('click', openModal);
 
-            document.getElementById('confirmModal').addEventListener('click', function(e) {
-                if (e.target === this) closeModal();
+            /* ── Clear modal ── */
+            clearModal.addEventListener('click', e => {
+                if (e.target === clearModal) clearModal.classList.remove('active');
+            });
+            clearModal.querySelector('.modal-box').addEventListener('click', e => e.stopPropagation());
+            document.getElementById('clearCancelBtn').addEventListener('click', () => clearModal.classList.remove(
+                'active'));
+
+            document.getElementById('clearConfirmBtn').addEventListener('click', async () => {
+                clearModal.classList.remove('active');
+
+                // Find question id from current card
+                const questionId = questionContainer.querySelector('[data-question-id]')?.dataset
+                    .questionId;
+                if (!questionId) return;
+
+                // Clear inputs
+                questionContainer.querySelectorAll('.answer-input').forEach(i => i.checked = false);
+                const textInput = questionContainer.querySelector('.text-answer-input');
+                if (textInput) textInput.value = '';
+                const richEditor = questionContainer.querySelector('.rich-text-answer-input');
+                if (richEditor) {
+                    const hiddenId = richEditor.getAttribute('input');
+                    const hidden = document.getElementById(hiddenId);
+                    if (hidden) hidden.value = '';
+                    richEditor.editor.setSelectedRange([0, richEditor.editor.getDocument().getLength()]);
+                    richEditor.editor.deleteInDirection('forward');
+                }
+                questionContainer.querySelectorAll('.fill-in-dropdown-select-inline').forEach(s => s.value =
+                    '');
+
+                answeredSet.delete(currentQ);
+                updateProgress();
+                renderNavBtns();
+
+                try {
+                    await fetch(`/tests/${TEST_ID}/clear-answer`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': CSRF,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            question_id: questionId
+                        })
+                    });
+                } catch (e) {
+                    console.error(e);
+                }
             });
 
-            // ── Timer ──
+            /* ── Timer ── */
             @if ($test->time_limit > 0)
-                const serverTimeMeta = parseInt(document.querySelector('meta[name="server-time"]')?.content || 0);
-                const testStartTimeMeta = parseInt(document.querySelector('meta[name="test-start-time"]')
-                    ?.content || 0);
-                const clientTimeAtLoad = Date.now();
+                const clientTimeAtLoad = Date.now() / 1000; // ← верни эту строку
                 const timerEl = document.getElementById('timer');
                 const timerPill = document.getElementById('timerPill');
-                const timeLimitMs = {{ $test->time_limit }} * 60 * 1000;
+                const timeLimitSeconds = {{ $test->time_limit }} * 60;
+                let serverTimeOffset = 0;
                 let timerInterval;
-                const timeLimitExceededOnLoad = document.querySelector('meta[name="time-limit-exceeded"]').content === 'true';
+                let timerTickCount = 0;
+
+                console.log('[TIMER] clientTimeAtLoad:', clientTimeAtLoad);
+                console.log('[TIMER] timeLimitSeconds:', timeLimitSeconds);
+                console.log('[TIMER] HTML placeholder textContent:', timerEl?.textContent);
 
                 function disableTestInputs() {
-                    document.querySelectorAll('.answer-input, .text-answer-input, .rich-text-answer-input, .fill-in-dropdown-select-inline').forEach(input => {
-                        input.disabled = true;
-                    });
-                    document.getElementById('prevBtn').disabled = true;
-                    document.getElementById('nextBtn').disabled = true;
+                    inputsDisabled = true;
+                    if (questionContainer) {
+                        questionContainer.querySelectorAll('input, select, trix-editor, button').forEach(el => el
+                            .disabled = true);
+                    }
+                    prevBtn.disabled = true;
+                    nextBtn.disabled = true;
                     document.getElementById('sidebarSubmitBtn').disabled = true;
                 }
 
                 function updateTimer() {
-                    if (timeLimitExceededOnLoad) {
-                        timerEl.textContent = '00:00';
-                        clearInterval(timerInterval);
-                        timerPill.classList.add('urgent');
-                        disableTestInputs();
-                        return;
+                    const clientNow = Date.now() / 1000;
+                    const timeSinceLoad = clientNow - clientTimeAtLoad;
+                    const currentServerTime = SERVER_TIME + timeSinceLoad + serverTimeOffset;
+                    const elapsedSeconds = Math.round(currentServerTime - START_TIME);
+                    const timeLeftSeconds = Math.max(0, timeLimitSeconds - elapsedSeconds);
+                    const m = Math.floor(timeLeftSeconds / 60);
+                    const s = timeLeftSeconds % 60;
+
+                    timerTickCount++;
+                    if (timerTickCount <= 3 || timerTickCount % 10 === 0) {
+                        console.log('[TIMER] tick #' + timerTickCount, {
+                            clientNow,
+                            timeSinceLoad,
+                            currentServerTime,
+                            elapsedSeconds,
+                            timeLeftSeconds,
+                            display: `${m}:${String(s).padStart(2, '0')}`
+                        });
                     }
 
-                    const elapsed = (serverTimeMeta + (Date.now() - clientTimeAtLoad)) - testStartTimeMeta;
-                    const leftMs = Math.max(0, timeLimitMs - elapsed);
-                    const leftSec = Math.round(leftMs / 1000);
-                    const m = Math.floor(leftSec / 60);
-                    const s = leftSec % 60;
                     timerEl.textContent = `${m}:${String(s).padStart(2, '0')}`;
-                    if (leftSec <= 60) timerPill.classList.add('urgent');
-                    if (leftSec <= 0) {
+                    if (timeLeftSeconds <= 60) timerPill.classList.add('urgent');
+                    if (timeLeftSeconds <= 0) {
                         timerEl.textContent = '00:00';
                         clearInterval(timerInterval);
-                        document.getElementById('testForm').submit();
                         disableTestInputs();
+                        document.getElementById('testForm').submit();
+                    }
+                }
+
+                async function syncWithServer() {
+                    try {
+                        const response = await fetch(`/tests/${TEST_ID}/timer-sync`, {
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                                'Accept': 'application/json'
+                            }
+                        });
+                        console.log('[TIMER] sync response status:', response.status);
+                        if (response.ok) {
+                            const data = await response.json();
+                            const clientNow = Date.now() / 1000;
+                            const calculatedServerTime = SERVER_TIME + (clientNow - clientTimeAtLoad);
+                            serverTimeOffset = data.server_time - calculatedServerTime;
+                            console.log('[TIMER] sync success, offset:', serverTimeOffset);
+                        } else {
+                            const errText = await response.text();
+                            console.log('[TIMER] sync failed:', response.status, errText);
+                        }
+                    } catch (e) {
+                        console.error('[TIMER] sync error:', e);
                     }
                 }
 
                 updateTimer();
                 timerInterval = setInterval(updateTimer, 1000);
+                setInterval(syncWithServer, 30000);
             @endif
-        });
+
+            /* ── Bootstrap: load the initial question ── */
+            updateProgress();
+            renderNavBtns();
+            updateNavControls();
+            loadQuestion(INITIAL_IDX);
+        })();
     </script>
 @endsection

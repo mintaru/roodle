@@ -225,15 +225,27 @@
                             </a>
                         @endif
 
-                        <a href="{{ $displayMode === 'single_page' ? route('tests.attempt', $test) : route('tests.attempt.page', [$test->id, 1]) }}"
-                           class="{{ $hasActiveAttempt ? 'btn btn-ghost' : 'btn btn-primary' }}"
-                           style="padding: 10px 24px;"
-                           onclick="if(!confirm('Это начнёт новую попытку. Продолжить?')) return false;">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M12 5v14"/><path d="M5 12h14"/>
-                            </svg>
-                            {{ $hasActiveAttempt ? 'Начать новую попытку' : 'Пройти тест' }}
-                        </a>
+                        @if ($hasActiveAttempt)
+                            <form action="{{ route('tests.attempt.force-new', $test) }}" method="POST" style="display: inline;">
+                                @csrf
+                                <button type="submit" class="btn btn-ghost" style="padding: 10px 24px; cursor: pointer; border: none; font-size: inherit;"
+                                        onclick="return confirm('Это начнёт новую попытку. Продолжить?')">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M12 5v14"/><path d="M5 12h14"/>
+                                    </svg>
+                                    Начать новую попытку
+                                </button>
+                            </form>
+                        @else
+                            <a href="{{ $displayMode === 'single_page' ? route('tests.attempt', $test) : route('tests.attempt.page', [$test->id, 1]) }}"
+                               class="btn btn-primary"
+                               style="padding: 10px 24px;">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M12 5v14"/><path d="M5 12h14"/>
+                                </svg>
+                                Пройти тест
+                            </a>
+                        @endif
 
                     </div>
 

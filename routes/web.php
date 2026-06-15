@@ -283,9 +283,17 @@ Route::get('/tests/{test}/attempt', [TestController::class, 'attempt'])
     ->middleware('auth')
     ->name('tests.attempt');
 
+Route::post('/tests/{test}/attempt/force-new', [TestController::class, 'forceNewAttempt'])
+    ->middleware('auth')
+    ->name('tests.attempt.force-new');
+
 Route::get('/tests/{test}/attempt/{questionIndex?}', [TestController::class, 'attemptPage'])
     ->middleware('auth')
     ->name('tests.attempt.page');
+
+// Загрузка вопроса через AJAX (stream-режим)
+Route::get('/tests/{test}/question/{questionIndex}', [TestController::class, 'getQuestion'])
+    ->middleware('auth');
 
 // Обработка сохранения временного ответа (AJAX)
 Route::post('/tests/{test}/save-answer', [TestController::class, 'saveAnswer'])
@@ -303,6 +311,11 @@ Route::post('/tests/{test}/clear-answer', [TestController::class, 'clearAnswer']
 Route::get('/tests/{test}/timer-sync', [TestController::class, 'timerSync'])
     ->middleware('auth')
     ->name('tests.timer_sync');
+
+// Получение прошедшего времени с сервера для синхронизации таймера
+Route::get('/tests/{test}/elapsed-time', [TestController::class, 'getElapsedTime'])
+    ->middleware('auth')
+    ->name('tests.elapsed_time');
 
 // Обработка отправки ответов и подсчета результатов
 Route::post('/tests/{test}/result', [TestController::class, 'result'])

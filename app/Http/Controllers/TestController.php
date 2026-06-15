@@ -108,7 +108,7 @@ class TestController extends Controller
     // Отображение теста с вопросами
     public function show(Test $test)
     {
-        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin','teacher']))) {
+        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin', 'teacher']))) {
             abort_if(! $test->isAvailable(), 404);
         }
 
@@ -125,7 +125,7 @@ class TestController extends Controller
 
     public function view(Test $test)
     {
-        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin','teacher']))) {
+        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin', 'teacher']))) {
             abort_if(! $test->isAvailable(), 404);
         }
 
@@ -331,36 +331,51 @@ class TestController extends Controller
 
     public function result(Test $test, Request $request)
     {
-        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin','teacher']))) {
-            abort_if(! $test->isAvailable(), 404);
-        }
-
         $user = Auth::user();
 
-        // Получаем активную попытку из БД
+        // Сначала ищем активную попытку
         $attempt = $test->attempts()
             ->where('user_id', $user->id)
             ->whereNull('ended_at')
             ->first();
 
-        // Если активной попытки нет, перенаправляем
+        // Если нет активной — берём последнюю завершённую (например, завершена по таймеру)
+        if (! $attempt) {
+            $attempt = $test->attempts()
+                ->where('user_id', $user->id)
+                ->whereNotNull('ended_at')
+                ->latest('ended_at')
+                ->first();
+        }
+
         if (! $attempt) {
             return redirect()->route('tests.view', $test)
                 ->with('error', 'Активная попытка не найдена.');
         }
 
-        // Подсчитываем результат попытки (rich_text ответы пока не засчитываются автоматически)
+        // Если попытка уже завершена — просто показываем результат без пересчёта
+        if ($attempt->ended_at) {
+            $scoreData = $this->calculateScoreForAttempt($test, $attempt);
+
+            return view('layout', [
+                'content' => view('test_result', [
+                    'test' => $test,
+                    'score' => $attempt->score,
+                    'correctAnswers' => $scoreData['correctAnswers'],
+                    'totalQuestions' => $scoreData['totalQuestions'],
+                ]),
+            ]);
+        }
+
+        // Иначе — завершаем попытку
         $scoreData = $this->calculateScoreForAttempt($test, $attempt);
         $score = $scoreData['score'];
 
-        // Обновляем активную попытку и сохраняем ответы
         DB::transaction(function () use ($attempt, $score) {
             $attempt->update([
                 'score' => round($score),
                 'ended_at' => now(),
             ]);
-
-            // Помечаем все ответы текущей попытки как неактивные
             TemporaryAnswer::where('test_attempt_id', $attempt->id)
                 ->update(['is_active' => false]);
         });
@@ -399,22 +414,24 @@ class TestController extends Controller
     {
         $user = Auth::user();
 
-        // Получаем время начала из сессии
-        $startedAt = session("test_{$test->id}_started_at");
+        // Берём started_at из активной попытки, а не из сессии (сессия не писалась)
+        $attempt = $test->attempts()
+            ->where('user_id', $user->id)
+            ->whereNull('ended_at')
+            ->first();
 
-        if (! $startedAt) {
+        if (!$attempt || !$attempt->started_at) {
             return response()->json(['time_left' => $test->time_limit * 60], 400);
         }
 
-        // Рассчитываем оставшееся время на основе серверного времени
         $now = now();
-        $elapsedSeconds = $now->diffInSeconds($startedAt);
+        $elapsedSeconds = $now->diffInSeconds($attempt->started_at);
         $timeLimitSeconds = $test->time_limit * 60;
         $timeLeft = max(0, $timeLimitSeconds - $elapsedSeconds);
 
         return response()->json([
             'time_left' => $timeLeft,
-            'server_time' => $now->timestamp,
+            'server_time' => $now->timestamp,  // <- маленькими, как в page_group
         ]);
     }
 
@@ -498,6 +515,7 @@ class TestController extends Controller
                     'current_attempt_number' => $currentAttemptNumber,
                 ];
             }
+
             return view('tests.results', compact('test', 'studentsData', 'course'));
         }
 
@@ -874,7 +892,7 @@ class TestController extends Controller
      */
     public function attempt(Test $test)
     {
-        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin','teacher']))) {
+        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin', 'teacher']))) {
             abort_if(! $test->isAvailable(), 404);
         }
 
@@ -922,14 +940,25 @@ class TestController extends Controller
             $activeAttempt->update(['started_at' => now()]);
         }
 
+        error_log('[ATTEMPT_DEBUG] ===== attempt() called for test_id='.$test->id);
+        error_log('[ATTEMPT_DEBUG] Active attempt ID: '.$activeAttempt->id);
+        error_log('[ATTEMPT_DEBUG] Active attempt started_at: '.($activeAttempt->started_at ? $activeAttempt->started_at->toDateTimeString() : 'NULL'));
+        error_log('[ATTEMPT_DEBUG] Active attempt ended_at: '.($activeAttempt->ended_at ? $activeAttempt->ended_at->toDateTimeString() : 'NULL'));
+        error_log('[ATTEMPT_DEBUG] Test time_limit: '.$test->time_limit);
+        error_log('[ATTEMPT_DEBUG] Test time_limit (int): '.(int)$test->time_limit);
+
         $timeLimitExceeded = false;
         if ($test->time_limit > 0 && $activeAttempt->started_at) {
             $elapsedSeconds = now()->diffInSeconds($activeAttempt->started_at);
+            error_log('[ATTEMPT_DEBUG] Time limit check: elapsedSeconds='.$elapsedSeconds.', limit='.($test->time_limit * 60));
             if ($elapsedSeconds > ($test->time_limit * 60)) {
                 $timeLimitExceeded = true;
+                error_log('[ATTEMPT_DEBUG] TIME LIMIT EXCEEDED! Setting ended_at...');
                 // Mark attempt as ended if time limit passed
                 if (is_null($activeAttempt->ended_at)) {
                     $activeAttempt->update(['ended_at' => now()]);
+                    error_log('[ATTEMPT_DEBUG] ended_at set, redirecting to result...');
+
                     // Redirect to result page if test ended by time limit
                     return redirect()->route('tests.result', $test);
                 }
@@ -938,7 +967,14 @@ class TestController extends Controller
 
         // Если попытка завершена (например, если timeLimitExceeded = true выше), то перенаправляем на страницу результатов
         if ($activeAttempt->ended_at) {
+            error_log('[ATTEMPT_DEBUG] Attempt already has ended_at, redirecting to result...');
             return redirect()->route('tests.result', $test);
+        }
+
+        $initialTimeRemaining = $test->time_limit * 60; // в секундах
+        if ($test->time_limit > 0 && $activeAttempt->started_at) {
+            $elapsed = now()->diffInSeconds($activeAttempt->started_at);
+            $initialTimeRemaining = max(0, ($test->time_limit * 60) - $elapsed);
         }
 
         // Загружаем вопросы с вариантами
@@ -1012,13 +1048,147 @@ class TestController extends Controller
             }
         }
 
+        $initialAnsweredCount = count($savedAnswers);
+
+        $answeredQuestionIds = array_keys($savedAnswers);
+        $answeredIndices = [];
+        foreach ($questionOrder as $idx => $qid) {
+            if (in_array($qid, $answeredQuestionIds)) {
+                $answeredIndices[] = $idx;
+            }
+        }
+
         return view('test_attempt', [
-                'test' => $test,
-                'savedAnswers' => $savedAnswers,
-                'attempt' => $activeAttempt,
-                'lastQuestionIndex' => $activeAttempt->last_question_index ?? 0,
-                'timeLimitExceeded' => $timeLimitExceeded,
-            ]);
+            'test' => $test,
+            'savedAnswers' => $savedAnswers,
+            'activeAttempt' => $activeAttempt,
+            'lastQuestionIndex' => $activeAttempt->last_question_index ?? 0,
+            'timeLimitExceeded' => $timeLimitExceeded,
+            'serverTime' => now()->timestamp,
+            'totalQuestions' => $test->questions->count(),
+            'initialAnsweredCount' => $initialAnsweredCount,
+            'answeredIndices' => $answeredIndices,
+            'initialTimeRemaining' => $initialTimeRemaining,
+        ]);
+
+
+    }
+
+    /**
+     * Принудительно завершает активную попытку и перенаправляет на создание новой.
+     */
+    public function forceNewAttempt(Test $test)
+    {
+        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin', 'teacher']))) {
+            abort_if(! $test->isAvailable(), 404);
+        }
+
+        $user = Auth::user();
+
+        $activeAttempt = $test->attempts()
+            ->where('user_id', $user->id)
+            ->whereNull('ended_at')
+            ->first();
+
+        if ($activeAttempt) {
+            $activeAttempt->update(['ended_at' => now()]);
+            TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
+                ->update(['is_active' => false]);
+        }
+
+        if ($test->display_mode === 'single_page') {
+            return redirect()->route('tests.attempt', $test);
+        }
+
+        return redirect()->route('tests.attempt.page', [$test->id, 1]);
+    }
+
+    /**
+     * Загрузка одного вопроса через AJAX (stream-режим).
+     */
+    public function getQuestion(Test $test, $questionIndex)
+    {
+        $user = Auth::user();
+
+        $activeAttempt = $test->attempts()
+            ->where('user_id', $user->id)
+            ->whereNull('ended_at')
+            ->first();
+
+        if (! $activeAttempt) {
+            return response()->json(['error' => 'No active attempt'], 403);
+        }
+
+        if ($test->time_limit > 0 && $activeAttempt->started_at) {
+            $elapsedSeconds = now()->diffInSeconds($activeAttempt->started_at);
+            if ($elapsedSeconds > ($test->time_limit * 60)) {
+                return response()->json(['error' => 'Time is up'], 403);
+            }
+        }
+
+        $test->load(['questions.options']);
+
+        $sessionKey = "test_{$test->id}_attempt_{$activeAttempt->id}_question_order";
+        $questionOrder = session($sessionKey);
+
+        $questions = $test->questions;
+
+        if (! $questionOrder) {
+            $questionOrder = $questions->pluck('id')->toArray();
+            if ($test->randomize_questions) {
+                shuffle($questionOrder);
+            }
+            session([$sessionKey => $questionOrder]);
+        }
+
+        $questionsById = $questions->keyBy('id');
+        $orderedQuestions = collect();
+        foreach ($questionOrder as $qid) {
+            if (isset($questionsById[$qid])) {
+                $orderedQuestions->push($questionsById[$qid]);
+            }
+        }
+
+        $totalQuestions = $orderedQuestions->count();
+        if ($questionIndex < 0 || $questionIndex >= $totalQuestions) {
+            return response()->json(['error' => 'Invalid question index'], 400);
+        }
+
+        $question = $orderedQuestions[$questionIndex];
+
+        $tempAnswers = TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
+            ->where('is_active', true)
+            ->get();
+
+        $savedAnswers = [];
+        foreach ($tempAnswers as $answer) {
+            $questionType = $questionsById[$answer->question_id]->question_type ?? null;
+            if (in_array($questionType, ['short_answer', 'rich_text_answer'])) {
+                $savedAnswers[$answer->question_id] = $answer->answer_text;
+            } elseif ($questionType === 'fill_in_dropdown') {
+                if (! isset($savedAnswers[$answer->question_id])) {
+                    $savedAnswers[$answer->question_id] = [];
+                }
+                if ($answer->answer_text && $answer->option_id) {
+                    $savedAnswers[$answer->question_id][$answer->answer_text] = $answer->option_id;
+                }
+            } else {
+                if (! isset($savedAnswers[$answer->question_id])) {
+                    $savedAnswers[$answer->question_id] = [];
+                }
+                if ($answer->option_id) {
+                    $savedAnswers[$answer->question_id][] = $answer->option_id;
+                }
+            }
+        }
+
+        $html = view('partials._question_card', [
+            'question' => $question,
+            'questionIndex' => $questionIndex,
+            'savedAnswers' => $savedAnswers,
+        ])->render();
+
+        return response()->json(['html' => $html]);
     }
 
     /**
@@ -1026,7 +1196,7 @@ class TestController extends Controller
      */
     public function attemptPage(Test $test, $questionIndex = 1)
     {
-        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin','teacher']))) {
+        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin', 'teacher']))) {
             abort_if(! $test->isAvailable(), 404);
         }
 
@@ -1177,17 +1347,22 @@ class TestController extends Controller
                 $globalIndexMap[$q->id] = $i++;
             }
 
-            return view('layout', [
-                'content' => view('test_attempt_page_group', [
-                    'test' => $test,
-                    'questions' => $pageQuestions,
-                    'pageIndex' => $questionIndex,
-                    'totalPages' => $totalPages,
-                    'savedAnswers' => $savedAnswers,
-                    'globalIndexMap' => $globalIndexMap,
-                    'activeAttempt' => $activeAttempt,
-                    'serverTime' => now()->timestamp,
-                ]),
+            $initialTimeRemaining = $test->time_limit * 60; // в секундах
+            if ($test->time_limit > 0 && $activeAttempt->started_at) {
+                $elapsed = now()->diffInSeconds($activeAttempt->started_at);
+                $initialTimeRemaining = max(0, ($test->time_limit * 60) - $elapsed);
+            }
+
+            return view('test_attempt_page_group', [
+                'test' => $test,
+                'questions' => $pageQuestions,
+                'pageIndex' => $questionIndex,
+                'totalPages' => $totalPages,
+                'savedAnswers' => $savedAnswers,
+                'globalIndexMap' => $globalIndexMap,
+                'activeAttempt' => $activeAttempt,
+                'serverTime' => now()->timestamp,
+                'initialTimeRemaining' => $initialTimeRemaining,
             ]);
         }
 
@@ -1211,8 +1386,7 @@ class TestController extends Controller
         // Для fill_in_dropdown
         if ($request->has('fill_in_dropdown_answers')) {
             $questionId = $request->input('question_id');
-            $answersArr = $request->input('fill_in_dropdown_answers'); // [blank_id => option_id]
-            // Сохраняем в сессии
+            $answersArr = $request->input('fill_in_dropdown_answers');
             $answers = session("test_{$test->id}_answers", []);
             $answers[$questionId] = $answersArr;
             session(["test_{$test->id}_answers" => $answers]);
@@ -1228,16 +1402,13 @@ class TestController extends Controller
                 }
                 if ($test->time_limit && $attempt->started_at) {
                     $elapsed = now()->diffInSeconds($attempt->started_at);
-                    $timeLimitSeconds = $test->time_limit * 60;
-                    if ($elapsed > $timeLimitSeconds) {
+                    if ($elapsed > $test->time_limit * 60) {
                         return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
                     }
                 }
-                // Удаляем предыдущие ответы на этот вопрос
                 TemporaryAnswer::where('test_attempt_id', $attempt->id)
-                ->where('question_id', $questionId)
-                ->delete();
-                // Сохраняем каждый пропуск как отдельный TemporaryAnswer
+                    ->where('question_id', $questionId)
+                    ->delete();
                 foreach ($answersArr as $blankId => $optionId) {
                     TemporaryAnswer::create([
                         'user_id' => $userId,
@@ -1245,7 +1416,7 @@ class TestController extends Controller
                         'test_attempt_id' => $attempt->id,
                         'question_id' => $questionId,
                         'option_id' => $optionId,
-                        'answer_text' => $blankId, // сохраняем blank_id для удобства
+                        'answer_text' => $blankId,
                     ]);
                 }
             }
@@ -1260,40 +1431,28 @@ class TestController extends Controller
 
         // Для текстовых ответов
         if ($request->has('answer_text')) {
-            // Сохраняем в сессии
             $answers = session("test_{$test->id}_answers", []);
             $answers[$questionId] = $answerText;
             session(["test_{$test->id}_answers" => $answers]);
 
             if (Auth::check()) {
                 $userId = Auth::id();
-
-                // Получаем текущую попытку
                 $attempt = TestAttempt::where('test_id', $test->id)
                     ->where('user_id', $userId)
                     ->whereNull('ended_at')
                     ->first();
-
                 if (! $attempt) {
                     return response()->json(['error' => 'Test not started'], 403);
                 }
-
-                // Проверка лимита времени (только если time_limit установлен)
                 if ($test->time_limit && $attempt->started_at) {
                     $elapsed = now()->diffInSeconds($attempt->started_at);
-                    $timeLimitSeconds = $test->time_limit * 60;
-
-                    if ($elapsed > $timeLimitSeconds) {
+                    if ($elapsed > $test->time_limit * 60) {
                         return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
                     }
                 }
-
-                // Удаляем предыдущие ответы на этот вопрос
                 TemporaryAnswer::where('test_attempt_id', $attempt->id)
-                ->where('question_id', $questionId)
-                ->delete();
-
-                // Вставляем новый текстовый ответ
+                    ->where('question_id', $questionId)
+                    ->delete();
                 TemporaryAnswer::create([
                     'user_id' => $userId,
                     'test_id' => $test->id,
@@ -1309,40 +1468,28 @@ class TestController extends Controller
 
         // Для развёрнутых ответов
         if ($request->has('rich_text_answer')) {
-            // Сохраняем в сессии
             $answers = session("test_{$test->id}_answers", []);
             $answers[$questionId] = $richTextAnswer;
             session(["test_{$test->id}_answers" => $answers]);
 
             if (Auth::check()) {
                 $userId = Auth::id();
-
-                // Получаем текущую попытку
                 $attempt = TestAttempt::where('test_id', $test->id)
                     ->where('user_id', $userId)
                     ->whereNull('ended_at')
                     ->first();
-
                 if (! $attempt) {
                     return response()->json(['error' => 'Test not started'], 403);
                 }
-
-                // Проверка лимита времени (только если time_limit установлен)
                 if ($test->time_limit && $attempt->started_at) {
                     $elapsed = now()->diffInSeconds($attempt->started_at);
-                    $timeLimitSeconds = $test->time_limit * 60;
-
-                    if ($elapsed > $timeLimitSeconds) {
+                    if ($elapsed > $test->time_limit * 60) {
                         return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
                     }
                 }
-
-                // Удаляем предыдущие ответы на этот вопрос
                 TemporaryAnswer::where('test_attempt_id', $attempt->id)
-                ->where('question_id', $questionId)
-                ->delete();
-
-                // Вставляем новый развёрнутый ответ
+                    ->where('question_id', $questionId)
+                    ->delete();
                 TemporaryAnswer::create([
                     'user_id' => $userId,
                     'test_id' => $test->id,
@@ -1357,44 +1504,30 @@ class TestController extends Controller
         }
 
         // Для множественного выбора
-        // Убедимся, что $optionIds всегда массив
-        if (! $request->has('answer_text') && $optionIds) {
+        if ($optionIds) {
             $optionIds = (array) $optionIds;
-
-            // Сохраняем в сессии
             $answers = session("test_{$test->id}_answers", []);
             $answers[$questionId] = $optionIds;
             session(["test_{$test->id}_answers" => $answers]);
 
             if (Auth::check()) {
                 $userId = Auth::id();
-
-                // Получаем текущую попытку
                 $attempt = TestAttempt::where('test_id', $test->id)
                     ->where('user_id', $userId)
                     ->whereNull('ended_at')
                     ->first();
-
                 if (! $attempt) {
                     return response()->json(['error' => 'Test not started'], 403);
                 }
-
-                // Проверка лимита времени (только если time_limit установлен)
                 if ($test->time_limit && $attempt->started_at) {
                     $elapsed = now()->diffInSeconds($attempt->started_at);
-                    $timeLimitSeconds = $test->time_limit * 60;
-
-                    if ($elapsed > $timeLimitSeconds) {
+                    if ($elapsed > $test->time_limit * 60) {
                         return response()->json(['error' => 'Time is up. Answer not saved.'], 403);
                     }
                 }
-
-                // Удаляем предыдущие ответы на этот вопрос
                 TemporaryAnswer::where('test_attempt_id', $attempt->id)
-                ->where('question_id', $questionId)
-                ->delete();
-
-                // Вставляем новый(е) ответ(ы)
+                    ->where('question_id', $questionId)
+                    ->delete();
                 foreach ($optionIds as $optionId) {
                     TemporaryAnswer::create([
                         'user_id' => $userId,
@@ -1408,6 +1541,46 @@ class TestController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Синхронизация таймера с сервером.
+     * Возвращает количество прошедших секунд с начала попытки.
+     */
+    public function getElapsedTime(Test $test)
+    {
+        if (! Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $attempt = $test->attempts()
+            ->where('user_id', Auth::id())
+            ->whereNull('ended_at')
+            ->first();
+
+        if (! $attempt) {
+            return response()->json(['error' => 'No active attempt'], 400);
+        }
+
+        // Рассчитываем прошедшие секунды с начала попытки
+        $elapsedSeconds = $attempt->started_at
+            ? now()->diffInSeconds($attempt->started_at)
+            : 0;
+
+        // Проверяем не превышен ли лимит времени
+        $timeLimitExceeded = false;
+        if ($test->time_limit > 0) {
+            $timeLimitSeconds = $test->time_limit * 60;
+            if ($elapsedSeconds >= $timeLimitSeconds) {
+                $timeLimitExceeded = true;
+            }
+        }
+
+        return response()->json([
+            'elapsed_seconds' => $elapsedSeconds,
+            'time_limit_exceeded' => $timeLimitExceeded,
+            'server_time' => now()->timestamp * 1000,
+        ]);
     }
 
     public function clearAnswer(Request $request, Test $test)
@@ -1448,8 +1621,8 @@ class TestController extends Controller
 
             // Удаляем ответ из БД
             TemporaryAnswer::where('test_attempt_id', $attempt->id)
-            ->where('question_id', $questionId)
-            ->delete();
+                ->where('question_id', $questionId)
+                ->delete();
         }
 
         return response()->json(['success' => true]);
