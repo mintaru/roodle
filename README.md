@@ -149,7 +149,7 @@ php artisan db:seed
 ```
 
 ## Скриншоты
-![Скриншот интерфейса](https://github.com/mintaru/roodle/blob/main/screenshots/screenshot1.jpg)
+![Скриншот интерфейса](https://github.com/mintaru/roodle/blob/main/screenshots/screenshot2.jpg)
 
 <div align="center">
 </div>
