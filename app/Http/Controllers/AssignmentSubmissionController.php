@@ -17,7 +17,7 @@ class AssignmentSubmissionController extends Controller
         // Ensure course is accessible for current user
         abort_if(! $course->isAvailable(), 404);
 
-        if ($assignment->course_id !== $course->id) {
+        if ($assignment->course_id && $assignment->course_id !== $course->id) {
             abort(404);
         }
 
@@ -39,7 +39,7 @@ class AssignmentSubmissionController extends Controller
         // Ensure course is accessible for current user
         abort_if(! $course->isAvailable(), 404);
 
-        if ($assignment->course_id !== $course->id) {
+        if ($assignment->course_id && $assignment->course_id !== $course->id) {
             abort(404);
         }
 
@@ -86,7 +86,7 @@ class AssignmentSubmissionController extends Controller
         // Ensure course is accessible for current user
         abort_if(! $course->isAvailable(), 404);
 
-        if ($assignment->course_id !== $course->id || $submission->assignment_id !== $assignment->id || $file->assignment_submission_id !== $submission->id) {
+        if (($assignment->course_id && $assignment->course_id !== $course->id) || $submission->assignment_id !== $assignment->id || $file->assignment_submission_id !== $submission->id) {
             abort(404);
         }
 
@@ -109,7 +109,7 @@ class AssignmentSubmissionController extends Controller
         // Ensure course is accessible for current user
         abort_if(! $course->isAvailable(), 404);
 
-        if ($assignment->course_id !== $course->id || $submission->assignment_id !== $assignment->id || $file->assignment_submission_id !== $submission->id) {
+        if (($assignment->course_id && $assignment->course_id !== $course->id) || $submission->assignment_id !== $assignment->id || $file->assignment_submission_id !== $submission->id) {
             abort(404);
         }
 
@@ -129,7 +129,7 @@ class AssignmentSubmissionController extends Controller
         // Ensure course is accessible for current user
         abort_if(! $course->isAvailable(), 404);
 
-        if ($assignment->course_id !== $course->id || $submission->assignment_id !== $assignment->id) {
+        if (($assignment->course_id && $assignment->course_id !== $course->id) || $submission->assignment_id !== $assignment->id) {
             abort(404);
         }
 

@@ -685,27 +685,95 @@
                     ->where('item_type', \App\Models\Assignment::class)
                     ->pluck('item_id')
                     ->toArray();
+                $globalTestsForSec = \App\Models\Test::where('is_global', true)
+                    ->where('status', \App\Models\Test::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedTestIds)
+                    ->get()
+                    ->map(fn($t) => ['id' => $t->id, 'title' => $t->title])
+                    ->values();
+                $myTestsForSec = \App\Models\Test::where('user_id', auth()->id())
+                    ->where('status', \App\Models\Test::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedTestIds)
+                    ->get()
+                    ->map(fn($t) => ['id' => $t->id, 'title' => $t->title])
+                    ->values();
+
+                $globalLecturesForSec = \App\Models\Lecture::where('is_global', true)
+                    ->where('status', \App\Models\Lecture::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedLectureIds)
+                    ->get()
+                    ->map(fn($l) => ['id' => $l->id, 'title' => $l->title])
+                    ->values();
+                $myLecturesForSec = \App\Models\Lecture::where('user_id', auth()->id())
+                    ->where('status', \App\Models\Lecture::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedLectureIds)
+                    ->get()
+                    ->map(fn($l) => ['id' => $l->id, 'title' => $l->title])
+                    ->values();
+
+                $globalMaterialsForSec = \App\Models\Material::where('is_global', true)
+                    ->where('status', \App\Models\Material::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedMaterialIds)
+                    ->get()
+                    ->map(fn($m) => ['id' => $m->id, 'title' => $m->title])
+                    ->values();
+                $myMaterialsForSec = \App\Models\Material::where('user_id', auth()->id())
+                    ->where('status', \App\Models\Material::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedMaterialIds)
+                    ->get()
+                    ->map(fn($m) => ['id' => $m->id, 'title' => $m->title])
+                    ->values();
+
+                $globalAssignmentsForSec = \App\Models\Assignment::where('is_global', true)
+                    ->where('status', \App\Models\Assignment::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedAssignmentIds)
+                    ->get()
+                    ->map(fn($a) => ['id' => $a->id, 'title' => $a->title])
+                    ->values();
+                $myAssignmentsForSec = \App\Models\Assignment::where('user_id', auth()->id())
+                    ->where('status', \App\Models\Assignment::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedAssignmentIds)
+                    ->get()
+                    ->map(fn($a) => ['id' => $a->id, 'title' => $a->title])
+                    ->values();
+
                 $attachData[$sec->id] = [
-                    'tests' => $course->tests
-                        ->where('status', \App\Models\Test::STATUS_ACTIVE)
-                        ->whereNotIn('id', $addedTestIds)
-                        ->map(fn($t) => ['id' => $t->id, 'title' => $t->title])
-                        ->values(),
-                    'lectures' => $course->lectures
-                        ->where('status', \App\Models\Lecture::STATUS_ACTIVE)
-                        ->whereNotIn('id', $addedLectureIds)
-                        ->map(fn($l) => ['id' => $l->id, 'title' => $l->title])
-                        ->values(),
-                    'materials' => $course->materials
-                        ->where('status', \App\Models\Material::STATUS_ACTIVE)
-                        ->whereNotIn('id', $addedMaterialIds)
-                        ->map(fn($m) => ['id' => $m->id, 'title' => $m->title])
-                        ->values(),
-                    'assignments' => $course->assignments
-                        ->where('status', \App\Models\Assignment::STATUS_ACTIVE)
-                        ->whereNotIn('id', $addedAssignmentIds)
-                        ->map(fn($a) => ['id' => $a->id, 'title' => $a->title])
-                        ->values(),
+                    'tests' => [
+                        'course' => $course->tests
+                            ->where('status', \App\Models\Test::STATUS_ACTIVE)
+                            ->whereNotIn('id', $addedTestIds)
+                            ->map(fn($t) => ['id' => $t->id, 'title' => $t->title])
+                            ->values(),
+                        'global' => $globalTestsForSec,
+                        'mine' => $myTestsForSec,
+                    ],
+                    'lectures' => [
+                        'course' => $course->lectures
+                            ->where('status', \App\Models\Lecture::STATUS_ACTIVE)
+                            ->whereNotIn('id', $addedLectureIds)
+                            ->map(fn($l) => ['id' => $l->id, 'title' => $l->title])
+                            ->values(),
+                        'global' => $globalLecturesForSec,
+                        'mine' => $myLecturesForSec,
+                    ],
+                    'materials' => [
+                        'course' => $course->materials
+                            ->where('status', \App\Models\Material::STATUS_ACTIVE)
+                            ->whereNotIn('id', $addedMaterialIds)
+                            ->map(fn($m) => ['id' => $m->id, 'title' => $m->title])
+                            ->values(),
+                        'global' => $globalMaterialsForSec,
+                        'mine' => $myMaterialsForSec,
+                    ],
+                    'assignments' => [
+                        'course' => $course->assignments
+                            ->where('status', \App\Models\Assignment::STATUS_ACTIVE)
+                            ->whereNotIn('id', $addedAssignmentIds)
+                            ->map(fn($a) => ['id' => $a->id, 'title' => $a->title])
+                            ->values(),
+                        'global' => $globalAssignmentsForSec,
+                        'mine' => $myAssignmentsForSec,
+                    ],
                 ];
             }
         @endphp
@@ -819,15 +887,15 @@
                         },
                         lecture: {
                             key: 'lectures',
-                            sub: 'Выберите лекцию'
+                            sub: 'Выберите лекцию (общий банк / мои / курс)'
                         },
                         material: {
                             key: 'materials',
-                            sub: 'Выберите материал'
+                            sub: 'Выберите материал (общий банк / мои / курс)'
                         },
                         assignment: {
                             key: 'assignments',
-                            sub: 'Выберите задание'
+                            sub: 'Выберите задание (общий банк / мои / курс)'
                         },
                     };
 
@@ -836,9 +904,9 @@
                     document.getElementById('attach-step-item').style.display = '';
                     document.getElementById('attach-search-input').value = '';
 
-                    if (type === 'test') {
+                    if (type === 'test' || type === 'lecture' || type === 'material' || type === 'assignment') {
                         // grouped: { course:[], global:[], mine:[] }
-                        _aItems = (ATTACH_DATA[_aSectionId] && ATTACH_DATA[_aSectionId].tests) || {
+                        _aItems = (ATTACH_DATA[_aSectionId] && ATTACH_DATA[_aSectionId][map[type].key]) || {
                             course: [],
                             global: [],
                             mine: []
@@ -862,7 +930,7 @@
                 }
 
                 function filterAttachItems(q) {
-                    if (_aType === 'test') {
+                    if (_aType === 'test' || _aType === 'lecture' || _aType === 'material' || _aType === 'assignment') {
                         const grouped = _aItems;
                         const f = (arr) => arr.filter(i => i.title.toLowerCase().includes(q.toLowerCase()));
                         renderAItemsGrouped({
@@ -896,6 +964,7 @@
                             '<div style="padding:24px;text-align:center;color:var(--color-text-muted);font-size:13px;">Нет доступных элементов</div>';
                         return;
                     }
+                    const mineLabel = _aType === 'lecture' ? 'Мои лекции' : (_aType === 'material' ? 'Мои материалы' : (_aType === 'assignment' ? 'Мои задания' : 'Мои тесты'));
                     let html = '';
                     const section = (title, arr) => {
                         if (!arr || !arr.length) return '';
@@ -907,7 +976,7 @@
 
                     html += section('В этом курсе', grouped.course || []);
                     html += section('Общий банк', grouped.global || []);
-                    html += section('Мои тесты', grouped.mine || []);
+                    html += section(mineLabel, grouped.mine || []);
 
                     list.innerHTML = html;
                 }

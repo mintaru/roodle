@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\CourseSectionItem;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,6 +17,8 @@ class Lecture extends Model
         'attachments',
         'pdf_path',
         'status',
+        'user_id',
+        'is_global',
     ];
 
     const CONTENT_TYPE_TEXT = 'text';
@@ -23,6 +26,7 @@ class Lecture extends Model
 
     protected $casts = [
         'attachments' => 'array',
+        'is_global' => 'boolean',
     ];
 
     const STATUS_ACTIVE = 'active';
@@ -31,6 +35,21 @@ class Lecture extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
+    }
+
+    public function sectionItems()
+    {
+        return $this->morphMany(CourseSectionItem::class, 'item');
+    }
+
+    public function getLinkedCoursesAttribute()
+    {
+        return $this->sectionItems->map(fn($si) => $si->section->course)->filter()->unique('id')->values();
     }
 
     public function scopeActive($query)

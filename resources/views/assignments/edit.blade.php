@@ -131,6 +131,24 @@
 
                 </div>
 
+                @if($assignment->is_global)
+                    <div style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 8px 14px;
+                        background: var(--amber-50);
+                        border-radius: var(--r-md);
+                        margin-bottom: 1rem;
+                        border: 1px solid var(--amber-100);
+                        font-size: 13px;
+                        color: var(--amber-700);
+                    ">
+                        <span>📋</span>
+                        <span>Общий банк заданий — видно всем преподавателям</span>
+                    </div>
+                @endif
+
                 <form
                     action="{{ route('assignments.update', [$course, $assignment]) }}"
                     method="POST"

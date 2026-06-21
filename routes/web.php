@@ -110,8 +110,9 @@ RouteFacade::bind('material', function ($value) {
     }
 
     $course = $material->course;
+    // Materials can be standalone (not linked to any course) — allow and let controller handle visibility
     if (! $course) {
-        abort(404);
+        return $material;
     }
 
     if (\Illuminate\Support\Facades\Auth::check()) {
@@ -144,8 +145,9 @@ RouteFacade::bind('assignment', function ($value) {
     }
 
     $course = $assignment->course;
+    // Assignments can be standalone (global bank, not linked to any course) — allow and let controller/policies handle visibility
     if (! $course) {
-        abort(404);
+        return $assignment;
     }
 
     if (\Illuminate\Support\Facades\Auth::check()) {

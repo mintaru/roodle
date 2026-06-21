@@ -1790,6 +1790,17 @@ class TestController extends Controller
         $validatedData['is_details_available'] = $request->has('is_details_available');
         $validatedData['display_mode'] = $request->input('display_mode', 'single_page');
 
+        // Опция: добавить в общий банк
+        if ($request->has('add_to_bank')) {
+            $validatedData['is_global'] = true;
+            $validatedData['user_id'] = null;
+            $validatedData['course_id'] = null;
+        } else {
+            $validatedData['is_global'] = false;
+            $validatedData['user_id'] = $request->user()->id;
+            $validatedData['course_id'] = null;
+        }
+
         // Обновляем тест
         $test->update($validatedData);
 

@@ -8,6 +8,8 @@ class Assignment extends Model
 {
     protected $fillable = [
         'course_id',
+        'user_id',
+        'is_global',
         'title',
         'description',
         'instructions',
@@ -18,6 +20,7 @@ class Assignment extends Model
 
     protected $casts = [
         'due_date' => 'datetime',
+        'is_global' => 'boolean',
     ];
 
     const STATUS_ACTIVE = 'active';
@@ -26,6 +29,11 @@ class Assignment extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function files()

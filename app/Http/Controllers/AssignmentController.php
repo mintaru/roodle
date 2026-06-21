@@ -29,13 +29,30 @@ class AssignmentController extends Controller
             'files.*' => 'nullable|file|max:102400', // 100MB per file
         ]);
 
-        $assignment = $course->assignments()->create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'instructions' => $request->instructions,
-            'due_date' => $request->due_date,
-            'position' => $course->assignments()->count(),
-        ]);
+        $addToBank = $request->has('add_to_bank');
+
+        if ($addToBank) {
+            $assignment = Assignment::create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'instructions' => $request->instructions,
+                'due_date' => $request->due_date,
+                'course_id' => null,
+                'user_id' => null,
+                'is_global' => true,
+                'position' => 0,
+            ]);
+        } else {
+            $assignment = $course->assignments()->create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'instructions' => $request->instructions,
+                'due_date' => $request->due_date,
+                'user_id' => $request->user()->id,
+                'is_global' => false,
+                'position' => $course->assignments()->count(),
+            ]);
+        }
 
         // Handle file uploads for assignment
         if ($request->hasFile('files')) {
@@ -58,7 +75,7 @@ class AssignmentController extends Controller
 
     public function show(Course $course, Assignment $assignment)
     {
-        if ($assignment->course_id !== $course->id) {
+        if ($assignment->course_id && $assignment->course_id !== $course->id) {
             abort(404);
         }
 
@@ -73,7 +90,7 @@ class AssignmentController extends Controller
 
     public function edit(Course $course, Assignment $assignment)
     {
-        if ($assignment->course_id !== $course->id) {
+        if ($assignment->course_id && $assignment->course_id !== $course->id) {
             abort(404);
         }
 
@@ -83,7 +100,7 @@ class AssignmentController extends Controller
 
     public function update(Request $request, Course $course, Assignment $assignment)
     {
-        if ($assignment->course_id !== $course->id) {
+        if ($assignment->course_id && $assignment->course_id !== $course->id) {
             abort(404);
         }
 
@@ -126,7 +143,7 @@ class AssignmentController extends Controller
 
     public function destroy(Course $course, Assignment $assignment)
     {
-        if ($assignment->course_id !== $course->id) {
+        if ($assignment->course_id && $assignment->course_id !== $course->id) {
             abort(404);
         }
 
@@ -152,7 +169,7 @@ class AssignmentController extends Controller
 
     public function archive(Course $course, Assignment $assignment)
     {
-        if ($assignment->course_id !== $course->id) {
+        if ($assignment->course_id && $assignment->course_id !== $course->id) {
             abort(404);
         }
 
@@ -166,7 +183,7 @@ class AssignmentController extends Controller
 
     public function restore(Course $course, Assignment $assignment)
     {
-        if ($assignment->course_id !== $course->id) {
+        if ($assignment->course_id && $assignment->course_id !== $course->id) {
             abort(404);
         }
 
@@ -180,7 +197,7 @@ class AssignmentController extends Controller
 
     public function deleteFile(Course $course, Assignment $assignment, AssignmentFile $file)
     {
-        if ($assignment->course_id !== $course->id || $file->assignment_id !== $assignment->id) {
+        if (($assignment->course_id && $assignment->course_id !== $course->id) || $file->assignment_id !== $assignment->id) {
             abort(404);
         }
 
@@ -197,7 +214,7 @@ class AssignmentController extends Controller
         // Ensure course is accessible for current user
         abort_if(! $course->isAvailable(), 404);
 
-        if ($assignment->course_id !== $course->id || $file->assignment_id !== $assignment->id) {
+        if (($assignment->course_id && $assignment->course_id !== $course->id) || $file->assignment_id !== $assignment->id) {
             abort(404);
         }
 
@@ -212,7 +229,7 @@ class AssignmentController extends Controller
 
     public function move(Request $request, Course $course, Assignment $assignment)
     {
-        if ($assignment->course_id !== $course->id) {
+        if ($assignment->course_id && $assignment->course_id !== $course->id) {
             abort(404);
         }
 

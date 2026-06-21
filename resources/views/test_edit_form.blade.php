@@ -335,7 +335,7 @@
 
                     <div class="field">
                         <label class="toggle-row" for="add_to_bank">
-                            <input type="checkbox" id="add_to_bank" name="add_to_bank" value="1" {{ $test->add_to_bank ? 'checked' : '' }}>
+                            <input type="checkbox" id="add_to_bank" name="add_to_bank" value="1" {{ $test->is_global ? 'checked' : '' }}>
                             <span class="toggle-label">Добавить в общий банк тестов (видно всем преподавателям)</span>
                         </label>
                     </div>

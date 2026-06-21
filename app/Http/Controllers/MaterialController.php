@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CourseSectionItem;
 use App\Models\Material;
 use App\Models\Course;
 use Illuminate\Http\Request;
@@ -24,13 +25,31 @@ class MaterialController extends Controller
         $file = $request->file('file');
         $path = $file->store('materials', 'public');
 
-        $material = $course->materials()->create([
-            'title' => $request->title,
-            'file_path' => $path,
-            'file_name' => $file->getClientOriginalName(),
-            'file_type' => $file->getClientOriginalExtension(),
-            'file_size' => $file->getSize(),
-        ]);
+        $addToBank = $request->has('add_to_bank');
+
+        if ($addToBank) {
+            $material = Material::create([
+                'title' => $request->title,
+                'file_path' => $path,
+                'file_name' => $file->getClientOriginalName(),
+                'file_type' => $file->getClientOriginalExtension(),
+                'file_size' => $file->getSize(),
+                'is_global' => true,
+                'user_id' => null,
+                'course_id' => null,
+            ]);
+        } else {
+            $material = $course->materials()->create([
+                'title' => $request->title,
+                'file_path' => $path,
+                'file_name' => $file->getClientOriginalName(),
+                'file_type' => $file->getClientOriginalExtension(),
+                'file_size' => $file->getSize(),
+                'is_global' => false,
+                'user_id' => $request->user()->id,
+                'course_id' => null,
+            ]);
+        }
 
         return redirect()->route('courses.show', $course)->with('success', 'Материал успешно загружен!');
     }
@@ -40,7 +59,15 @@ class MaterialController extends Controller
         // Ensure course is accessible for current user
         abort_if(! $course->isAvailable(), 404);
 
-        if ($material->course_id !== $course->id) {
+        // Material is accessible if it belongs to this course or is global
+        $accessible = ($material->course_id && $material->course_id === $course->id)
+            || $material->is_global
+            || CourseSectionItem::where('item_type', Material::class)
+                ->where('item_id', $material->id)
+                ->whereHas('section', fn($q) => $q->where('course_id', $course->id))
+                ->exists();
+
+        if (! $accessible) {
             abort(404);
         }
 
@@ -55,7 +82,14 @@ class MaterialController extends Controller
 
     public function edit(Course $course, Material $material)
     {
-        if ($material->course_id !== $course->id) {
+        $accessible = ($material->course_id && $material->course_id === $course->id)
+            || $material->is_global
+            || CourseSectionItem::where('item_type', Material::class)
+                ->where('item_id', $material->id)
+                ->whereHas('section', fn($q) => $q->where('course_id', $course->id))
+                ->exists();
+
+        if (! $accessible) {
             abort(404);
         }
 
@@ -64,7 +98,14 @@ class MaterialController extends Controller
 
     public function update(Request $request, Course $course, Material $material)
     {
-        if ($material->course_id !== $course->id) {
+        $accessible = ($material->course_id && $material->course_id === $course->id)
+            || $material->is_global
+            || CourseSectionItem::where('item_type', Material::class)
+                ->where('item_id', $material->id)
+                ->whereHas('section', fn($q) => $q->where('course_id', $course->id))
+                ->exists();
+
+        if (! $accessible) {
             abort(404);
         }
 
@@ -95,7 +136,14 @@ class MaterialController extends Controller
 
     public function destroy(Course $course, Material $material)
     {
-        if ($material->course_id !== $course->id) {
+        $accessible = ($material->course_id && $material->course_id === $course->id)
+            || $material->is_global
+            || CourseSectionItem::where('item_type', Material::class)
+                ->where('item_id', $material->id)
+                ->whereHas('section', fn($q) => $q->where('course_id', $course->id))
+                ->exists();
+
+        if (! $accessible) {
             abort(404);
         }
 
@@ -107,7 +155,14 @@ class MaterialController extends Controller
 
     public function toggleStatus(Course $course, Material $material)
     {
-        if ($material->course_id !== $course->id) {
+        $accessible = ($material->course_id && $material->course_id === $course->id)
+            || $material->is_global
+            || CourseSectionItem::where('item_type', Material::class)
+                ->where('item_id', $material->id)
+                ->whereHas('section', fn($q) => $q->where('course_id', $course->id))
+                ->exists();
+
+        if (! $accessible) {
             abort(404);
         }
 
