@@ -263,8 +263,7 @@ class CourseController extends Controller
 
         $course->update($validated);
 
-        $redirectRoute = $user->hasRole('admin') ? 'admin.courses.index' : 'home';
-        return redirect()->route($redirectRoute)->with('success', 'Курс успешно обновлен!');
+        return redirect()->route("home")->with('success', 'Курс успешно обновлен!');
     }
 
     /**

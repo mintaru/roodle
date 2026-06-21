@@ -446,25 +446,25 @@
                         Отмеченные группы увидят этот элемент. Без отметок — скрыто от всех студентов.
                     </p>
 
-                    {{-- Быстрые действия --}}
-                    <div style="display:flex; gap:8px; margin-bottom:14px;">
-                        <button type="button"
-                            wire:click="$set('visibilityGroupIds', {{ $course->groups->pluck('id')->map(fn($id) => (string) $id)->toJson() }})"
-                            class="btn btn-ghost"
-                            style="font-size:12px; padding:5px 12px; color:var(--green-600); border-color:var(--green-200);">
-                             Разрешить всем
-                        </button>
-                        <button type="button" wire:click="$set('visibilityGroupIds', [])" class="btn btn-ghost"
-                            style="font-size:12px; padding:5px 12px; color:var(--red-500); border-color:#ffcdd2;">
-                             Запретить всем
-                        </button>
-                    </div>
+                            {{-- Быстрые действия --}}
+                            <div style="display:flex; gap:8px; margin-bottom:14px;">
+                                <button type="button"
+                                    wire:click="$set('visibilityGroupIds', {{ $course->groups->pluck('id')->map(fn($id) => (string) $id)->toJson() }})"
+                                    class="btn btn-ghost"
+                                    style="font-size:12px; padding:5px 12px; color:var(--green-400); border-color:var(--green-600);">
+                                     Разрешить всем
+                                </button>
+                                <button type="button" wire:click="$set('visibilityGroupIds', [])" class="btn btn-ghost"
+                                    style="font-size:12px; padding:5px 12px; color:var(--red-400); border-color:rgba(244,63,94,0.3);">
+                                     Запретить всем
+                                </button>
+                            </div>
 
                     {{-- Список групп курса с чекбоксами --}}
                     <div style="display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto;">
                         @forelse($course->groups as $group)
                             <label
-                                style="display:flex; align-items:center; gap:10px; padding:9px 12px; border:1.5px solid var(--color-border); border-radius:var(--r-md); background:var(--color-surface-2); cursor:pointer; font-size:13px; color:var(--gray-700); transition: border-color .12s, background .12s; user-select:none;"
+                                style="display:flex; align-items:center; gap:10px; padding:9px 12px; border:1.5px solid var(--color-border); border-radius:var(--r-md); background:var(--color-surface-2); cursor:pointer; font-size:13px; color:var(--color-text-primary); transition: border-color .12s, background .12s; user-select:none;"
                                 :style="$wire.visibilityGroupIds.includes('{{ $group->id }}') ?
                                     'border-color: var(--sky-400); background: var(--sky-50);' :
                                     ''">
@@ -526,6 +526,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--gray-100); color:var(--gray-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                                         </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Секция</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">
@@ -536,6 +537,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--teal-50); color:var(--teal-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
                                         </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Тест</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Создать
@@ -546,6 +548,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--sky-50); color:var(--sky-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                         </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Лекция</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Создать
@@ -556,6 +559,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--green-50); color:var(--green-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                         </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Материал</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">
@@ -566,6 +570,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--amber-50); color:var(--amber-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                                         </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Задание</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Создать
@@ -801,6 +806,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--teal-50); color:var(--teal-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
                                         </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Тест</div>
                                 </button>
@@ -808,6 +814,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--sky-50); color:var(--sky-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                         </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Лекция</div>
                                 </button>
@@ -815,6 +822,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--green-50); color:var(--green-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                                         </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Материал</div>
                                 </button>
@@ -822,6 +830,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--amber-50); color:var(--amber-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                                         </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Задание</div>
                                 </button>

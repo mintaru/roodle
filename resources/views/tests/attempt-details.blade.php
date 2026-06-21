@@ -542,6 +542,83 @@
             transform: translateY(-1px);
         }
 
+        html.dark .option-item.selected-correct {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--green-500);
+        }
+
+        html.dark .option-item.selected-incorrect {
+            background: rgba(244, 63, 94, 0.2);
+            border-color: var(--red-400);
+        }
+
+        html.dark .option-item.correct {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--green-500);
+        }
+
+        html.dark .text-answer-box.correct,
+        html.dark .rich-text-answer-box.correct {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--green-500);
+            color: var(--green-400);
+        }
+
+        html.dark .text-answer-box.incorrect,
+        html.dark .rich-text-answer-box.incorrect {
+            background: rgba(244, 63, 94, 0.15);
+            border-color: var(--red-400);
+            color: var(--red-400);
+        }
+
+        html.dark .status-badge.correct {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--green-400);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        html.dark .status-badge.incorrect {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--red-400);
+            border-color: rgba(244, 63, 94, 0.3);
+        }
+
+        html.dark .status-badge.pending {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            border-color: rgba(251, 191, 36, 0.3);
+        }
+
+        html.dark .status-badge.empty {
+            background: var(--color-surface-2);
+            color: var(--color-text-muted);
+            border-color: var(--color-border);
+        }
+
+        html.dark .correct-answers-panel {
+            background: rgba(16, 185, 129, 0.1);
+            border-left-color: var(--green-500);
+        }
+
+        html.dark .correct-answers-panel__title {
+            color: var(--green-400);
+        }
+
+        html.dark .correct-answers-panel p {
+            color: var(--green-300);
+        }
+
+        html.dark .micro-badge.user {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+        }
+
+        html.dark .micro-badge.should {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--green-400);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
         @media (max-width: 640px) {
             .q-card__header {
                 flex-direction: column;

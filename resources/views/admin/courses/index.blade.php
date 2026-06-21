@@ -197,6 +197,13 @@
             }
         }
     </style>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</head>
+<body>
 
     <div class="admin-container">
         <div class="admin-card">

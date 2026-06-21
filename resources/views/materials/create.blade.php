@@ -8,6 +8,11 @@
     <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
     <script defer src="{{ asset('js/alpine.min.js') }}"></script>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body>
 

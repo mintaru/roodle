@@ -226,8 +226,17 @@
             .date-grid {
                 grid-template-columns: 1fr;
             }
+
+            .form-card {
+                max-width: 100%;
+            }
         }
     </style>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body>
 
@@ -416,14 +425,14 @@
                     <div class="date-grid">
                         <div class="field" style="margin-bottom:0;">
                             <label for="period_start">Доступен с</label>
-                            <div style="display: flex; gap: 6px;">
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                                 <input
                                     type="datetime-local"
                                     id="period_start"
                                     name="period_start"
                                     value="{{ now()->format('Y-m-d\TH:i') }}"
                                     class="input"
-                                    style="flex: 1;"
+                                    style="flex: 1; min-width: 180px;"
                                 >
                                 <button type="button" onclick="setToday(document.getElementById('period_start'))"
                                     style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--color-border);border-radius:var(--r-md);background:var(--color-surface);font-size:12px;color:var(--teal-600);cursor:pointer;font-family:var(--font-body);white-space:nowrap;transition:border-color 0.2s,background 0.2s,color 0.2s;"

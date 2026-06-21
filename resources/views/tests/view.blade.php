@@ -15,6 +15,25 @@
             padding:0;
             background: var(--color-bg);
         }
+        @media (max-width: 640px) {
+            #attempts-list > div {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px !important;
+            }
+            #attempts-list > div > div:last-child {
+                align-self: flex-end !important;
+            }
+            .panel > div[style*="flex"] {
+                gap: 1rem !important;
+            }
+            .panel {
+                padding: 1rem 1.25rem !important;
+            }
+            .page-header__title {
+                font-size: 20px !important;
+            }
+        }
     </style>
 </head>
 <body>

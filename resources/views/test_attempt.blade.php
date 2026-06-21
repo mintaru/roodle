@@ -52,6 +52,15 @@
             gap: 1rem;
         }
 
+        html.dark .test-topbar {
+            background: rgba(26, 32, 44, .94);
+            border-bottom-color: var(--color-border, #2d3748);
+        }
+
+        html.dark .test-topbar__title {
+            color: var(--color-text-primary, #e2e8f0);
+        }
+
         .test-topbar__title {
             font-size: 15px;
             font-weight: 700;

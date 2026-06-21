@@ -10,6 +10,11 @@
     <script src="{{ asset('js/trix.min.js') }}"></script>
     <script defer src="{{ asset('js/alpine.min.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('css/lecture-content.css') }}">
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body>
 

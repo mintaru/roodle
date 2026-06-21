@@ -36,8 +36,10 @@
     --gray-800: #1e2530;
     --gray-900: #111720;
 
+    --amber-50: #fff8e1;
     --amber-400: #ffca28;
     --amber-500: #ffb300;
+    --amber-600: #ffb300;
     --red-400: #ef5350;
     --red-500: #e53935;
 
@@ -80,6 +82,980 @@
 
     /* Переходы */
     --transition: 0.2s ease;
+}
+
+/* =============================================
+     ТЁМНАЯ ТЕМА
+  ============================================= */
+html.dark {
+    --gray-50: #0f172a;
+    --gray-100: #1e293b;
+    --gray-200: #334155;
+    --gray-300: #475569;
+    --gray-400: #64748b;
+    --gray-500: #94a3b8;
+    --gray-600: #cbd5e1;
+    --gray-700: #e2e8f0;
+    --gray-800: #f1f5f9;
+    --gray-900: #f8fafc;
+
+    --teal-50: #134e4a;
+    --teal-100: #134e4a;
+    --teal-400: #2dd4bf;
+    --teal-500: #14b8a6;
+    --teal-600: #0d9488;
+    --teal-700: #0f766e;
+    --teal-800: #115e59;
+    --teal-900: #134e4a;
+
+    --sky-50: #0c4a6e;
+    --sky-100: #075985;
+    --sky-400: #38bdf8;
+    --sky-500: #0ea5e9;
+    --sky-600: #0284c7;
+    --sky-700: #0369a1;
+    --sky-800: #075985;
+
+    --green-50: #064e3b;
+    --green-100: #064e3b;
+    --green-400: #34d399;
+    --green-500: #10b981;
+    --green-600: #059669;
+
+    --red-400: #fb7185;
+    --red-500: #f43f5e;
+
+    --amber-50: #78350f;
+    --amber-400: #fbbf24;
+    --amber-500: #f59e0b;
+    --amber-600: #fbbf24;
+
+    --color-bg: #0f172a;
+    --color-surface: #1e293b;
+    --color-surface-2: #334155;
+    --color-border: #334155;
+    --color-border-2: #475569;
+
+    --color-text-primary: #f1f5f9;
+    --color-text-secondary: #94a3b8;
+    --color-text-muted: #64748b;
+
+    --color-accent-light: #134e4a;
+    --color-accent-dark: #2dd4bf;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+    --shadow-accent: 0 4px 16px rgba(45, 212, 191, 0.15);
+}
+
+html.dark .header {
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border);
+}
+
+html.dark .logo__name {
+    color: var(--color-text-primary);
+}
+
+html.dark .login-logo__name {
+    color: var(--color-text-primary);
+}
+
+html.dark .nav-link:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+}
+
+html.dark .nav-link.active {
+    background: var(--color-accent-light);
+    color: var(--color-accent-dark);
+}
+
+html.dark .sidebar-link:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+}
+
+html.dark .sidebar-link.active {
+    background: var(--color-accent-light);
+    color: var(--color-accent-dark);
+}
+
+html.dark .tab.active {
+    background: var(--color-surface);
+    color: var(--color-accent-dark);
+}
+
+html.dark .tabs {
+    background: var(--color-surface-2);
+}
+
+html.dark .tab:hover {
+    color: var(--color-text-primary);
+}
+
+html.dark .search-box {
+    background: var(--color-surface-2);
+    border-color: var(--color-border);
+    color: var(--color-text-muted);
+}
+
+html.dark .search-box:hover {
+    border-color: var(--teal-400);
+    background: var(--color-surface);
+}
+
+html.dark .search-input {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+}
+
+html.dark .search-input:focus {
+    border-color: var(--teal-400);
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15);
+}
+
+html.dark .btn-ghost {
+    border-color: var(--color-border-2);
+    color: var(--color-text-secondary);
+}
+
+html.dark .btn-ghost:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+}
+
+html.dark .btn-secondary {
+    background: var(--color-surface-2);
+    color: var(--color-text-secondary);
+}
+
+html.dark .btn-secondary:hover {
+    background: var(--color-border);
+}
+
+html.dark .profile-btn:hover {
+    color: var(--color-text-primary);
+}
+
+html.dark .profile-dropdown-item:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+}
+
+html.dark .filter-chip {
+    background: var(--color-surface);
+    border-color: var(--color-border-2);
+    color: var(--color-text-secondary);
+}
+
+html.dark .filter-chip:hover {
+    border-color: var(--teal-400);
+    color: var(--teal-400);
+}
+
+html.dark .filter-chip.active {
+    background: var(--teal-500);
+    border-color: var(--teal-500);
+    color: #fff;
+}
+
+html.dark .course-card-menu-btn {
+    background: rgba(30, 41, 59, 0.9);
+    color: var(--color-text-secondary);
+}
+
+html.dark .course-card-menu-btn:hover {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+}
+
+html.dark .course-card-menu-item:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+}
+
+html.dark .progress-bar {
+    background: var(--color-surface-2);
+}
+
+html.dark .deadline-urgent {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+}
+
+html.dark .deadline-soon {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+}
+
+html.dark .deadline-ok {
+    background: var(--color-accent-light);
+    color: var(--color-accent-dark);
+}
+
+html.dark .lesson-item.done {
+    background: rgba(52, 211, 153, 0.1);
+    border-color: rgba(52, 211, 153, 0.2);
+}
+
+html.dark .lesson-num {
+    background: var(--color-accent-light);
+    color: var(--color-accent-dark);
+}
+
+html.dark .stat-icon.amber {
+    background: rgba(245, 158, 11, 0.15);
+}
+
+html.dark .badge-amber {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+}
+
+html.dark .badge-red {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+    background: var(--color-border-2);
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
+}
+
+html.dark .avatar {
+    border-color: var(--color-surface);
+}
+
+html.dark .modal-alpine-backdrop {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+html.dark .section-title {
+    color: var(--color-text-primary);
+}
+
+html.dark .page-header__title {
+    color: var(--color-text-primary);
+}
+
+html.dark .course-card__title {
+    color: var(--color-text-primary);
+}
+
+html.dark .lesson-title {
+    color: var(--color-text-primary);
+}
+
+html.dark .assignment-title {
+    color: var(--color-text-primary);
+}
+
+html.dark .panel__title {
+    color: var(--color-text-primary);
+}
+
+html.dark .activity-text strong {
+    color: var(--color-text-primary);
+}
+
+html.dark .announcement-card__title {
+    color: var(--color-text-primary);
+}
+
+html.dark .stat-value {
+    color: var(--color-text-primary);
+}
+
+html.dark .section-subtitle {
+    color: var(--color-text-secondary);
+}
+
+html.dark .announcement-card__icon {
+    background: var(--color-accent-light);
+    color: var(--color-accent-dark);
+}
+
+html.dark .stat-icon.teal {
+    background: var(--color-accent-light);
+    color: var(--color-accent-dark);
+}
+
+html.dark .stat-icon.sky {
+    background: rgba(14, 165, 233, 0.15);
+    color: #38bdf8;
+}
+
+html.dark .stat-icon.green {
+    background: rgba(52, 211, 153, 0.15);
+    color: #34d399;
+}
+
+html.dark .section-link {
+    color: var(--color-accent-dark);
+}
+
+html.dark .section-link:hover {
+    color: var(--teal-400);
+}
+
+html.dark .lesson-item:hover {
+    border-color: var(--teal-600);
+}
+
+html.dark .assignment-card:hover {
+    border-color: var(--teal-600);
+}
+
+html.dark .badge-teal {
+    background: var(--color-accent-light);
+    color: var(--color-accent-dark);
+}
+
+html.dark .badge-sky {
+    background: rgba(14, 165, 233, 0.15);
+    color: #38bdf8;
+}
+
+html.dark .badge-green {
+    background: rgba(52, 211, 153, 0.15);
+    color: #34d399;
+}
+
+html.dark .page-section {
+    border-top-color: var(--color-border);
+}
+
+/* =============================================
+     КУРСЫ (ТЁМНАЯ ТЕМА)
+  ============================================= */
+html.dark .tq-type--rich {
+    background: rgba(139, 92, 246, 0.15) !important;
+    color: #c4b5fd !important;
+}
+
+html.dark .tq-type--dropdown {
+    background: rgba(251, 146, 60, 0.15) !important;
+    color: #fdba74 !important;
+}
+
+html.dark .tq-icon-btn--delete:hover {
+    background: rgba(244, 63, 94, 0.15) !important;
+    border-color: rgba(244, 63, 94, 0.3) !important;
+}
+
+html.dark .alert-success,
+html.dark [style*="background: #e8f5e9"],
+html.dark [style*="background:#e8f5e9"] {
+    background: rgba(52, 211, 153, 0.12) !important;
+    border-color: rgba(52, 211, 153, 0.2) !important;
+}
+
+html.dark .alert-success p,
+html.dark [style*="color: #2e7d32"] {
+    color: #34d399 !important;
+}
+
+html.dark .alert-error,
+html.dark [style*="background: #ffebee"],
+html.dark [style*="background:#ffebee"] {
+    background: rgba(244, 63, 94, 0.12) !important;
+    border-color: rgba(244, 63, 94, 0.2) !important;
+}
+
+html.dark .detail-opt.correct,
+html.dark [style*="background: #f0fdf4"] {
+    background: rgba(52, 211, 153, 0.1) !important;
+    border-color: rgba(52, 211, 153, 0.2) !important;
+}
+
+html.dark .detail-opt.correct .detail-opt__dot,
+html.dark [style*="background: #22c55e"] {
+    background: rgba(52, 211, 153, 0.3) !important;
+}
+
+html.dark .detail-correct-text {
+    color: #34d399 !important;
+}
+
+html.dark .tq-paged-bar {
+    background: rgba(14, 165, 233, 0.1) !important;
+    border-bottom-color: rgba(14, 165, 233, 0.2) !important;
+}
+
+html.dark .tq-paged-bar svg {
+    color: rgba(14, 165, 233, 0.8) !important;
+}
+
+/* =============================================
+     АДМИН-ПАНЕЛЬ (ТЁМНАЯ ТЕМА)
+  ============================================= */
+html.dark .admin-card {
+    background: var(--color-surface) !important;
+    border-color: var(--color-border) !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+html.dark .admin-card h1 {
+    color: var(--color-text-primary) !important;
+}
+
+html.dark .groups-table thead {
+    background: var(--color-surface-2) !important;
+    border-bottom-color: var(--color-border) !important;
+}
+
+html.dark .groups-table th {
+    color: var(--color-text-primary) !important;
+}
+
+html.dark .groups-table td {
+    border-bottom-color: var(--color-border) !important;
+    color: var(--color-text-secondary);
+}
+
+html.dark .groups-table tbody tr:hover {
+    background: var(--color-surface-2) !important;
+}
+
+html.dark .table-link {
+    color: var(--teal-400) !important;
+}
+
+html.dark .table-link:hover {
+    color: var(--teal-300) !important;
+}
+
+html.dark .search-box {
+    background: var(--color-surface-2) !important;
+    border-color: var(--color-border) !important;
+}
+
+html.dark .search-box label {
+    color: var(--color-text-secondary) !important;
+}
+
+html.dark .search-box select,
+html.dark .search-box input {
+    background: var(--color-surface) !important;
+    border-color: var(--color-border-2) !important;
+    color: var(--color-text-primary) !important;
+}
+
+html.dark .search-box select:focus,
+html.dark .search-box input:focus {
+    border-color: var(--teal-400) !important;
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15) !important;
+}
+
+html.dark .btn-search {
+    background: linear-gradient(135deg, var(--teal-500), var(--teal-600)) !important;
+}
+
+html.dark .btn-reset {
+    background: var(--color-surface-2) !important;
+    color: var(--color-text-secondary) !important;
+}
+
+html.dark .btn-reset:hover {
+    background: var(--color-border) !important;
+}
+
+html.dark .btn-danger {
+    color: var(--red-400) !important;
+}
+
+html.dark .success-message {
+    background: rgba(52, 211, 153, 0.1) !important;
+    border-color: rgba(52, 211, 153, 0.2) !important;
+    color: #34d399 !important;
+}
+
+html.dark .admin-container {
+    color: var(--color-text-primary);
+}
+
+html.dark .admin-header p {
+    color: var(--color-text-secondary);
+}
+
+html.dark .admin-card-title {
+    color: var(--color-text-primary) !important;
+}
+
+html.dark .admin-card-description {
+    color: var(--color-text-secondary) !important;
+}
+
+/* Modal / import styles in admin */
+html.dark .modal-backdrop {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+html.dark .modal-box {
+    background: var(--color-surface) !important;
+    border-color: var(--color-border) !important;
+}
+
+html.dark .modal-box h3 {
+    color: var(--color-text-primary) !important;
+}
+
+html.dark .modal-box p {
+    color: var(--color-text-secondary) !important;
+}
+
+html.dark .modal-box label {
+    color: var(--color-text-secondary) !important;
+}
+
+html.dark .modal-box input,
+html.dark .modal-box select,
+html.dark .modal-box textarea {
+    background: var(--color-surface-2) !important;
+    border-color: var(--color-border-2) !important;
+    color: var(--color-text-primary) !important;
+}
+
+html.dark .modal-icon {
+    background: rgba(52, 211, 153, 0.15) !important;
+}
+
+html.dark .modal-btn--cancel {
+    background: var(--color-surface-2) !important;
+    color: var(--color-text-secondary) !important;
+}
+
+html.dark .pagination a,
+html.dark .pagination span {
+    color: var(--color-text-secondary) !important;
+    border-color: var(--color-border) !important;
+}
+
+html.dark .pagination a:hover {
+    background: var(--color-surface-2) !important;
+}
+
+/* Admin livewire pagination (inline styles) */
+html.dark div[style*="color:#666"] {
+    color: var(--color-text-muted) !important;
+}
+
+html.dark span[style*="color:#aaa"] {
+    color: var(--color-text-muted) !important;
+    border-color: var(--color-border) !important;
+}
+
+html.dark button[style*="color:#333"] {
+    color: var(--color-text-secondary) !important;
+    background: var(--color-surface) !important;
+    border-color: var(--color-border) !important;
+}
+
+html.dark span[style*="background:#667eea"] {
+    background: var(--teal-600) !important;
+    border-color: var(--teal-600) !important;
+}
+
+/* Admin dropdown menus */
+html.dark div[style*="background:#fff"][style*="border:1px solid #e0e0e0"][style*="border-radius:8px"] {
+    background: var(--color-surface) !important;
+    border-color: var(--color-border) !important;
+}
+
+html.dark div[style*="background:#fff"][style*="border:1px solid #e0e0e0"] {
+    background: var(--color-surface) !important;
+    border-color: var(--color-border) !important;
+}
+
+html.dark a[style*="color:#667eea"] {
+    color: var(--teal-400) !important;
+}
+
+html.dark button[style*="color:#e74c3c"] {
+    color: var(--red-400) !important;
+}
+
+html.dark [style*="border-top:1px solid #e0e0e0"] {
+    border-top-color: var(--color-border) !important;
+}
+
+html.dark a[style*="background:#f5f5f5"] {
+    background: var(--color-surface-2) !important;
+}
+
+/* Back button */
+html.dark .back-button,
+html.dark [style*="background: #e5e7eb"] {
+    background: var(--color-surface-2) !important;
+}
+
+html.dark .back-button,
+html.dark [style*="color: #374151"] {
+    color: var(--color-text-primary) !important;
+}
+
+/* Admin card success/error messages */
+html.dark [style*="background: #e8f5e9"],
+html.dark [style*="background:#e8f5e9"] {
+    background: rgba(52, 211, 153, 0.12) !important;
+    border-color: rgba(52, 211, 153, 0.2) !important;
+}
+
+html.dark [style*="color: #2e7d32"] {
+    color: #34d399 !important;
+}
+
+html.dark [style*="background: #ffebee"],
+html.dark [style*="background:#ffebee"] {
+    background: rgba(244, 63, 94, 0.12) !important;
+    border-color: rgba(244, 63, 94, 0.2) !important;
+}
+
+/* Common inline dark text on light bg */
+html.dark [style*="color: #333"] {
+    color: var(--color-text-secondary) !important;
+}
+
+html.dark [style*="color: #666"] {
+    color: var(--color-text-muted) !important;
+}
+
+/* White backgrounds in admin/lectures/assignments */
+html.dark [style*="background: white"]:not(html.dark [style*="gradient"]):not(.btn):not(.modal-btn) {
+    background: var(--color-surface) !important;
+}
+
+/* Warning/alert backgrounds */
+html.dark [style*="background: #fff8e1"],
+html.dark [style*="background:#fff8e1"] {
+    background: rgba(251, 191, 36, 0.12) !important;
+}
+
+html.dark [style*="background: #fff3e0"],
+html.dark [style*="background:#fff3e0"] {
+    background: rgba(251, 146, 60, 0.12) !important;
+}
+
+html.dark [style*="background: #fff7ed"],
+html.dark [style*="background:#fff7ed"] {
+    background: rgba(251, 146, 60, 0.12) !important;
+}
+
+html.dark [style*="background: #fff0f0"],
+html.dark [style*="background:#fff0f0"] {
+    background: rgba(244, 63, 94, 0.1) !important;
+}
+
+html.dark [style*="background: #f0fdf4"],
+html.dark [style*="background:#f0fdf4"] {
+    background: rgba(52, 211, 153, 0.08) !important;
+    border-color: rgba(52, 211, 153, 0.15) !important;
+}
+
+html.dark [style*="color: #15803d"] {
+    color: #34d399 !important;
+}
+
+/* Modal boxes with white bg */
+html.dark .modal-box {
+    background: var(--color-surface) !important;
+}
+
+html.dark .modal-icon--delete {
+    background: rgba(244, 63, 94, 0.15) !important;
+}
+
+html.dark .modal-box h3 {
+    color: var(--color-text-primary) !important;
+}
+
+html.dark .modal-box p {
+    color: var(--color-text-secondary) !important;
+}
+
+html.dark .modal-btn--cancel {
+    background: var(--color-surface-2) !important;
+    color: var(--color-text-secondary) !important;
+}
+
+html.dark .modal-btn--cancel:hover {
+    background: var(--color-border) !important;
+}
+
+/* Assignment-specific cards and alerts */
+html.dark [style*="background-color: white"],
+html.dark [style*="background-color:white"] {
+    background: var(--color-surface) !important;
+}
+
+/* Lecture content styles */
+html.dark .lecture-content th {
+    background: var(--color-surface-2) !important;
+}
+
+html.dark [style*="background: #f0f3f5"] {
+    background: var(--color-surface-2) !important;
+}
+
+html.dark [style*="background: #e2e8ed"] {
+    background: var(--color-border) !important;
+}
+
+/* Grades report */
+html.dark .grades-container {
+    background: var(--color-surface) !important;
+}
+
+html.dark [style*="background-color: #f9f9f9"] {
+    background: var(--color-surface-2) !important;
+}
+
+html.dark [style*="background-color: #ecf0f1"] {
+    background: var(--color-surface-2) !important;
+}
+
+/* Tailwind-only pages (teacher-permissions, reports, tests edit) */
+html.dark body.bg-gray-100 {
+    background-color: #0f172a !important;
+}
+
+html.dark .max-w-6xl.mx-auto.bg-white,
+html.dark .max-w-4xl.mx-auto.bg-white,
+html.dark .max-w-2xl.mx-auto.bg-white,
+html.dark div.bg-white.rounded.shadow,
+html.dark div.bg-white.rounded-lg.shadow {
+    background: var(--color-surface) !important;
+    border-color: var(--color-border) !important;
+}
+
+html.dark .text-gray-800 {
+    color: var(--color-text-primary) !important;
+}
+
+html.dark .text-gray-700 {
+    color: var(--color-text-secondary) !important;
+}
+
+html.dark .text-gray-600 {
+    color: var(--color-text-secondary) !important;
+}
+
+html.dark .text-gray-500 {
+    color: var(--color-text-muted) !important;
+}
+
+html.dark .border-gray-300 {
+    border-color: var(--color-border) !important;
+}
+
+html.dark tr.hover\:bg-gray-50:hover,
+html.dark tr:hover .hover\:bg-gray-50 {
+    background: var(--color-surface-2) !important;
+}
+
+html.dark .bg-gray-200 {
+    background: var(--color-surface-2) !important;
+}
+
+html.dark .bg-green-100 {
+    background: rgba(52, 211, 153, 0.15) !important;
+}
+
+html.dark .text-green-800,
+html.dark .text-green-700 {
+    color: #34d399 !important;
+}
+
+html.dark .bg-blue-100 {
+    background: rgba(14, 165, 233, 0.15) !important;
+}
+
+html.dark .text-blue-800,
+html.dark .text-blue-600 {
+    color: #38bdf8 !important;
+}
+
+html.dark .bg-purple-100 {
+    background: rgba(139, 92, 246, 0.15) !important;
+}
+
+html.dark .text-purple-800 {
+    color: #a78bfa !important;
+}
+
+html.dark .bg-orange-100 {
+    background: rgba(251, 146, 60, 0.15) !important;
+}
+
+html.dark .text-orange-800 {
+    color: #fdba74 !important;
+}
+
+html.dark .bg-indigo-100 {
+    background: rgba(99, 102, 241, 0.15) !important;
+}
+
+html.dark .text-indigo-800 {
+    color: #a5b4fc !important;
+}
+
+html.dark .bg-red-200 {
+    background: rgba(244, 63, 94, 0.15) !important;
+}
+
+html.dark .text-red-800 {
+    color: #fb7185 !important;
+}
+
+html.dark .hover\:bg-gray-50:hover {
+    background: var(--color-surface-2) !important;
+}
+
+html.dark .bg-gradient-to-br.from-gray-50.to-gray-100 {
+    background: #0f172a !important;
+}
+
+html.dark .border {
+    border-color: var(--color-border) !important;
+}
+
+/* =============================================
+     TRIX EDITOR (ТЁМНАЯ ТЕМА)
+  ============================================= */
+html.dark trix-editor {
+    background: var(--color-surface-2) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text-primary) !important;
+}
+
+html.dark trix-toolbar .trix-button-row {
+    border-bottom-color: var(--color-border) !important;
+}
+
+html.dark trix-toolbar .trix-button-group {
+    border-color: var(--color-border-2) !important;
+}
+
+html.dark trix-toolbar .trix-button {
+    color: var(--color-text-secondary) !important;
+    border-bottom-color: var(--color-border) !important;
+}
+
+html.dark trix-toolbar .trix-button:not(:first-child) {
+    border-left-color: var(--color-border) !important;
+}
+
+html.dark trix-toolbar .trix-button.trix-active {
+    background: var(--color-accent-light) !important;
+    color: var(--color-accent-dark) !important;
+}
+
+html.dark trix-toolbar .trix-dialog {
+    background: var(--color-surface) !important;
+    box-shadow: var(--shadow-lg) !important;
+    border-top-color: var(--teal-500) !important;
+}
+
+html.dark trix-toolbar .trix-input--dialog {
+    background: var(--color-surface-2) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text-primary) !important;
+}
+
+html.dark trix-editor .trix-button {
+    color: var(--color-text-secondary) !important;
+}
+
+html.dark trix-editor .trix-button.trix-active {
+    background: var(--color-accent-light) !important;
+}
+
+html.dark trix-editor .trix-button--remove {
+    background: var(--color-surface) !important;
+    border-color: var(--color-border-2) !important;
+}
+
+html.dark trix-editor .trix-button--remove:hover {
+    border-color: var(--color-text-secondary) !important;
+}
+
+html.dark .trix-content .attachment--file {
+    color: var(--color-text-primary) !important;
+    border-color: var(--color-border-2) !important;
+    background: var(--color-surface-2) !important;
+}
+
+html.dark .trix-content pre {
+    background-color: var(--color-surface-2) !important;
+    color: var(--color-text-primary) !important;
+}
+
+html.dark .trix-content blockquote {
+    border-color: var(--color-border-2) !important;
+    color: var(--color-text-secondary) !important;
+}
+
+html.dark .trix-content .attachment--preview .attachment__caption {
+    color: var(--color-text-muted) !important;
+}
+
+/* =============================================
+     СТАТИСТИКА КУРСА — СИНИЙ ФОН (ТЁМНАЯ ТЕМА)
+  ============================================= */
+html.dark [style*="background: var(--sky-50)"],
+html.dark [style*="background:var(--sky-50)"],
+html.dark .bg-sky-50 {
+    background: rgba(14, 165, 233, 0.1) !important;
+}
+
+html.dark [style*="color: var(--sky-600)"],
+html.dark [style*="color:var(--sky-600)"],
+html.dark .text-sky-600 {
+    color: #38bdf8 !important;
+}
+
+html.dark [style*="color: var(--sky-700)"],
+html.dark [style*="color:var(--sky-700)"],
+html.dark .text-sky-700 {
+    color: #7dd3fc !important;
+}
+
+html.dark .border-t {
+    border-top-color: var(--color-border) !important;
+}
+
+/* =============================================
+     ИНПУТЫ И ПЛЕЙСХОЛДЕРЫ (ТЁМНАЯ ТЕМА)
+  ============================================= */
+html.dark input:where([type="text"]),
+html.dark input:where([type="email"]),
+html.dark input:where([type="password"]),
+html.dark input:where([type="search"]),
+html.dark input:where([type="number"]),
+html.dark input:where([type="url"]),
+html.dark input:where([type="tel"]),
+html.dark input:where([type="date"]),
+html.dark input:where([type="datetime-local"]),
+html.dark textarea,
+html.dark select {
+    background-color: var(--color-surface-2) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text-primary) !important;
+}
+
+html.dark ::placeholder,
+html.dark ::-webkit-input-placeholder,
+html.dark ::-moz-placeholder {
+    color: var(--color-text-secondary) !important;
+    opacity: 1 !important;
 }
 
 *,
@@ -1305,6 +2281,12 @@ body {
     transition: var(--transition);
 }
 
+@media (max-width: 768px) {
+    .search-input {
+        width: 100%;
+    }
+}
+
 .search-input::placeholder {
     color: var(--color-text-muted);
 }
@@ -1395,6 +2377,12 @@ body {
 
 .course-card:hover .course-card-menu-btn {
     opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .course-card-menu-btn {
+        opacity: 1;
+    }
 }
 
 .course-card-menu {
@@ -1525,6 +2513,12 @@ body {
     z-index: 101;
 }
 
+@media (max-width: 640px) {
+    .admin-search-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
 /* RESPONSIVE */
 @media (max-width: 1024px) {
     .layout {
@@ -1563,6 +2557,10 @@ body {
 
     .search-box {
         display: none;
+    }
+
+    .header__inner {
+        justify-content: space-between;
     }
 
     .courses-grid {

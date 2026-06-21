@@ -193,6 +193,11 @@
             transform: translateY(-1px);
         }
     </style>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 
 <body>

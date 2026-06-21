@@ -9,6 +9,13 @@
 
     <!-- Fonts -->
 
+    <!-- Dark theme init (must run before render to prevent FOUC) -->
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
