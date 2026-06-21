@@ -488,7 +488,7 @@
                             <button type="button"
                                     id="reset-color">
 
-                                ✕
+                                
 
                             </button>
 

@@ -725,13 +725,13 @@
 
                                 if ($question->question_type === 'rich_text_answer' && $hasAnswer && !$isManuallyGraded) {
                                     $badgeClass = 'pending';
-                                    $badgeText = '⏳ Ожидает проверки';
+                                    $badgeText = ' Ожидает проверки';
                                 } elseif ($isCorrect) {
                                     $badgeClass = 'correct';
-                                    $badgeText = '✓ Правильно';
+                                    $badgeText = ' Правильно';
                                 } elseif ($hasAnswer) {
                                     $badgeClass = 'incorrect';
-                                    $badgeText = '✗ Неправильно';
+                                    $badgeText = ' Неправильно';
                                 } else {
                                     $badgeClass = 'empty';
                                     $badgeText = '— Не ответил';
@@ -802,12 +802,12 @@
                                                         <label class="grade-radio-label">
                                                             <input type="radio" name="grades[{{ $question->id }}]" value="correct"
                                                                 {{ $isManuallyGraded && $isCorrect ? 'checked' : '' }}>
-                                                            <span>✓ Засчитать как правильный</span>
+                                                            <span> Засчитать как правильный</span>
                                                         </label>
                                                         <label class="grade-radio-label">
                                                             <input type="radio" name="grades[{{ $question->id }}]" value="incorrect"
                                                                 {{ $isManuallyGraded && !$isCorrect ? 'checked' : '' }}>
-                                                            <span>✗ Отметить как неправильный</span>
+                                                            <span> Отметить как неправильный</span>
                                                         </label>
                                                     </div>
                                                 </div>

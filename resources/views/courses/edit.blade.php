@@ -128,11 +128,11 @@
                             <div style="display: flex; gap: 8px; margin-bottom: 10px;">
                                 <button type="button" id="generate-pattern" class="btn btn-primary"
                                     style="font-size: 13px; padding: 7px 14px;">
-                                    🎲 Случайная обложка
+                                     Случайная обложка
                                 </button>
                                 <button type="button" id="clear-pattern" class="btn btn-ghost"
                                     style="font-size: 13px; padding: 7px 14px; display: none;">
-                                    ✕ Убрать
+                                     Убрать
                                 </button>
                             </div>
 

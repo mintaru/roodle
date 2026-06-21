@@ -8,7 +8,7 @@
             style="padding: 12px 16px; background: var(--green-50); color: var(--green-600); border-radius: var(--r-md); margin-bottom: 16px; border: 1px solid var(--green-200); font-size: 13px; display: flex; justify-content: space-between; align-items: center;">
             <span>{{ $successMessage }}</span>
             <button @click="$wire.set('successMessage', '')"
-                style="background: none; border: none; cursor: pointer; font-size: 16px;">✕</button>
+                style="background: none; border: none; cursor: pointer; font-size: 16px;"></button>
         </div>
     @endif
 
@@ -17,7 +17,7 @@
             style="padding: 12px 16px; background: #ffebee; color: var(--red-500); border-radius: var(--r-md); margin-bottom: 16px; border: 1px solid #ffcdd2; font-size: 13px; display: flex; justify-content: space-between; align-items: center;">
             <span>{{ $errorMessage }}</span>
             <button @click="$wire.set('errorMessage', '')"
-                style="background: none; border: none; cursor: pointer; font-size: 16px;">✕</button>
+                style="background: none; border: none; cursor: pointer; font-size: 16px;"></button>
         </div>
     @endif
 
@@ -25,11 +25,11 @@
     <div style="margin-bottom: 16px; position: relative; display: flex; gap: 8px; align-items: center;">
         <div style="position: relative; flex: 1;">
             <span
-                style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); font-size: 14px; pointer-events: none;">🔍</span>
+                style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); font-size: 14px; pointer-events: none;"></span>
             <input x-model="search" type="text" placeholder="Поиск по тестам, лекциям, материалам..."
                 style="width: 100%; padding: 8px 36px 8px 32px; border: 1px solid var(--color-border); border-radius: var(--r-sm); font-size: 13px; box-sizing: border-box; background: var(--color-surface);">
             <button x-show="search !== ''" @click="search = ''"
-                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 14px; color: var(--color-text-muted); line-height: 1;">✕</button>
+                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 14px; color: var(--color-text-muted); line-height: 1;"></button>
         </div>
         @if ($canManage)
             <button type="button" onclick="openCreateModal()"
@@ -91,7 +91,7 @@
                         <button type="button" onclick="openAttachModal({{ $section->id }})" class="btn btn-ghost"
                             style="padding: 6px 10px; font-size: 16px; line-height: 1; color: var(--teal-600); border-color: var(--teal-200);"
                             title="Добавить элемент">+</button>
-                        {{-- ★ НОВАЯ КНОПКА: настройки видимости секции --}}
+                        {{--  НОВАЯ КНОПКА: настройки видимости секции --}}
                         <button type="button" wire:click="openSectionVisibility({{ $section->id }})"
                             class="btn btn-ghost"
                             style="padding: 6px 10px; font-size: 13px; color: var(--sky-600); border-color: var(--sky-200);"
@@ -394,7 +394,7 @@
     </div>
 
     {{-- ============================================================
-         ★ МОДАЛКА НАСТРОЙКИ ВИДИМОСТИ ПО ГРУППАМ
+          МОДАЛКА НАСТРОЙКИ ВИДИМОСТИ ПО ГРУППАМ
          Работает и для секций, и для отдельных элементов.
          Открывается через wire:click="openSectionVisibility(id)"
          или wire:click="openItemVisibility(id)"
@@ -452,11 +452,11 @@
                             wire:click="$set('visibilityGroupIds', {{ $course->groups->pluck('id')->map(fn($id) => (string) $id)->toJson() }})"
                             class="btn btn-ghost"
                             style="font-size:12px; padding:5px 12px; color:var(--green-600); border-color:var(--green-200);">
-                            ✓ Разрешить всем
+                             Разрешить всем
                         </button>
                         <button type="button" wire:click="$set('visibilityGroupIds', [])" class="btn btn-ghost"
                             style="font-size:12px; padding:5px 12px; color:var(--red-500); border-color:#ffcdd2;">
-                            ✕ Запретить всем
+                             Запретить всем
                         </button>
                     </div>
 
@@ -526,7 +526,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--gray-100); color:var(--gray-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📁</div>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Секция</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">
                                         Группировка контента</div>
@@ -536,7 +536,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--teal-50); color:var(--teal-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📝</div>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Тест</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Создать
                                         новый тест</div>
@@ -546,7 +546,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--sky-50); color:var(--sky-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📖</div>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Лекция</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Создать
                                         новую лекцию</div>
@@ -556,7 +556,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--green-50); color:var(--green-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📎</div>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Материал</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">
                                         Загрузить файл</div>
@@ -566,7 +566,7 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--amber-50); color:var(--amber-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📋</div>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Задание</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Создать
                                         задание</div>
@@ -801,28 +801,28 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--teal-50); color:var(--teal-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📝</div>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Тест</div>
                                 </button>
                                 <button type="button" onclick="selectAttachType('lecture')"
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--sky-50); color:var(--sky-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📖</div>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Лекция</div>
                                 </button>
                                 <button type="button" onclick="selectAttachType('material')"
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--green-50); color:var(--green-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📎</div>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Материал</div>
                                 </button>
                                 <button type="button" onclick="selectAttachType('assignment')"
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--amber-50); color:var(--amber-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📋</div>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Задание</div>
                                 </button>
                             </div>
@@ -995,7 +995,7 @@
                     el.style.borderColor = 'var(--teal-500)';
                     el.style.background = 'var(--teal-50)';
                     const c = el.querySelector('.acheck');
-                    c.textContent = '✓';
+                    c.textContent = '';
                     c.style.background = 'var(--teal-500)';
                     c.style.borderColor = 'var(--teal-500)';
                     c.style.color = '#fff';

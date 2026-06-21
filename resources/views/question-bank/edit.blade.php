@@ -134,7 +134,7 @@
                                 </label>
                             </div>
                             <button type="button" class="removeOptionBtn px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition mt-1">
-                                ✕
+                                
                             </button>
                         </div>
                     </div>
@@ -149,7 +149,7 @@
         <!-- Action Buttons -->
         <div class="flex gap-3">
             <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-lg">
-                ✓ Сохранить изменения
+                 Сохранить изменения
             </button>
             <a href="{{ route('admin.question-bank.index') }}" class="flex-1 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition font-semibold text-lg text-center">
                 Отмена
@@ -177,7 +177,7 @@
                     </label>
                 </div>
                 <button type="button" class="removeOptionBtn px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition mt-1">
-                    ✕
+                    
                 </button>
             </div>
         `;

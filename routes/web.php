@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\TeacherCoursePermissionController;
 use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\Admin\TestManagementController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\UserImportController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\GradeReportController;
 
@@ -399,6 +400,7 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::get('/admin/users/{user}/edit', [UserManagementController::class, 'edit'])->name('admin.users.edit');
     Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
     Route::delete('/admin/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
+    Route::post('/admin/users/import', [UserImportController::class, 'import'])->name('admin.users.import');
 
     //для прав доступа преподавателей
     Route::get('/admin/teacher-permissions', [TeacherCoursePermissionController::class, 'index'])->name('admin.teacher-permissions.index');

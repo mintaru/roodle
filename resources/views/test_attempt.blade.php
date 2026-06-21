@@ -942,7 +942,7 @@
                             </div>
                             <div class="sidebar-progress__label" id="progressLabel">
                                 @if ($initialAnsweredCount === $totalQuestions && $totalQuestions > 0)
-                                    Все вопросы отвечены ✓
+                                    Все вопросы отвечены 
                                 @else
                                     Осталось: {{ $totalQuestions - $initialAnsweredCount }}
                                 @endif
@@ -1167,7 +1167,7 @@
                 const pct = TOTAL > 0 ? Math.round((count / TOTAL) * 100) : 0;
                 progressFill.style.width = pct + '%';
                 progressLabel.textContent = count === TOTAL ?
-                    'Все вопросы отвечены ✓' :
+                    'Все вопросы отвечены ' :
                     `Осталось: ${TOTAL - count}`;
             }
 

@@ -699,7 +699,7 @@
                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
                         <span x-text="selectedGroupIds.length > 0 ? selectedGroupIds.length + ' групп' : 'Группы'"></span>
                         <template x-if="selectedGroupIds.length > 0">
-                            <span style="margin-left:2px;cursor:pointer;opacity:0.6;" @click.stop="selectedGroupIds = []">✕</span>
+                            <span style="margin-left:2px;cursor:pointer;opacity:0.6;" @click.stop="selectedGroupIds = []"></span>
                         </template>
                     </button>
                     @endcan
@@ -887,7 +887,7 @@
                             "
                         >
                             <span style="font-size:14px;flex:1;color:var(--color-text-primary);user-select:none;">{{ $group->name }}</span>
-                            <span x-show="tempGroupIds.includes({{ $group->id }})" style="color:var(--teal-600);font-weight:700;font-size:15px;flex-shrink:0;">✓</span>
+                            <span x-show="tempGroupIds.includes({{ $group->id }})" style="color:var(--teal-600);font-weight:700;font-size:15px;flex-shrink:0;"></span>
                         </div>
                     @endforeach
                     @if($groups->isEmpty())

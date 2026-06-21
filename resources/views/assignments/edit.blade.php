@@ -144,7 +144,7 @@
                         font-size: 13px;
                         color: var(--amber-700);
                     ">
-                        <span>📋</span>
+                        <span></span>
                         <span>Общий банк заданий — видно всем преподавателям</span>
                     </div>
                 @endif

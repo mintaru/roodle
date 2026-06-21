@@ -11,6 +11,7 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "livewire/livewire": "^3.6",
+        "phpoffice/phpspreadsheet": "^5.8",
         "smalot/pdfparser": "^2.12",
         "spatie/laravel-backup": "^9.3",
         "spatie/laravel-medialibrary": "^11.14",

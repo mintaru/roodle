@@ -1022,9 +1022,9 @@
                 <div class="modal__body">
                     {{-- ── AI-генерация ── --}}
                     <div class="ff" style="background:var(--teal-50);border:1px solid var(--teal-100);border-radius:var(--r-md);padding:12px 14px;margin-bottom:1.2rem;">
-                        <label style="color:var(--teal-700);">✨ Сгенерировать с помощью AI</label>
+                        <label style="color:var(--teal-700);"> Сгенерировать с помощью AI</label>
                         <div style="display:flex;gap:8px;align-items:center;">
-                            <input type="text" id="ai-prompt" placeholder="Например: вопрос про ООП в Python"
+                            <input type="text" id="ai-prompt" placeholder="Например: Определение интеграла"
                                 style="flex:1;padding:8px 11px;border:1px solid var(--teal-200);border-radius:var(--r-md);font-size:14px;font-family:var(--font-body);">
                             <button type="button" id="ai-gen-btn" onclick="generateQuestion()"
                                 style="padding:8px 16px;background:var(--teal-500);color:#fff;border:none;border-radius:var(--r-full);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--font-body);transition:var(--transition);">
@@ -1271,7 +1271,7 @@ async function generateQuestion() {
         const data = await res.json();
 
         if (!res.ok || data.error) {
-            status.textContent = '❌ Ошибка: ' + (data.error || 'неизвестная');
+            status.textContent = ' Ошибка: ' + (data.error || 'неизвестная');
             return;
         }
 
@@ -1306,10 +1306,10 @@ async function generateQuestion() {
             });
         }
 
-        status.textContent = '✅ Готово! Проверьте и отредактируйте если нужно.';
+        status.textContent = ' Готово! Проверьте и отредактируйте если нужно.';
 
     } catch (e) {
-        status.textContent = '❌ Ошибка сети: ' + e.message;
+        status.textContent = ' Ошибка сети: ' + e.message;
     } finally {
         btn.disabled = false;
         btn.textContent = 'Сгенерировать';
@@ -1380,7 +1380,7 @@ async function generateQuestion() {
             } else if (q.type === 'short_answer') {
                 h += `<div class="detail-section-label">Правильные ответы</div>`;
                 q.options.filter(o => o.is_correct).forEach(o => {
-                    h += `<div class="detail-correct-text">✓ ${o.text}</div>`;
+                    h += `<div class="detail-correct-text"> ${o.text}</div>`;
                 });
             } else if (q.type === 'rich_text_answer') {
                 h +=

@@ -709,7 +709,7 @@
                     <div class="content-card">
 
                         <h2 class="content-card__title">
-                            📎 Файлы задания
+                             Файлы задания
                         </h2>
 
                         <ul class="file-list">
