@@ -221,8 +221,17 @@
             .date-grid {
                 grid-template-columns: 1fr;
             }
+
+            .form-card {
+                max-width: 100%;
+            }
         }
     </style>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body>
 
@@ -335,7 +344,7 @@
 
                     <div class="field">
                         <label class="toggle-row" for="add_to_bank">
-                            <input type="checkbox" id="add_to_bank" name="add_to_bank" value="1" {{ $test->add_to_bank ? 'checked' : '' }}>
+                            <input type="checkbox" id="add_to_bank" name="add_to_bank" value="1" {{ $test->is_global ? 'checked' : '' }}>
                             <span class="toggle-label">Добавить в общий банк тестов (видно всем преподавателям)</span>
                         </label>
                     </div>
@@ -447,14 +456,14 @@
                     <div class="date-grid">
                         <div class="field" style="margin-bottom:0;">
                             <label for="period_start">Доступен с</label>
-                            <div style="display: flex; gap: 6px;">
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                                 <input
                                     type="datetime-local"
                                     id="period_start"
                                     name="period_start"
                                     value="{{ old('period_start', $test->period_start ? $test->period_start->format('Y-m-d\TH:i') : '') }}"
                                     class="input"
-                                    style="flex: 1;"
+                                    style="flex: 1; min-width: 180px;"
                                 >
                                 <button type="button" onclick="setToday(document.getElementById('period_start'))"
                                     style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--color-border);border-radius:var(--r-md);background:var(--color-surface);font-size:12px;color:var(--teal-600);cursor:pointer;font-family:var(--font-body);white-space:nowrap;transition:border-color 0.2s,background 0.2s,color 0.2s;"
@@ -478,19 +487,18 @@
 
                 {{-- Footer --}}
                 <div class="form-footer">
-                    <span class="form-footer-hint">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M12 8v4M12 16h.01"/>
-                        </svg>
-                        Изменения применяются сразу после сохранения
-                    </span>
-                    <button type="submit" class="btn btn-primary">
-                        Сохранить изменения
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
-                    </button>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" name="action" value="view" class="btn">
+                            Сохранить и перейти к тесту
+                        </button>
+                        <button type="submit" name="action" value="questions" class="btn btn-primary">
+                            Сохранить и редактировать вопросы
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
             </form>

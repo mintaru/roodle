@@ -319,88 +319,99 @@ textarea:focus-visible {
     transform: scale(1.05);
 }
 
-.dark-theme {
+.dark-theme,
+html.dark {
     background-color: #111827;
     color: #e5e7eb;
 }
 
 .dark-theme .card,
-.dark-theme .card-title {
+html.dark .card,
+.dark-theme .card-title,
+html.dark .card-title {
     background-color: #1f2937;
     color: #f9fafb;
     border: 1px solid #374151;
 }
 
-.dark-theme h2 {
+.dark-theme h2,
+html.dark h2 {
     color: #f3f4f6;
 }
 
-.dark-theme h3 {
+.dark-theme h3,
+html.dark h3 {
     color: #e5e7eb;
     border-bottom: 2px solid #374151;
 }
 
-.dark-theme .question-item {
+.dark-theme .question-item,
+html.dark .question-item {
     background-color: #1f2937;
     border: 1px solid #374151;
 }
 
-.dark-theme .question-text {
+.dark-theme .question-text,
+html.dark .question-text {
     color: #f9fafb;
 }
 
-.dark-theme .options-list li {
+.dark-theme .options-list li,
+html.dark .options-list li {
     color: #d1d5db;
 }
 
-.dark-theme .options-list li:hover {
+.dark-theme .options-list li:hover,
+html.dark .options-list li:hover {
     background-color: #2d3748;
 }
 
 .dark-theme textarea,
-.dark-theme input[type="text"] {
+html.dark textarea,
+.dark-theme input[type="text"],
+html.dark input[type="text"] {
     background-color: #374151;
     border: 1px solid #4b5563;
     color: #f9fafb;
 }
 
-.dark-theme textarea::placeholder,
-.dark-theme input[type="text"]::placeholder {
-    color: #9ca3af;
+html.dark ::placeholder,
+html.dark ::-webkit-input-placeholder,
+html.dark ::-moz-placeholder {
+    color: var(--color-text-secondary) !important;
+    opacity: 1 !important;
 }
 
-.dark-theme .submit-btn {
+.dark-theme .submit-btn,
+html.dark .submit-btn {
     background-color: #3b82f6;
     color: #fff;
 }
 
-.dark-theme .submit-btn:hover {
+.dark-theme .submit-btn:hover,
+html.dark .submit-btn:hover {
     background-color: #2563eb;
 }
 
-.dark-theme .success-message {
+.dark-theme .success-message,
+html.dark .success-message {
     background-color: #065f46;
     border-left: 5px solid #34d399;
     color: #d1fae5;
 }
 
-.dark-theme p {
+.dark-theme p,
+html.dark p {
     color: #e5e7eb;
 }
 
-.dark-theme .question-text {
-    color: #f9fafb;
-}
-
-.dark-theme .options-list li {
+.dark-theme .options-list li,
+html.dark .options-list li {
     color: #e5e7eb;
 }
 
-.dark-theme textarea::placeholder,
-.dark-theme input[type="text"]::placeholder {
-    color: #9ca3af;
-}
-.dark-theme label {
+.dark-theme label,
+html.dark label {
     color: #f9fafb;
 }
 .logo {

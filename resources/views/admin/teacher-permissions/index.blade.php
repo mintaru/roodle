@@ -5,6 +5,11 @@
     <meta charset="UTF-8">
     <title>Управление правами учителей</title>
     <link href="{{ asset('css/tailwind.min.css') }}" rel="stylesheet">
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 
 <body class="bg-gray-100 p-8">
@@ -36,7 +41,7 @@
             <!-- Teachers Column -->
             <div class="bg-white rounded-lg shadow">
                 <div class="bg-blue-600 text-white p-6 rounded-t-lg">
-                    <h2 class="text-2xl font-bold">👨‍🏫 Учителя</h2>
+                    <h2 class="text-2xl font-bold"> Учителя</h2>
                     <p class="text-sm opacity-90">Выберите учителя для управления его доступом</p>
                 </div>
                 <div class="p-6">
@@ -72,7 +77,7 @@
             <!-- Courses Column -->
             <div class="bg-white rounded-lg shadow">
                 <div class="bg-purple-600 text-white p-6 rounded-t-lg">
-                    <h2 class="text-2xl font-bold">📚 Курсы</h2>
+                    <h2 class="text-2xl font-bold"> Курсы</h2>
                     <p class="text-sm opacity-90">Выберите курс для настройки доступа</p>
                 </div>
                 <div class="p-6">

@@ -8,6 +8,11 @@
     <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
     <script defer src="{{ asset('js/alpine.min.js') }}"></script>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 
 <body>
@@ -64,14 +69,14 @@
                 <div class="panel" style="padding: 2rem;">
 
                     @if (session('success'))
-                        <div
+                        <div class="alert-success"
                             style="background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: var(--r-md); padding: 12px 16px; margin-bottom: 1.5rem;">
                             <p style="font-size: 13px; color: #2e7d32;">{{ session('success') }}</p>
                         </div>
                     @endif
 
                     @if ($errors->any())
-                        <div
+                        <div class="alert-error"
                             style="background: #ffebee; border: 1px solid #ffcdd2; border-radius: var(--r-md); padding: 12px 16px; margin-bottom: 1.5rem;">
                             <p style="font-size: 13px; font-weight: 600; color: var(--red-500); margin-bottom: 6px;">
                                 Пожалуйста, исправьте ошибки:</p>
@@ -128,11 +133,11 @@
                             <div style="display: flex; gap: 8px; margin-bottom: 10px;">
                                 <button type="button" id="generate-pattern" class="btn btn-primary"
                                     style="font-size: 13px; padding: 7px 14px;">
-                                    🎲 Случайная обложка
+                                     Случайная обложка
                                 </button>
                                 <button type="button" id="clear-pattern" class="btn btn-ghost"
                                     style="font-size: 13px; padding: 7px 14px; display: none;">
-                                    ✕ Убрать
+                                     Убрать
                                 </button>
                             </div>
 
@@ -608,156 +613,6 @@
                 input.value = '';
             }
         }
-
-        // ── Pattern generator ──────────────────────────────────────────────────────────
-        (function() {
-            const useGeneratedInput = document.getElementById('use_generated_pattern');
-            const imageInput = document.getElementById('image_input');
-            const clearBtn = document.getElementById('clear-pattern');
-            const form = document.getElementById('course-form');
-            let patternBlob = null;
-
-            const PALETTES = [
-                // ===== BLUE =====
-                ['#0b132b', '#1c2541', '#3a506b'],
-                ['#03045e', '#0077b6', '#90e0ef'],
-                ['#001f3f', '#005f99', '#66c2ff'],
-                ['#14213d', '#274c77', '#6096ba'],
-                ['#0f4c5c', '#1b9aaa', '#b2dbbf'],
-
-                // ===== GREEN =====
-                ['#081c15', '#1b4332', '#52b788'],
-                ['#0b3d20', '#2d6a4f', '#95d5b2'],
-                ['#1f4037', '#2c7744', '#90ee90'],
-                ['#004b23', '#006400', '#38b000'],
-                ['#2b9348', '#55a630', '#80b918'],
-
-                // ===== RED =====
-                ['#370617', '#9d0208', '#dc2f02'],
-                ['#540b0e', '#9e2a2b', '#e09f3e'],
-                ['#641220', '#a4161a', '#ff4d6d'],
-                ['#7f1d1d', '#b91c1c', '#ef4444'],
-                ['#450920', '#a53860', '#f4a7bb'],
-
-                // ===== ORANGE =====
-                ['#7c2d12', '#ea580c', '#fdba74'],
-                ['#552200', '#aa5500', '#ff9900'],
-                ['#8d5524', '#c68642', '#e0ac69'],
-                ['#ff6f00', '#ff8f00', '#ffd180'],
-                ['#bc6c25', '#dda15e', '#ffe6a7'],
-
-                // ===== YELLOW =====
-                ['#fffde7', '#fff9c4', '#fff176'],
-                ['#f48c06', '#ffba08', '#ffe066'],
-                ['#ffdd00', '#ffd60a', '#fff3b0'],
-                ['#e09f3e', '#f2cc8f', '#fff3bf'],
-                ['#c9a227', '#ffd700', '#fff4b5'],
-
-                // ===== PURPLE =====
-                ['#240046', '#5a189a', '#9d4edd'],
-                ['#3c096c', '#7b2d8b', '#c77dff'],
-                ['#4a148c', '#6a1b9a', '#ba68c8'],
-                ['#2e1065', '#7c3aed', '#c4b5fd'],
-                ['#5b2a86', '#9163cb', '#d6c6ff'],
-
-                // ===== PINK =====
-                ['#ff006e', '#fb5607', '#ffbe0b'],
-                ['#f72585', '#b5179e', '#7209b7'],
-                ['#ff5d8f', '#ff99c8', '#ffe5ec'],
-                ['#d63384', '#f06595', '#faa2c1'],
-                ['#c9184a', '#ff4d6d', '#ffb3c1'],
-
-                // ===== CYAN / TEAL =====
-                ['#004e64', '#00a5cf', '#9fffcb'],
-                ['#006466', '#065a60', '#0b525b'],
-                ['#003049', '#00b4d8', '#90e0ef'],
-                ['#005f73', '#0a9396', '#94d2bd'],
-                ['#0a2239', '#53a2be', '#bcd4de'],
-
-                // ===== NEUTRAL / GRAY =====
-                ['#0d0d0d', '#1a1a1a', '#2d2d2d'],
-                ['#1f1f1f', '#3d3d3d', '#b0b0b0'],
-                ['#2b2d42', '#8d99ae', '#edf2f4'],
-                ['#111827', '#374151', '#d1d5db'],
-                ['#22223b', '#4a4e69', '#c9ada7'],
-
-                // ===== PASTEL =====
-                ['#ffd6e7', '#ffafcc', '#bde0fe'],
-                ['#cdb4db', '#ffc8dd', '#ffafcc'],
-                ['#d8f3dc', '#b7e4c7', '#74c69d'],
-                ['#fff1e6', '#fde2e4', '#fad2e1'],
-                ['#e2ece9', '#bee1e6', '#f0efeb'],
-
-                // ===== SUNSET =====
-                ['#ff4e50', '#f9d423', '#fc913a'],
-                ['#ee0979', '#ff6a00', '#ffca28'],
-                ['#ff6b6b', '#feca57', '#ff9f43'],
-                ['#ff7b00', '#ff8800', '#ffd000'],
-                ['#ef476f', '#ffd166', '#06d6a0'],
-            ];
-
-            function randomPattern() {
-                const palette = PALETTES[Math.floor(Math.random() * PALETTES.length)];
-                const shuffled = palette.slice().sort(() => Math.random() - 0.5);
-                const cellSize = Math.floor(Math.random() * 120) + 40;
-                const variance = Math.random() * 0.9 + 0.1;
-                return window.trianglify({
-                    width: 600,
-                    height: 200,
-                    cellSize,
-                    variance,
-                    xColors: shuffled,
-                    yColors: Math.random() > 0.4 ? 'match' : shuffled.slice().reverse(),
-                });
-            }
-
-            function drawPattern() {
-                const pattern = randomPattern();
-                const c = pattern.toCanvas();
-                c.style.width = '100%';
-                c.style.height = '100%';
-                const preview = document.getElementById('pattern-preview');
-                preview.innerHTML = '';
-                preview.appendChild(c);
-                clearBtn.style.display = 'inline-flex';
-                useGeneratedInput.value = '1';
-                c.toBlob(blob => {
-                    patternBlob = blob;
-                }, 'image/png');
-            }
-
-            document.getElementById('generate-pattern').addEventListener('click', drawPattern);
-
-            clearBtn.addEventListener('click', function() {
-                const preview = document.getElementById('pattern-preview');
-                preview.innerHTML =
-                    '<span id="preview-placeholder" style="font-size:13px;color:var(--color-text-muted);">Обложка появится здесь</span>';
-                clearBtn.style.display = 'none';
-                useGeneratedInput.value = '0';
-                patternBlob = null;
-            });
-
-            imageInput.addEventListener('change', function() {
-                if (this.files.length > 0) {
-                    clearBtn.style.display = 'none';
-                    useGeneratedInput.value = '0';
-                    patternBlob = null;
-                }
-            });
-
-            form.addEventListener('submit', function(e) {
-                if (useGeneratedInput.value === '1' && patternBlob && !imageInput.files.length) {
-                    e.preventDefault();
-                    const file = new File([patternBlob], 'pattern.png', {
-                        type: 'image/png'
-                    });
-                    const dt = new DataTransfer();
-                    dt.items.add(file);
-                    imageInput.files = dt.files;
-                    form.submit();
-                }
-            });
-        })();
 
         // ── Group chips ────────────────────────────────────────────────────────────────
         const selectedGroups = new Set(

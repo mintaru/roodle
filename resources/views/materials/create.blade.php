@@ -8,6 +8,11 @@
     <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
     <script defer src="{{ asset('js/alpine.min.js') }}"></script>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body>
 
@@ -184,6 +189,14 @@
                                 </div>
                             </template>
                         </div>
+                    </div>
+
+                    {{-- Add to bank toggle --}}
+                    <div style="margin-bottom: 1.5rem;">
+                        <label class="toggle-row" for="add_to_bank" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1.5px solid var(--color-border); border-radius: var(--r-md); background: var(--gray-50); cursor: pointer;">
+                            <input type="checkbox" id="add_to_bank" name="add_to_bank" value="1" checked style="width: 18px; height: 18px; accent-color: var(--teal-500); cursor: pointer; flex-shrink: 0;">
+                            <span style="font-size: 14px; font-weight: 500; color: var(--gray-700); user-select: none;">Добавить в общий банк материалов (видно всем преподавателям)</span>
+                        </label>
                     </div>
 
                     {{-- Actions --}}

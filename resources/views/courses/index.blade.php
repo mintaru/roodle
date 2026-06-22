@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <title>Список курсов</title>
     <link href="{{ asset('css/tailwind.min.css') }}" rel="stylesheet">
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body class="bg-gray-100 p-8">
 
@@ -105,7 +110,7 @@
                             @if($canEdit)
                                 <a href="{{ route('courses.edit', $course) }}"
                                     class="px-3 py-2 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700">
-                                    ✏️
+                                    
                                 </a>
                             @endif
 
@@ -115,7 +120,7 @@
                                     @method('DELETE')
                                     <button type="submit" class="px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700"
                                         onclick="return confirm('Вы уверены?')">
-                                        🗑️
+                                        
                                     </button>
                                 </form>
                             @endif

@@ -143,6 +143,11 @@
             color: #7f8c8d;
         }
     </style>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body>
 @include('components.menu')
@@ -161,7 +166,7 @@
                     <select name="group_id" id="group_id" onchange="document.getElementById('gradesFilterForm').submit()">
                         <option value="">-- Выберите группу --</option>
                         <option value="all" {{ $allGroupsSelected ? 'selected' : '' }}>
-                            📊 Все группы
+                             Все группы
                         </option>
                         @foreach($groups as $group)
                             <option value="{{ $group->id }}" {{ $selectedGroupId == $group->id ? 'selected' : '' }}>
@@ -189,7 +194,7 @@
                                     @foreach($tests as $test)
                                         <option value="test" data-item-id="{{ $test->id }}" 
                                             {{ $selectedItemType === 'test' && $selectedItem && $selectedItem->id == $test->id ? 'selected' : '' }}>
-                                            📝 {{ $test->title }}
+                                             {{ $test->title }}
                                         </option>
                                     @endforeach
                                 </optgroup>
@@ -199,7 +204,7 @@
                                     @foreach($assignments as $assignment)
                                         <option value="assignment" data-item-id="{{ $assignment->id }}"
                                             {{ $selectedItemType === 'assignment' && $selectedItem && $selectedItem->id == $assignment->id ? 'selected' : '' }}>
-                                            ✓ {{ $assignment->title }}
+                                             {{ $assignment->title }}
                                         </option>
                                     @endforeach
                                 </optgroup>
@@ -209,7 +214,7 @@
                         <input type="hidden" name="item_id" id="item_id" value="{{ $selectedItem ? $selectedItem->id : '' }}">
 
                         @if($selectedStudent || $selectedItem)
-                            <a href="{{ route('courses.grades', $course) }}" style="margin-left: 20px;" class="btn btn-secondary btn-xs">✕ Очистить фильтры</a>
+                            <a href="{{ route('courses.grades', $course) }}" style="margin-left: 20px;" class="btn btn-secondary btn-xs"> Очистить фильтры</a>
                         @endif
                     @endif
                 </form>

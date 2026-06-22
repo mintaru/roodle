@@ -150,7 +150,7 @@
                                        background:#fff; border:1px solid #e0e0e0;
                                        border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.12);
                                        min-width:170px; padding:4px 0; white-space:nowrap;">
-                                <a href="{{ route('admin.tests.edit', $test) }}"
+                                <a href="{{ route('tests.edit-settings', $test) }}"
                                     @click="open = false"
                                     style="display:flex; align-items:center; gap:8px; padding:7px 14px; font-size:13px; color:#667eea; text-decoration:none;"
                                     @mouseenter="$el.style.background='#f5f5f5'"

@@ -114,6 +114,11 @@
             flex-grow: 1;
         }
     </style>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 
 <body>
@@ -129,32 +134,32 @@
 
         <div class="admin-grid">
             <a href="{{ route('admin.courses.index') }}" class="admin-card accent">
-                <h2 class="admin-card-title">📚 Список курсов</h2>
+                <h2 class="admin-card-title"> Список курсов</h2>
                 <p class="admin-card-description">Управляйте всеми курсами платформы</p>
             </a>
 
             <a href="{{ route('admin.lectures.index') }}" class="admin-card sky">
-                <h2 class="admin-card-title">📖 Список лекций</h2>
+                <h2 class="admin-card-title"> Список лекций</h2>
                 <p class="admin-card-description">Управляйте всеми лекциями</p>
             </a>
 
             <a href="{{ route('admin.tests.index') }}" class="admin-card green">
-                <h2 class="admin-card-title">📝 Список тестов</h2>
+                <h2 class="admin-card-title"> Список тестов</h2>
                 <p class="admin-card-description">Управляйте всеми тестами</p>
             </a>
 
             <a href="{{ route('admin.question-bank.index') }}" class="admin-card accent">
-                <h2 class="admin-card-title">❓ Банк вопросов</h2>
+                <h2 class="admin-card-title"> Банк вопросов</h2>
                 <p class="admin-card-description">Управляйте всеми вопросами</p>
             </a>
 
             <a href="{{ route('admin.groups.index') }}" class="admin-card sky">
-                <h2 class="admin-card-title">👥 Список групп</h2>
+                <h2 class="admin-card-title"> Список групп</h2>
                 <p class="admin-card-description">Управляйте группами обучающихся</p>
             </a>
 
             <a href="{{ route('admin.users.index') }}" class="admin-card accent">
-                <h2 class="admin-card-title">👤 Список пользователей</h2>
+                <h2 class="admin-card-title"> Список пользователей</h2>
                 <p class="admin-card-description">Управляйте всеми пользователями</p>
             </a>
 

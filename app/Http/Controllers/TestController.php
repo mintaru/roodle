@@ -153,16 +153,16 @@ class TestController extends Controller
         $maxAttemptsForUser = $test->getMaxAttemptsForUser($user->id);
         $isUnlimited = ($maxAttemptsForUser === 0);
 
-        // Оставшиеся попытки
-        $remaining = $isUnlimited
-            ? '∞'
-            : max(0, $maxAttemptsForUser - $userAttemptsCount);
-
         // Проверяем, есть ли активная попытка (где ended_at == null)
         $hasActiveAttempt = $test->attempts()
             ->where('user_id', $user->id)
             ->whereNull('ended_at')
             ->exists();
+
+        // Оставшиеся попытки (активная попытка тоже считается использованной)
+        $remaining = $isUnlimited
+            ? '∞'
+            : max(0, $maxAttemptsForUser - $userAttemptsCount - ($hasActiveAttempt ? 1 : 0));
 
         $activeAttempt = null;
         if ($hasActiveAttempt) {
@@ -944,15 +944,119 @@ class TestController extends Controller
     }
 
     /**
-     * Страница для начала прохождения теста (одностраничный режим).
+     * Проверяет, имеет ли пользователь доступ к конкретному тесту
+     * (проверка видимости на уровне элемента раздела курса).
+     */
+    private function userCanAccessTest(Test $test, $user): bool
+    {
+        if ($user->hasAnyRole(['admin', 'teacher'])) {
+            return true;
+        }
+
+        $sectionItem = CourseSectionItem::where('item_type', Test::class)
+            ->where('item_id', $test->id)
+            ->first();
+
+        if ($sectionItem) {
+            $visibleGroupIds = $sectionItem->visibleGroups()->pluck('group_id')->toArray();
+
+            if (!empty($visibleGroupIds)) {
+                $userGroupIds = $user->groups()->pluck('groups.id')->toArray();
+                if (empty(array_intersect($userGroupIds, $visibleGroupIds))) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Запуск новой попытки прохождения теста (POST).
+     */
+    public function startAttempt(Test $test)
+    {
+        $user = Auth::user();
+
+        if (! ($user && $user->hasAnyRole(['admin', 'teacher']))) {
+            abort_if(! $test->isAvailable(), 404);
+        }
+        if (! $this->userCanAccessTest($test, $user)) {
+            abort(404);
+        }
+
+        if ($test->max_attempts > 0) {
+            $completedAttempts = $test->attempts()
+                ->where('user_id', $user->id)
+                ->whereNotNull('ended_at')
+                ->count();
+
+            $extraAttempts = UserTestExtraAttempt::where('user_id', $user->id)
+                ->where('test_id', $test->id)
+                ->first();
+
+            $maxAllowed = $test->max_attempts + ($extraAttempts ? $extraAttempts->extra_attempts : 0);
+
+            if ($completedAttempts >= $maxAllowed) {
+                return redirect()->route('tests.view', $test)
+                    ->with('error', 'Вы исчерпали все попытки для этого теста.');
+            }
+        }
+
+        $activeAttempt = $test->attempts()
+            ->where('user_id', $user->id)
+            ->whereNull('ended_at')
+            ->first();
+
+        if ($activeAttempt) {
+            if ($test->display_mode === 'single_page') {
+                return redirect()->route('tests.attempt', $test);
+            }
+            return redirect()->route('tests.attempt.page', [$test->id, 1]);
+        }
+
+        $lastAttemptNumber = TestAttempt::where('test_id', $test->id)
+            ->where('user_id', $user->id)
+            ->max('attempt_number') ?? 0;
+
+        $test->attempts()->create([
+            'user_id' => $user->id,
+            'score' => 0,
+            'attempt_number' => $lastAttemptNumber + 1,
+            'started_at' => now(),
+        ]);
+
+        if ($test->display_mode === 'single_page') {
+            return redirect()->route('tests.attempt', $test);
+        }
+
+        return redirect()->route('tests.attempt.page', [$test->id, 1]);
+    }
+
+    /**
+     * Страница для продолжения прохождения теста (одностраничный режим).
+     * Если нет активной попытки — перенаправляет на страницу просмотра теста.
      */
     public function attempt(Test $test)
     {
-        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin', 'teacher']))) {
+        $user = Auth::user();
+
+        if (! ($user && $user->hasAnyRole(['admin', 'teacher']))) {
             abort_if(! $test->isAvailable(), 404);
         }
+        if (! $this->userCanAccessTest($test, $user)) {
+            abort(404);
+        }
 
-        $user = Auth::user();
+        // Если нет активной попытки — на страницу теста
+        $activeAttempt = $test->attempts()
+            ->where('user_id', $user->id)
+            ->whereNull('ended_at')
+            ->first();
+
+        if (! $activeAttempt) {
+            return redirect()->route('tests.view', $test);
+        }
 
         // Проверка количества попыток
         if ($test->max_attempts > 0) {
@@ -961,7 +1065,6 @@ class TestController extends Controller
                 ->whereNotNull('ended_at')
                 ->count();
 
-            // Получаем дополнительные попытки для пользователя
             $extraAttempts = UserTestExtraAttempt::where('user_id', $user->id)
                 ->where('test_id', $test->id)
                 ->first();
@@ -969,30 +1072,12 @@ class TestController extends Controller
             $maxAllowed = $test->max_attempts + ($extraAttempts ? $extraAttempts->extra_attempts : 0);
 
             if ($completedAttempts >= $maxAllowed) {
-                return redirect()->back()->with('error', 'Вы исчерпали все попытки для этого теста.');
+                return redirect()->route('tests.view', $test)
+                    ->with('error', 'Вы исчерпали все попытки для этого теста.');
             }
         }
 
-        // Проверяем, есть ли активная попытка (не завершённая)
-        $activeAttempt = $test->attempts()
-            ->where('user_id', $user->id)
-            ->whereNull('ended_at')
-            ->first();
-
-        // Если нет активной попытки, создаём новую
-        if (! $activeAttempt) {
-            $lastAttemptNumber = TestAttempt::where('test_id', $test->id)
-                ->where('user_id', $user->id)
-                ->max('attempt_number') ?? 0;
-
-            $activeAttempt = $test->attempts()->create([
-                'user_id' => $user->id,
-                'score' => 0,
-                'attempt_number' => $lastAttemptNumber + 1,
-                'started_at' => now(),
-            ]);
-        } elseif (! $activeAttempt->started_at) {
-            // Ensure started_at is set if it was null
+        if (! $activeAttempt->started_at) {
             $activeAttempt->update(['started_at' => now()]);
         }
 
@@ -1162,15 +1247,18 @@ class TestController extends Controller
     }
 
     /**
-     * Принудительно завершает активную попытку и перенаправляет на создание новой.
+     * Принудительно завершает активную попытку и создаёт новую.
      */
     public function forceNewAttempt(Test $test)
     {
-        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin', 'teacher']))) {
+        $user = Auth::user();
+
+        if (! ($user && $user->hasAnyRole(['admin', 'teacher']))) {
             abort_if(! $test->isAvailable(), 404);
         }
-
-        $user = Auth::user();
+        if (! $this->userCanAccessTest($test, $user)) {
+            abort(404);
+        }
 
         $activeAttempt = $test->attempts()
             ->where('user_id', $user->id)
@@ -1182,6 +1270,36 @@ class TestController extends Controller
             TemporaryAnswer::where('test_attempt_id', $activeAttempt->id)
                 ->update(['is_active' => false]);
         }
+
+        // Проверка количества попыток
+        if ($test->max_attempts > 0) {
+            $completedAttempts = $test->attempts()
+                ->where('user_id', $user->id)
+                ->whereNotNull('ended_at')
+                ->count();
+
+            $extraAttempts = UserTestExtraAttempt::where('user_id', $user->id)
+                ->where('test_id', $test->id)
+                ->first();
+
+            $maxAllowed = $test->max_attempts + ($extraAttempts ? $extraAttempts->extra_attempts : 0);
+
+            if ($completedAttempts >= $maxAllowed) {
+                return redirect()->route('tests.view', $test)
+                    ->with('error', 'Вы исчерпали все попытки для этого теста.');
+            }
+        }
+
+        $lastAttemptNumber = TestAttempt::where('test_id', $test->id)
+            ->where('user_id', $user->id)
+            ->max('attempt_number') ?? 0;
+
+        $test->attempts()->create([
+            'user_id' => $user->id,
+            'score' => 0,
+            'attempt_number' => $lastAttemptNumber + 1,
+            'started_at' => now(),
+        ]);
 
         if ($test->display_mode === 'single_page') {
             return redirect()->route('tests.attempt', $test);
@@ -1280,14 +1398,29 @@ class TestController extends Controller
 
     /**
      * Прохождение теста по страницам/вопросам.
+     * Если нет активной попытки — перенаправляет на страницу просмотра теста.
      */
     public function attemptPage(Test $test, $questionIndex = 1)
     {
-        if (! (Auth::check() && Auth::user()->hasAnyRole(['admin', 'teacher']))) {
+        $user = Auth::user();
+
+        if (! ($user && $user->hasAnyRole(['admin', 'teacher']))) {
             abort_if(! $test->isAvailable(), 404);
         }
+        if (! $this->userCanAccessTest($test, $user)) {
+            abort(404);
+        }
 
-        $user = Auth::user();
+        // Получаем текущую активную попытку
+        $activeAttempt = $test->attempts()
+            ->where('user_id', $user->id)
+            ->whereNull('ended_at')
+            ->first();
+
+        // Если активной попытки нет — на страницу теста
+        if (! $activeAttempt) {
+            return redirect()->route('tests.view', $test);
+        }
 
         // Проверка количества попыток
         if ($test->max_attempts > 0) {
@@ -1304,30 +1437,12 @@ class TestController extends Controller
             $maxAllowed = $test->max_attempts + ($extraAttempts ? $extraAttempts->extra_attempts : 0);
 
             if ($completedAttempts >= $maxAllowed) {
-                return redirect()->back()->with('error', 'Вы исчерпали все попытки для этого теста.');
+                return redirect()->route('tests.view', $test)
+                    ->with('error', 'Вы исчерпали все попытки для этого теста.');
             }
         }
 
-        // Получаем текущую активную попытку
-        $activeAttempt = $test->attempts()
-            ->where('user_id', $user->id)
-            ->whereNull('ended_at')
-            ->first();
-
-        // Если активной попытки нет, создаём новую (как в одностраничном режиме)
-        if (! $activeAttempt) {
-            $lastAttemptNumber = TestAttempt::where('test_id', $test->id)
-                ->where('user_id', $user->id)
-                ->max('attempt_number') ?? 0;
-
-            $activeAttempt = $test->attempts()->create([
-                'user_id' => $user->id,
-                'score' => 0,
-                'attempt_number' => $lastAttemptNumber + 1,
-                'started_at' => now(),
-            ]);
-        } elseif (! $activeAttempt->started_at) {
-            // Если попытка была создана без started_at — установим его
+        if (! $activeAttempt->started_at) {
             $activeAttempt->update(['started_at' => now()]);
         }
 
@@ -1790,8 +1905,29 @@ class TestController extends Controller
         $validatedData['is_details_available'] = $request->has('is_details_available');
         $validatedData['display_mode'] = $request->input('display_mode', 'single_page');
 
+        // Опция: добавить в общий банк
+        if ($request->has('add_to_bank')) {
+            $validatedData['is_global'] = true;
+            $validatedData['user_id'] = null;
+            $validatedData['course_id'] = null;
+        } else {
+            $validatedData['is_global'] = false;
+            $validatedData['user_id'] = $request->user()->id;
+            $validatedData['course_id'] = null;
+        }
+
         // Обновляем тест
         $test->update($validatedData);
+
+        if ($request->input('action') === 'questions') {
+            return redirect()->route('tests.show', $test)
+                ->with('success', 'Параметры теста успешно обновлены!');
+        }
+
+        if ($request->input('action') === 'view') {
+            return redirect()->route('tests.view', $test)
+                ->with('success', 'Параметры теста успешно обновлены!');
+        }
 
         if ($test->course) {
             return redirect()->route('courses.show', $test->course)

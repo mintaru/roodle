@@ -10,6 +10,11 @@
     <script src="{{ asset('js/trix.min.js') }}"></script>
     <script defer src="{{ asset('js/alpine.min.js') }}"></script>
     <link rel="stylesheet" href="{{ asset('css/lecture-content.css') }}">
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body>
 
@@ -31,9 +36,9 @@
             Курсы
         </a>
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
-        <a href="{{ route('courses.show', $lecture->course) }}" style="color:var(--color-text-muted);text-decoration:none;transition:color 0.2s;"
+        <a href="{{ route('courses.show', $course) }}" style="color:var(--color-text-muted);text-decoration:none;transition:color 0.2s;"
            onmouseover="this.style.color='var(--teal-600)'" onmouseout="this.style.color='var(--color-text-muted)'">
-            {{ $lecture->course->title }}
+            {{ $course->title }}
         </a>
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
         <span style="color:var(--gray-600);font-weight:500;">{{ $lecture->title }}</span>

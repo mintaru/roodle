@@ -14,6 +14,11 @@
 
 
     <script defer src="{{ asset('js/alpine.min.js') }}"></script>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body>
 
@@ -425,6 +430,14 @@
                             onblur="this.style.borderColor='var(--color-border)'; this.style.boxShadow='none'"
                         >
 
+                    </div>
+
+                    {{-- Add to bank --}}
+                    <div style="margin-bottom: 2rem;">
+                        <label class="toggle-row" for="add_to_bank">
+                            <input type="checkbox" id="add_to_bank" name="add_to_bank" value="1" checked>
+                            <span class="toggle-label">Добавить в общий банк заданий (видно всем преподавателям)</span>
+                        </label>
                     </div>
 
                     {{-- Upload files --}}

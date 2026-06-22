@@ -12,6 +12,11 @@
 
 
     <script defer src="{{ asset('js/alpine.min.js') }}"></script>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body>
 
@@ -131,6 +136,109 @@
 
                 </div>
 
+                @if($assignment->is_global)
+                    <div style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 8px 14px;
+                        background: var(--amber-50);
+                        border-radius: var(--r-md);
+                        margin-bottom: 1rem;
+                        border: 1px solid var(--amber-100);
+                        font-size: 13px;
+                        color: var(--amber-700);
+                    ">
+                        <span></span>
+                        <span>Общий банк заданий — видно всем преподавателям</span>
+                    </div>
+                @endif
+
+                {{-- Existing files --}}
+                @if($assignment->files->count())
+
+                    <div style="margin-bottom: 2rem;">
+
+                        <label style="
+                            display: block;
+                            font-size: 13px;
+                            font-weight: 600;
+                            color: var(--gray-700);
+                            margin-bottom: 10px;
+                        ">
+                            Текущие файлы
+                        </label>
+
+                        <div style="
+                            display: flex;
+                            flex-direction: column;
+                            gap: 12px;
+                        ">
+
+                            @foreach($assignment->files as $file)
+
+                                <div style="
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: space-between;
+                                    gap: 16px;
+                                    padding: 14px;
+                                    border: 1px solid var(--color-border);
+                                    border-radius: var(--r-lg);
+                                    background: var(--gray-50);
+                                ">
+
+                                    <div style="min-width: 0;">
+
+                                        <p style="
+                                            font-size: 14px;
+                                            font-weight: 600;
+                                            color: var(--gray-800);
+                                            margin-bottom: 4px;
+                                            word-break: break-word;
+                                        ">
+                                            {{ $file->title }}
+                                        </p>
+
+                                        <p style="
+                                            font-size: 12px;
+                                            color: var(--color-text-muted);
+                                        ">
+                                            {{ number_format($file->file_size / 1024, 2) }} KB
+                                        </p>
+
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onclick="deleteFile({{ $assignment->id }}, {{ $file->id }}, {{ $course->id }})"
+                                        style="
+                                            padding: 8px 14px;
+                                            border: none;
+                                            border-radius: var(--r-full);
+                                            background: var(--red-500);
+                                            color: white;
+                                            font-size: 12px;
+                                            font-weight: 600;
+                                            cursor: pointer;
+                                            transition: opacity 0.2s;
+                                        "
+                                        onmouseover="this.style.opacity='0.9'"
+                                        onmouseout="this.style.opacity='1'"
+                                    >
+                                        Удалить
+                                    </button>
+
+                                </div>
+
+                            @endforeach
+
+                        </div>
+
+                    </div>
+
+                @endif
+
                 <form
                     action="{{ route('assignments.update', [$course, $assignment]) }}"
                     method="POST"
@@ -189,12 +297,12 @@
 
                         <label for="title"
                                style="
-                                   display: block;
-                                   font-size: 13px;
-                                   font-weight: 600;
-                                   color: var(--gray-700);
-                                   margin-bottom: 8px;
-                               ">
+                                    display: block;
+                                    font-size: 13px;
+                                    font-weight: 600;
+                                    color: var(--gray-700);
+                                    margin-bottom: 8px;
+                                ">
 
                             Название задания
                             <span style="color: var(--red-400);">*</span>
@@ -231,12 +339,12 @@
 
                         <label for="description"
                                style="
-                                   display: block;
-                                   font-size: 13px;
-                                   font-weight: 600;
-                                   color: var(--gray-700);
-                                   margin-bottom: 8px;
-                               ">
+                                    display: block;
+                                    font-size: 13px;
+                                    font-weight: 600;
+                                    color: var(--gray-700);
+                                    margin-bottom: 8px;
+                                ">
 
                             Описание
 
@@ -271,12 +379,12 @@
 
                         <label for="instructions"
                                style="
-                                   display: block;
-                                   font-size: 13px;
-                                   font-weight: 600;
-                                   color: var(--gray-700);
-                                   margin-bottom: 8px;
-                               ">
+                                    display: block;
+                                    font-size: 13px;
+                                    font-weight: 600;
+                                    color: var(--gray-700);
+                                    margin-bottom: 8px;
+                                ">
 
                             Инструкции
 
@@ -311,12 +419,12 @@
 
                         <label for="due_date"
                                style="
-                                   display: block;
-                                   font-size: 13px;
-                                   font-weight: 600;
-                                   color: var(--gray-700);
-                                   margin-bottom: 8px;
-                               ">
+                                    display: block;
+                                    font-size: 13px;
+                                    font-weight: 600;
+                                    color: var(--gray-700);
+                                    margin-bottom: 8px;
+                                ">
 
                             Срок сдачи
 
@@ -344,101 +452,6 @@
                         >
 
                     </div>
-
-                    {{-- Existing files --}}
-                    @if($assignment->files->count())
-
-                        <div style="margin-bottom: 2rem;">
-
-                            <label style="
-                                display: block;
-                                font-size: 13px;
-                                font-weight: 600;
-                                color: var(--gray-700);
-                                margin-bottom: 10px;
-                            ">
-                                Текущие файлы
-                            </label>
-
-                            <div style="
-                                display: flex;
-                                flex-direction: column;
-                                gap: 12px;
-                            ">
-
-                                @foreach($assignment->files as $file)
-
-                                    <div style="
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: space-between;
-                                        gap: 16px;
-                                        padding: 14px;
-                                        border: 1px solid var(--color-border);
-                                        border-radius: var(--r-lg);
-                                        background: var(--gray-50);
-                                    ">
-
-                                        <div style="min-width: 0;">
-
-                                            <p style="
-                                                font-size: 14px;
-                                                font-weight: 600;
-                                                color: var(--gray-800);
-                                                margin-bottom: 4px;
-                                                word-break: break-word;
-                                            ">
-                                                {{ $file->title }}
-                                            </p>
-
-                                            <p style="
-                                                font-size: 12px;
-                                                color: var(--color-text-muted);
-                                            ">
-                                                {{ number_format($file->file_size / 1024, 2) }} KB
-                                            </p>
-
-                                        </div>
-
-                                        <form
-                                            action="{{ route('assignments.delete-file', [$course, $assignment, $file]) }}"
-                                            method="POST"
-                                        >
-
-                                            @csrf
-                                            @method('DELETE')
-
-                                            <button
-                                                type="submit"
-                                                onclick="return confirm('Удалить файл?')"
-                                                style="
-                                                    padding: 8px 14px;
-                                                    border: none;
-                                                    border-radius: var(--r-full);
-                                                    background: var(--red-500);
-                                                    color: white;
-                                                    font-size: 12px;
-                                                    font-weight: 600;
-                                                    cursor: pointer;
-                                                    transition: opacity 0.2s;
-                                                "
-                                                onmouseover="this.style.opacity='0.9'"
-                                                onmouseout="this.style.opacity='1'"
-                                            >
-                                                Удалить
-                                            </button>
-
-                                        </form>
-
-                                    </div>
-
-                                @endforeach
-
-                            </div>
-
-                        </div>
-
-                    @endif
 
                     {{-- Upload new files --}}
                     <div style="margin-bottom: 2rem;">
@@ -736,6 +749,29 @@ function fileUpload() {
                 : mb.toFixed(1) + ' МБ';
         }
     }
+}
+
+function deleteFile(assignmentId, fileId, courseId) {
+    if (!confirm('Удалить файл?')) return;
+
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/courses/' + courseId + '/assignments/' + assignmentId + '/files/' + fileId;
+
+    var csrf = document.createElement('input');
+    csrf.type = 'hidden';
+    csrf.name = '_token';
+    csrf.value = '{{ csrf_token() }}';
+    form.appendChild(csrf);
+
+    var method = document.createElement('input');
+    method.type = 'hidden';
+    method.name = '_method';
+    method.value = 'DELETE';
+    form.appendChild(method);
+
+    document.body.appendChild(form);
+    form.submit();
 }
 </script>
 

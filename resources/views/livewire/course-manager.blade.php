@@ -8,7 +8,7 @@
             style="padding: 12px 16px; background: var(--green-50); color: var(--green-600); border-radius: var(--r-md); margin-bottom: 16px; border: 1px solid var(--green-200); font-size: 13px; display: flex; justify-content: space-between; align-items: center;">
             <span>{{ $successMessage }}</span>
             <button @click="$wire.set('successMessage', '')"
-                style="background: none; border: none; cursor: pointer; font-size: 16px;">✕</button>
+                style="background: none; border: none; cursor: pointer; font-size: 16px;"></button>
         </div>
     @endif
 
@@ -17,7 +17,7 @@
             style="padding: 12px 16px; background: #ffebee; color: var(--red-500); border-radius: var(--r-md); margin-bottom: 16px; border: 1px solid #ffcdd2; font-size: 13px; display: flex; justify-content: space-between; align-items: center;">
             <span>{{ $errorMessage }}</span>
             <button @click="$wire.set('errorMessage', '')"
-                style="background: none; border: none; cursor: pointer; font-size: 16px;">✕</button>
+                style="background: none; border: none; cursor: pointer; font-size: 16px;"></button>
         </div>
     @endif
 
@@ -25,11 +25,11 @@
     <div style="margin-bottom: 16px; position: relative; display: flex; gap: 8px; align-items: center;">
         <div style="position: relative; flex: 1;">
             <span
-                style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); font-size: 14px; pointer-events: none;">🔍</span>
+                style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); font-size: 14px; pointer-events: none;"></span>
             <input x-model="search" type="text" placeholder="Поиск по тестам, лекциям, материалам..."
                 style="width: 100%; padding: 8px 36px 8px 32px; border: 1px solid var(--color-border); border-radius: var(--r-sm); font-size: 13px; box-sizing: border-box; background: var(--color-surface);">
             <button x-show="search !== ''" @click="search = ''"
-                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 14px; color: var(--color-text-muted); line-height: 1;">✕</button>
+                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 14px; color: var(--color-text-muted); line-height: 1;"></button>
         </div>
         @if ($canManage)
             <button type="button" onclick="openCreateModal()"
@@ -91,7 +91,7 @@
                         <button type="button" onclick="openAttachModal({{ $section->id }})" class="btn btn-ghost"
                             style="padding: 6px 10px; font-size: 16px; line-height: 1; color: var(--teal-600); border-color: var(--teal-200);"
                             title="Добавить элемент">+</button>
-                        {{-- ★ НОВАЯ КНОПКА: настройки видимости секции --}}
+                        {{--  НОВАЯ КНОПКА: настройки видимости секции --}}
                         <button type="button" wire:click="openSectionVisibility({{ $section->id }})"
                             class="btn btn-ghost"
                             style="padding: 6px 10px; font-size: 13px; color: var(--sky-600); border-color: var(--sky-200);"
@@ -263,16 +263,16 @@
                                             style="width: 36px; height: 36px;">
                                     </div>
                                     <div style="flex: 1;">
-                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                            <strong
-                                                style="color: var(--amber-600); font-size: 12px; text-transform: uppercase;">Задание</strong>
-                                            @if (($item->status ?? 'active') === \App\Models\Assignment::STATUS_ARCHIVED)
-                                                <span
-                                                    style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивировано]</span>
-                                            @endif
-                                        </div>
-                                        <a href="{{ route('assignments.view', ['course' => $course, 'assignment' => $item]) }}"
-                                            style="color: var(--amber-600); text-decoration: none; font-weight: 600; font-size: 14px;">{{ $item->title }}</a>
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                        <strong
+                                            style="color: var(--teal-600); font-size: 12px; text-transform: uppercase;">Задание</strong>
+                                        @if (($item->status ?? 'active') === \App\Models\Assignment::STATUS_ARCHIVED)
+                                            <span
+                                                style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивировано]</span>
+                                        @endif
+                                    </div>
+                                    <a href="{{ route('assignments.view', ['course' => $course, 'assignment' => $item]) }}"
+                                        style="color: var(--teal-600); text-decoration: none; font-weight: 600; font-size: 14px;">{{ $item->title }}</a>
                                         @if ($item->due_date)
                                             <p style="font-size: 12px; color: var(--color-text-muted); margin: 4px 0;">
                                                 Срок сдачи: {{ $item->due_date->format('d.m.Y H:i') }}
@@ -394,7 +394,7 @@
     </div>
 
     {{-- ============================================================
-         ★ МОДАЛКА НАСТРОЙКИ ВИДИМОСТИ ПО ГРУППАМ
+          МОДАЛКА НАСТРОЙКИ ВИДИМОСТИ ПО ГРУППАМ
          Работает и для секций, и для отдельных элементов.
          Открывается через wire:click="openSectionVisibility(id)"
          или wire:click="openItemVisibility(id)"
@@ -446,25 +446,25 @@
                         Отмеченные группы увидят этот элемент. Без отметок — скрыто от всех студентов.
                     </p>
 
-                    {{-- Быстрые действия --}}
-                    <div style="display:flex; gap:8px; margin-bottom:14px;">
-                        <button type="button"
-                            wire:click="$set('visibilityGroupIds', {{ $course->groups->pluck('id')->map(fn($id) => (string) $id)->toJson() }})"
-                            class="btn btn-ghost"
-                            style="font-size:12px; padding:5px 12px; color:var(--green-600); border-color:var(--green-200);">
-                            ✓ Разрешить всем
-                        </button>
-                        <button type="button" wire:click="$set('visibilityGroupIds', [])" class="btn btn-ghost"
-                            style="font-size:12px; padding:5px 12px; color:var(--red-500); border-color:#ffcdd2;">
-                            ✕ Запретить всем
-                        </button>
-                    </div>
+                            {{-- Быстрые действия --}}
+                            <div style="display:flex; gap:8px; margin-bottom:14px;">
+                                <button type="button"
+                                    wire:click="$set('visibilityGroupIds', {{ $course->groups->pluck('id')->map(fn($id) => (string) $id)->toJson() }})"
+                                    class="btn btn-ghost"
+                                    style="font-size:12px; padding:5px 12px; color:var(--green-400); border-color:var(--green-600);">
+                                     Разрешить всем
+                                </button>
+                                <button type="button" wire:click="$set('visibilityGroupIds', [])" class="btn btn-ghost"
+                                    style="font-size:12px; padding:5px 12px; color:var(--red-400); border-color:rgba(244,63,94,0.3);">
+                                     Запретить всем
+                                </button>
+                            </div>
 
                     {{-- Список групп курса с чекбоксами --}}
                     <div style="display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto;">
                         @forelse($course->groups as $group)
                             <label
-                                style="display:flex; align-items:center; gap:10px; padding:9px 12px; border:1.5px solid var(--color-border); border-radius:var(--r-md); background:var(--color-surface-2); cursor:pointer; font-size:13px; color:var(--gray-700); transition: border-color .12s, background .12s; user-select:none;"
+                                style="display:flex; align-items:center; gap:10px; padding:9px 12px; border:1.5px solid var(--color-border); border-radius:var(--r-md); background:var(--color-surface-2); cursor:pointer; font-size:13px; color:var(--color-text-primary); transition: border-color .12s, background .12s; user-select:none;"
                                 :style="$wire.visibilityGroupIds.includes('{{ $group->id }}') ?
                                     'border-color: var(--sky-400); background: var(--sky-50);' :
                                     ''">
@@ -526,7 +526,8 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--gray-100); color:var(--gray-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📁</div>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Секция</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">
                                         Группировка контента</div>
@@ -536,7 +537,8 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--teal-50); color:var(--teal-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📝</div>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Тест</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Создать
                                         новый тест</div>
@@ -546,7 +548,8 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--sky-50); color:var(--sky-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📖</div>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Лекция</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Создать
                                         новую лекцию</div>
@@ -556,7 +559,8 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--green-50); color:var(--green-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📎</div>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Материал</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">
                                         Загрузить файл</div>
@@ -566,7 +570,8 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center; text-decoration:none; display:block;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--amber-50); color:var(--amber-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📋</div>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Задание</div>
                                     <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Создать
                                         задание</div>
@@ -685,27 +690,95 @@
                     ->where('item_type', \App\Models\Assignment::class)
                     ->pluck('item_id')
                     ->toArray();
+                $globalTestsForSec = \App\Models\Test::where('is_global', true)
+                    ->where('status', \App\Models\Test::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedTestIds)
+                    ->get()
+                    ->map(fn($t) => ['id' => $t->id, 'title' => $t->title])
+                    ->values();
+                $myTestsForSec = \App\Models\Test::where('user_id', auth()->id())
+                    ->where('status', \App\Models\Test::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedTestIds)
+                    ->get()
+                    ->map(fn($t) => ['id' => $t->id, 'title' => $t->title])
+                    ->values();
+
+                $globalLecturesForSec = \App\Models\Lecture::where('is_global', true)
+                    ->where('status', \App\Models\Lecture::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedLectureIds)
+                    ->get()
+                    ->map(fn($l) => ['id' => $l->id, 'title' => $l->title])
+                    ->values();
+                $myLecturesForSec = \App\Models\Lecture::where('user_id', auth()->id())
+                    ->where('status', \App\Models\Lecture::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedLectureIds)
+                    ->get()
+                    ->map(fn($l) => ['id' => $l->id, 'title' => $l->title])
+                    ->values();
+
+                $globalMaterialsForSec = \App\Models\Material::where('is_global', true)
+                    ->where('status', \App\Models\Material::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedMaterialIds)
+                    ->get()
+                    ->map(fn($m) => ['id' => $m->id, 'title' => $m->title])
+                    ->values();
+                $myMaterialsForSec = \App\Models\Material::where('user_id', auth()->id())
+                    ->where('status', \App\Models\Material::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedMaterialIds)
+                    ->get()
+                    ->map(fn($m) => ['id' => $m->id, 'title' => $m->title])
+                    ->values();
+
+                $globalAssignmentsForSec = \App\Models\Assignment::where('is_global', true)
+                    ->where('status', \App\Models\Assignment::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedAssignmentIds)
+                    ->get()
+                    ->map(fn($a) => ['id' => $a->id, 'title' => $a->title])
+                    ->values();
+                $myAssignmentsForSec = \App\Models\Assignment::where('user_id', auth()->id())
+                    ->where('status', \App\Models\Assignment::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedAssignmentIds)
+                    ->get()
+                    ->map(fn($a) => ['id' => $a->id, 'title' => $a->title])
+                    ->values();
+
                 $attachData[$sec->id] = [
-                    'tests' => $course->tests
-                        ->where('status', \App\Models\Test::STATUS_ACTIVE)
-                        ->whereNotIn('id', $addedTestIds)
-                        ->map(fn($t) => ['id' => $t->id, 'title' => $t->title])
-                        ->values(),
-                    'lectures' => $course->lectures
-                        ->where('status', \App\Models\Lecture::STATUS_ACTIVE)
-                        ->whereNotIn('id', $addedLectureIds)
-                        ->map(fn($l) => ['id' => $l->id, 'title' => $l->title])
-                        ->values(),
-                    'materials' => $course->materials
-                        ->where('status', \App\Models\Material::STATUS_ACTIVE)
-                        ->whereNotIn('id', $addedMaterialIds)
-                        ->map(fn($m) => ['id' => $m->id, 'title' => $m->title])
-                        ->values(),
-                    'assignments' => $course->assignments
-                        ->where('status', \App\Models\Assignment::STATUS_ACTIVE)
-                        ->whereNotIn('id', $addedAssignmentIds)
-                        ->map(fn($a) => ['id' => $a->id, 'title' => $a->title])
-                        ->values(),
+                    'tests' => [
+                        'course' => $course->tests
+                            ->where('status', \App\Models\Test::STATUS_ACTIVE)
+                            ->whereNotIn('id', $addedTestIds)
+                            ->map(fn($t) => ['id' => $t->id, 'title' => $t->title])
+                            ->values(),
+                        'global' => $globalTestsForSec,
+                        'mine' => $myTestsForSec,
+                    ],
+                    'lectures' => [
+                        'course' => $course->lectures
+                            ->where('status', \App\Models\Lecture::STATUS_ACTIVE)
+                            ->whereNotIn('id', $addedLectureIds)
+                            ->map(fn($l) => ['id' => $l->id, 'title' => $l->title])
+                            ->values(),
+                        'global' => $globalLecturesForSec,
+                        'mine' => $myLecturesForSec,
+                    ],
+                    'materials' => [
+                        'course' => $course->materials
+                            ->where('status', \App\Models\Material::STATUS_ACTIVE)
+                            ->whereNotIn('id', $addedMaterialIds)
+                            ->map(fn($m) => ['id' => $m->id, 'title' => $m->title])
+                            ->values(),
+                        'global' => $globalMaterialsForSec,
+                        'mine' => $myMaterialsForSec,
+                    ],
+                    'assignments' => [
+                        'course' => $course->assignments
+                            ->where('status', \App\Models\Assignment::STATUS_ACTIVE)
+                            ->whereNotIn('id', $addedAssignmentIds)
+                            ->map(fn($a) => ['id' => $a->id, 'title' => $a->title])
+                            ->values(),
+                        'global' => $globalAssignmentsForSec,
+                        'mine' => $myAssignmentsForSec,
+                    ],
                 ];
             }
         @endphp
@@ -733,28 +806,32 @@
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--teal-50); color:var(--teal-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📝</div>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Тест</div>
                                 </button>
                                 <button type="button" onclick="selectAttachType('lecture')"
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--sky-50); color:var(--sky-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📖</div>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Лекция</div>
                                 </button>
                                 <button type="button" onclick="selectAttachType('material')"
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--green-50); color:var(--green-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📎</div>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Материал</div>
                                 </button>
                                 <button type="button" onclick="selectAttachType('assignment')"
                                     style="padding:1rem .75rem; border:1.5px solid var(--color-border); border-radius:var(--r-lg); cursor:pointer; background:transparent; font-family:var(--font-body); text-align:center;">
                                     <div
                                         style="width:36px; height:36px; border-radius:var(--r-md); background:var(--amber-50); color:var(--amber-600); display:flex; align-items:center; justify-content:center; margin:0 auto 8px; font-size:18px;">
-                                        📋</div>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                        </div>
                                     <div style="font-size:13px; font-weight:700; color:var(--gray-800);">Задание</div>
                                 </button>
                             </div>
@@ -819,15 +896,15 @@
                         },
                         lecture: {
                             key: 'lectures',
-                            sub: 'Выберите лекцию'
+                            sub: 'Выберите лекцию (общий банк / мои / курс)'
                         },
                         material: {
                             key: 'materials',
-                            sub: 'Выберите материал'
+                            sub: 'Выберите материал (общий банк / мои / курс)'
                         },
                         assignment: {
                             key: 'assignments',
-                            sub: 'Выберите задание'
+                            sub: 'Выберите задание (общий банк / мои / курс)'
                         },
                     };
 
@@ -836,9 +913,9 @@
                     document.getElementById('attach-step-item').style.display = '';
                     document.getElementById('attach-search-input').value = '';
 
-                    if (type === 'test') {
+                    if (type === 'test' || type === 'lecture' || type === 'material' || type === 'assignment') {
                         // grouped: { course:[], global:[], mine:[] }
-                        _aItems = (ATTACH_DATA[_aSectionId] && ATTACH_DATA[_aSectionId].tests) || {
+                        _aItems = (ATTACH_DATA[_aSectionId] && ATTACH_DATA[_aSectionId][map[type].key]) || {
                             course: [],
                             global: [],
                             mine: []
@@ -862,7 +939,7 @@
                 }
 
                 function filterAttachItems(q) {
-                    if (_aType === 'test') {
+                    if (_aType === 'test' || _aType === 'lecture' || _aType === 'material' || _aType === 'assignment') {
                         const grouped = _aItems;
                         const f = (arr) => arr.filter(i => i.title.toLowerCase().includes(q.toLowerCase()));
                         renderAItemsGrouped({
@@ -896,6 +973,7 @@
                             '<div style="padding:24px;text-align:center;color:var(--color-text-muted);font-size:13px;">Нет доступных элементов</div>';
                         return;
                     }
+                    const mineLabel = _aType === 'lecture' ? 'Мои лекции' : (_aType === 'material' ? 'Мои материалы' : (_aType === 'assignment' ? 'Мои задания' : 'Мои тесты'));
                     let html = '';
                     const section = (title, arr) => {
                         if (!arr || !arr.length) return '';
@@ -907,7 +985,7 @@
 
                     html += section('В этом курсе', grouped.course || []);
                     html += section('Общий банк', grouped.global || []);
-                    html += section('Мои тесты', grouped.mine || []);
+                    html += section(mineLabel, grouped.mine || []);
 
                     list.innerHTML = html;
                 }
@@ -926,7 +1004,7 @@
                     el.style.borderColor = 'var(--teal-500)';
                     el.style.background = 'var(--teal-50)';
                     const c = el.querySelector('.acheck');
-                    c.textContent = '✓';
+                    c.textContent = '';
                     c.style.background = 'var(--teal-500)';
                     c.style.borderColor = 'var(--teal-500)';
                     c.style.color = '#fff';

@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\TeacherCoursePermissionController;
 use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\Admin\TestManagementController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\UserImportController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\GradeReportController;
 
@@ -76,8 +77,18 @@ RouteFacade::bind('lecture', function ($value) {
     }
 
     $course = $lecture->course;
+    // Лекции из общего банка (копии) не привязаны к курсу напрямую — ищем через секции
     if (! $course) {
-        abort(404);
+        $sectionItem = \App\Models\CourseSectionItem::where('item_type', \App\Models\Lecture::class)
+            ->where('item_id', $lecture->id)
+            ->with('section.course')
+            ->first();
+        $course = $sectionItem?->section?->course;
+    }
+
+    // Если курс всё ещё не найден — возможно это шаблон из банка, не привязанный ни к одному курсу
+    if (! $course) {
+        return $lecture;
     }
 
     if (\Illuminate\Support\Facades\Auth::check()) {
@@ -110,8 +121,9 @@ RouteFacade::bind('material', function ($value) {
     }
 
     $course = $material->course;
+    // Materials can be standalone (not linked to any course) — allow and let controller handle visibility
     if (! $course) {
-        abort(404);
+        return $material;
     }
 
     if (\Illuminate\Support\Facades\Auth::check()) {
@@ -144,8 +156,9 @@ RouteFacade::bind('assignment', function ($value) {
     }
 
     $course = $assignment->course;
+    // Assignments can be standalone (global bank, not linked to any course) — allow and let controller/policies handle visibility
     if (! $course) {
-        abort(404);
+        return $assignment;
     }
 
     if (\Illuminate\Support\Facades\Auth::check()) {
@@ -278,10 +291,15 @@ Route::post('/tests/{test}/users/{user}/grant-attempts', [TestController::class,
 
 // Эти маршруты показывают, как можно их вынести в контроллер для единообразия.
 
-// Страница для начала прохождения теста
+// Страница для продолжения прохождения теста (GET — только если уже есть активная попытка)
 Route::get('/tests/{test}/attempt', [TestController::class, 'attempt'])
     ->middleware('auth')
     ->name('tests.attempt');
+
+// Запуск новой попытки (POST — требует явного действия пользователя)
+Route::post('/tests/{test}/attempt/start', [TestController::class, 'startAttempt'])
+    ->middleware('auth')
+    ->name('tests.attempt.start');
 
 Route::post('/tests/{test}/attempt/force-new', [TestController::class, 'forceNewAttempt'])
     ->middleware('auth')
@@ -357,7 +375,7 @@ Route::get('/courses/{course}/assignments/{assignment}/files/{file}/download', [
 Route::post('/courses/{course}/assignments/{assignment}/move', [AssignmentController::class, 'move'])->middleware(['auth','role:admin|teacher'])->name('assignments.move');
 
 // Маршруты для ответов на задания
-Route::get('/courses/{course}/assignments/{assignment}/view', [AssignmentSubmissionController::class, 'view'])->middleware(['auth','role:admin|teacher'])->name('assignments.view');
+Route::get('/courses/{course}/assignments/{assignment}/view', [AssignmentSubmissionController::class, 'view'])->middleware('auth')->name('assignments.view');
 Route::post('/courses/{course}/assignments/{assignment}/submit', [AssignmentSubmissionController::class, 'submit'])->middleware('auth')->name('assignments.submit');
 Route::post('/courses/{course}/assignments/{assignment}/submissions/{submission}/grade', [AssignmentSubmissionController::class, 'grade'])->middleware(['auth','role:admin|teacher'])->name('assignments.grade');
 Route::get('/courses/{course}/assignments/{assignment}/submissions/{submission}/files/{file}/download', [AssignmentSubmissionController::class, 'downloadSubmissionFile'])->middleware('auth')->name('assignments.download-submission-file');
@@ -397,6 +415,7 @@ Route::middleware(['auth', 'role:admin|teacher'])->group(function () {
     Route::get('/admin/users/{user}/edit', [UserManagementController::class, 'edit'])->name('admin.users.edit');
     Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
     Route::delete('/admin/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
+    Route::post('/admin/users/import', [UserImportController::class, 'import'])->name('admin.users.import');
 
     //для прав доступа преподавателей
     Route::get('/admin/teacher-permissions', [TeacherCoursePermissionController::class, 'index'])->name('admin.teacher-permissions.index');

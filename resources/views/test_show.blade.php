@@ -471,6 +471,12 @@
             padding-bottom: 1.25rem;
             border-bottom: 1px solid var(--color-border);
         }
+        .detail-qtext img,
+        #detail-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--r-md);
+        }
 
         .detail-section-label {
             font-size: 11px;
@@ -836,6 +842,11 @@
     padding: 0;
 }
     </style>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 
 <body>
@@ -907,8 +918,8 @@
                     @endphp
                     <li class="tq-row">
                         <div class="tq-row__num">{{ $loop->iteration }}</div>
-                        <div class="tq-row__text" title="{{ strip_tags($question->question_text) }}">
-                            {{ strip_tags($question->question_text) }}
+                        <div class="tq-row__text" title="{{ strip_tags(preg_replace('/<figcaption[^>]*>.*?<\/figcaption>/si', '', $question->question_text)) }}">
+                            {{ strip_tags(preg_replace('/<figcaption[^>]*>.*?<\/figcaption>/si', '', $question->question_text)) }}
                         </div>
                         <span class="tq-row__type {{ $ti[1] }}">{{ $ti[0] }}</span>
 
@@ -1022,9 +1033,9 @@
                 <div class="modal__body">
                     {{-- ── AI-генерация ── --}}
                     <div class="ff" style="background:var(--teal-50);border:1px solid var(--teal-100);border-radius:var(--r-md);padding:12px 14px;margin-bottom:1.2rem;">
-                        <label style="color:var(--teal-700);">✨ Сгенерировать с помощью AI</label>
+                        <label style="color:var(--teal-700);"> Сгенерировать с помощью AI</label>
                         <div style="display:flex;gap:8px;align-items:center;">
-                            <input type="text" id="ai-prompt" placeholder="Например: вопрос про ООП в Python"
+                            <input type="text" id="ai-prompt" placeholder="Например: Определение интеграла"
                                 style="flex:1;padding:8px 11px;border:1px solid var(--teal-200);border-radius:var(--r-md);font-size:14px;font-family:var(--font-body);">
                             <button type="button" id="ai-gen-btn" onclick="generateQuestion()"
                                 style="padding:8px 16px;background:var(--teal-500);color:#fff;border:none;border-radius:var(--r-full);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--font-body);transition:var(--transition);">
@@ -1127,9 +1138,9 @@
                             style="height:auto;padding:0;">
                             @foreach ($allQuestions as $q)
                                 <option value="{{ $q->id }}"
-                                    data-q="{{ strtolower(strip_tags($q->question_text)) }}"
+                                    data-q="{{ strtolower(strip_tags(preg_replace('/<figcaption[^>]*>.*?<\/figcaption>/si', '', $q->question_text))) }}"
                                     style="padding:8px 10px;border-bottom:1px solid var(--color-border);">
-                                    {{ strip_tags($q->question_text) }}
+                                    {{ strip_tags(preg_replace('/<figcaption[^>]*>.*?<\/figcaption>/si', '', $q->question_text)) }}
                                 </option>
                             @endforeach
                         </select>
@@ -1146,7 +1157,7 @@
 
     {{-- ═══ MODAL: детали вопроса ═══ --}}
     <div class="modal-overlay" id="modal-detail" onclick="overlayClick(event,'modal-detail')">
-        <div class="modal modal--md">
+        <div class="modal modal--lg">
             <div class="modal__head">
                 <div>
                     <div class="modal__title">Детали вопроса</div>
@@ -1271,7 +1282,7 @@ async function generateQuestion() {
         const data = await res.json();
 
         if (!res.ok || data.error) {
-            status.textContent = '❌ Ошибка: ' + (data.error || 'неизвестная');
+            status.textContent = ' Ошибка: ' + (data.error || 'неизвестная');
             return;
         }
 
@@ -1306,10 +1317,10 @@ async function generateQuestion() {
             });
         }
 
-        status.textContent = '✅ Готово! Проверьте и отредактируйте если нужно.';
+        status.textContent = ' Готово! Проверьте и отредактируйте если нужно.';
 
     } catch (e) {
-        status.textContent = '❌ Ошибка сети: ' + e.message;
+        status.textContent = ' Ошибка сети: ' + e.message;
     } finally {
         btn.disabled = false;
         btn.textContent = 'Сгенерировать';
@@ -1380,7 +1391,7 @@ async function generateQuestion() {
             } else if (q.type === 'short_answer') {
                 h += `<div class="detail-section-label">Правильные ответы</div>`;
                 q.options.filter(o => o.is_correct).forEach(o => {
-                    h += `<div class="detail-correct-text">✓ ${o.text}</div>`;
+                    h += `<div class="detail-correct-text"> ${o.text}</div>`;
                 });
             } else if (q.type === 'rich_text_answer') {
                 h +=
@@ -1571,28 +1582,26 @@ async function generateQuestion() {
         });
 
         /* ── IMAGE UPLOAD ── */
-        document.addEventListener('trix-attachment-add', e => {
-            if (e.attachment.file) upload(e.attachment);
-        });
-
-        function upload(att) {
+        document.addEventListener('trix-file-accept', function(e) {
+            if (!e.file.type.startsWith('image/')) return;
+            e.preventDefault();
             const fd = new FormData();
-            fd.append('file', att.file);
+            fd.append('file', e.file);
             fetch("{{ route('questions.upload') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: fd,
-                    credentials: 'same-origin'
-                }).then(r => r.json()).then(d => {
-                    if (d.location) att.setAttributes({
-                        url: d.location,
-                        href: d.location
-                    });
-                })
-                .catch(() => showNotification('Ошибка загрузки изображения'));
-        }
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: fd,
+                credentials: 'same-origin'
+            }).then(r => r.json()).then(d => {
+                if (d.location) {
+                    document.querySelector('trix-editor').editor.insertHTML(
+                        `<figure class="attachment attachment--preview attachment--image"><img src="${d.location}" loading="lazy"></figure>`
+                    );
+                }
+            }).catch(() => showNotification('Ошибка загрузки изображения'));
+        });
 
         document.getElementById('question-form').addEventListener('submit', function(e) {
             const t = qType.value;

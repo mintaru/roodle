@@ -193,6 +193,11 @@
             transform: translateY(-1px);
         }
     </style>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 
 <body>
@@ -208,15 +213,17 @@
             Навигация
         </p>
 
-        <a href="{{ route('courses.show', $lecture->course) }}" class="sidebar-link">
+        @if ($lecture->course)
+            <a href="{{ route('courses.show', $lecture->course) }}" class="sidebar-link">
 
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M19 12H5M12 5l-7 7 7 7"/>
-            </svg>
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M19 12H5M12 5l-7 7 7 7"/>
+                </svg>
 
-            К курсу
+                К курсу
 
-        </a>
+            </a>
+        @endif
 
         <a href="{{ route('home') }}" class="sidebar-link">
 
@@ -228,6 +235,7 @@
 
         </a>
 
+        @if ($lecture->course)
         <p class="sidebar-section-title" style="margin-top: 2rem;">
             Курс
         </p>
@@ -244,6 +252,7 @@
             </p>
 
         </div>
+        @endif
 
     </aside>
 
@@ -273,14 +282,16 @@
                 <path d="M9 18l6-6-6-6"/>
             </svg>
 
-            <a href="{{ route('courses.show', $lecture->course) }}"
-               style="color: var(--color-text-muted); text-decoration: none;"
-               onmouseover="this.style.color='var(--teal-600)'"
-               onmouseout="this.style.color='var(--color-text-muted)'">
+            @if ($lecture->course)
+                <a href="{{ route('courses.show', $lecture->course) }}"
+                   style="color: var(--color-text-muted); text-decoration: none;"
+                   onmouseover="this.style.color='var(--teal-600)'"
+                   onmouseout="this.style.color='var(--color-text-muted)'">
 
-                {{ $lecture->course->title }}
+                    {{ $lecture->course->title }}
 
-            </a>
+                </a>
+            @endif
 
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M9 18l6-6-6-6"/>
@@ -307,38 +318,40 @@
             <div class="panel" style="padding: 2rem;">
 
                 {{-- Course badge --}}
-                <div style="
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                    padding: 10px 14px;
-                    background: var(--teal-50);
-                    border-radius: var(--r-md);
-                    margin-bottom: 2rem;
-                    border: 1px solid var(--teal-100);
-                ">
-
-                    <svg width="16"
-                         height="16"
-                         fill="none"
-                         stroke="var(--teal-600)"
-                         stroke-width="2"
-                         viewBox="0 0 24 24">
-
-                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
-
-                    </svg>
-
-                    <span style="
-                        font-size: 13px;
-                        font-weight: 600;
-                        color: var(--teal-700);
+                @if ($lecture->course)
+                    <div style="
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        padding: 10px 14px;
+                        background: var(--teal-50);
+                        border-radius: var(--r-md);
+                        margin-bottom: 2rem;
+                        border: 1px solid var(--teal-100);
                     ">
-                        {{ $lecture->course->title }}
-                    </span>
 
-                </div>
+                        <svg width="16"
+                             height="16"
+                             fill="none"
+                             stroke="var(--teal-600)"
+                             stroke-width="2"
+                             viewBox="0 0 24 24">
+
+                            <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+
+                        </svg>
+
+                        <span style="
+                            font-size: 13px;
+                            font-weight: 600;
+                            color: var(--teal-700);
+                        ">
+                            {{ $lecture->course->title }}
+                        </span>
+
+                    </div>
+                @endif
 
                 {{-- Errors --}}
                 @if($errors->any())
@@ -519,7 +532,7 @@
                             <button type="button"
                                     id="reset-color">
 
-                                ✕
+                                
 
                             </button>
 
@@ -592,6 +605,29 @@
 
                     </div>
 
+                    {{-- Add to bank --}}
+                    <div style="
+                        display:flex;
+                        align-items:center;
+                        gap:10px;
+                        margin-top:1.5rem;
+                        padding:10px 14px;
+                        background:var(--gray-50);
+                        border-radius:var(--r-md);
+                        border:1px solid var(--color-border);
+                    ">
+                        <input type="checkbox"
+                               id="add_to_bank"
+                               name="add_to_bank"
+                               value="1"
+                               {{ $lecture->is_global ? 'checked' : '' }}
+                               style="width:16px;height:16px;accent-color:var(--teal-500);cursor:pointer;">
+                        <label for="add_to_bank"
+                               style="font-size:13px;font-weight:500;color:var(--gray-700);cursor:pointer;">
+                            Добавить в общий банк лекций (видно всем преподавателям)
+                        </label>
+                    </div>
+
                     {{-- Actions --}}
                     <div style="
                         display:flex;
@@ -620,7 +656,7 @@
 
                         </button>
 
-                        <a href="{{ route('courses.show', $lecture->course) }}"
+                        <a href="{{ route('courses.show', $lecture->course ?? $lecture->course_id) }}"
                            class="btn btn-ghost">
 
                             Отмена

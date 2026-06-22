@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <title>Отчёт по группам</title>
     <link href="{{ asset('css/tailwind.min.css') }}" rel="stylesheet">
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body class="bg-gray-100 p-8">
 

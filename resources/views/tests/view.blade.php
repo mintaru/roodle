@@ -15,6 +15,25 @@
             padding:0;
             background: var(--color-bg);
         }
+        @media (max-width: 640px) {
+            #attempts-list > div {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 8px !important;
+            }
+            #attempts-list > div > div:last-child {
+                align-self: flex-end !important;
+            }
+            .panel > div[style*="flex"] {
+                gap: 1rem !important;
+            }
+            .panel {
+                padding: 1rem 1.25rem !important;
+            }
+            .page-header__title {
+                font-size: 20px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -228,7 +247,7 @@
             {{-- Actions --}}
             <div class="panel" style="padding: 1.5rem 2rem; margin-bottom: 1.25rem;">
 
-                @if ($isUnlimited || $userAttemptsCount < $maxAttemptsForUser)
+                @if ($isUnlimited || $remaining > 0 || $hasActiveAttempt)
 
                     <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
 
@@ -245,21 +264,22 @@
                             </a>
                         @endif
 
-                        @if ($hasActiveAttempt)
+                        @if ($hasActiveAttempt && ($isUnlimited || $remaining > 0))
                             <form action="{{ route('tests.attempt.force-new', $test) }}" method="POST" style="display: inline;">
                                 @csrf
-                                <button type="submit" class="btn btn-ghost" style="padding: 10px 24px; cursor: pointer; border: none; font-size: inherit;"
-                                        onclick="return confirm('Это начнёт новую попытку. Продолжить?')">
+                                <button type="button" class="btn btn-ghost" style="padding: 10px 24px; cursor: pointer; border: none; font-size: inherit;"
+                                        onclick="openModal('{{ route('tests.attempt.force-new', $test) }}', true)">
                                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <path d="M12 5v14"/><path d="M5 12h14"/>
                                     </svg>
                                     Начать новую попытку
                                 </button>
                             </form>
-                        @else
-                            <a href="{{ $displayMode === 'single_page' ? route('tests.attempt', $test) : route('tests.attempt.page', [$test->id, 1]) }}"
+                        @elseif (!$hasActiveAttempt && ($isUnlimited || $remaining > 0))
+                            <a href="#"
+                               onclick="event.preventDefault(); openModal('{{ route('tests.attempt.start', $test) }}', true)"
                                class="btn btn-primary"
-                               style="padding: 10px 24px;">
+                               style="padding: 10px 24px; cursor: pointer;">
                                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path d="M12 5v14"/><path d="M5 12h14"/>
                                 </svg>
@@ -368,6 +388,55 @@
     </main>
 
 </div>
+
+{{-- Confirmation modal --}}
+<div id="confirm-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: #fff; border-radius: 12px; padding: 2rem; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.15);">
+        <p style="font-size: 18px; font-weight: 700; color: var(--gray-800); margin-bottom: 8px;">Начать попытку?</p>
+        <p style="font-size: 14px; color: var(--color-text-muted); margin-bottom: 1.5rem;">Вы уверены, что хотите начать прохождение теста?</p>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="closeModal()" class="btn btn-ghost" style="padding: 10px 20px; cursor: pointer; border: none; font-size: inherit;">Отмена</button>
+            <button onclick="confirmModal()" class="btn btn-primary" style="padding: 10px 20px; cursor: pointer; border: none; font-size: inherit;">Начать</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openModal(url, isPost) {
+        var modal = document.getElementById('confirm-modal');
+        modal.dataset.url = url;
+        modal.dataset.isPost = isPost ? '1' : '0';
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('confirm-modal').style.display = 'none';
+    }
+
+    function confirmModal() {
+        var modal = document.getElementById('confirm-modal');
+        var url = modal.dataset.url;
+        if (modal.dataset.isPost === '1') {
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = '_token';
+            input.value = '{{ csrf_token() }}';
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        } else {
+            window.location.href = url;
+        }
+        closeModal();
+    }
+
+    document.getElementById('confirm-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+</script>
 
 @endsection
 </body>

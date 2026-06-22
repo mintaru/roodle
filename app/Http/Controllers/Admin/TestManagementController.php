@@ -59,17 +59,29 @@ class TestManagementController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'course_id' => 'required|exists:courses,id',
+            'course_id' => 'nullable|exists:courses,id',
             'max_attempts' => 'nullable|integer|min:0',
             'time_limit' => 'nullable|integer|min:0'
         ]);
 
-        $test->update([
+        $addToBank = $request->has('add_to_bank');
+
+        $data = [
             'title' => $request->title,
             'description' => $request->description,
-            'course_id' => $request->course_id,
             'max_attempts' => $request->max_attempts ?? 0,
-        ]);
+        ];
+
+        if ($addToBank) {
+            $data['is_global'] = true;
+            $data['user_id'] = null;
+            $data['course_id'] = null;
+        } else {
+            $data['is_global'] = false;
+            $data['course_id'] = $request->course_id;
+        }
+
+        $test->update($data);
 
         return redirect()->route('admin.tests.index')
             ->with('success', 'Тест успешно обновлён!');

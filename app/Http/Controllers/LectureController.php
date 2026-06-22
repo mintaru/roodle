@@ -48,6 +48,8 @@ class LectureController extends Controller
     {
         $contentSource = $request->input('content_source', 'manual');
 
+        $addToBank = $request->has('add_to_bank');
+
         if ($contentSource === 'pdf') {
             $request->validate([
                 'title' => 'required|string|max:255',
@@ -73,12 +75,12 @@ class LectureController extends Controller
                 $text .= $pages[$i]->getText()."\n\n";
             }
 
-            $lecture = $course->lectures()->create([
+            $data = [
                 'title' => $request->title,
                 'pdf_path' => $path,
                 'content' => trim($text),
                 'content_type' => Lecture::CONTENT_TYPE_TEXT,
-            ]);
+            ];
         } elseif ($contentSource === 'word') {
             $request->validate([
                 'title' => 'required|string|max:255',
@@ -87,10 +89,8 @@ class LectureController extends Controller
 
             $file = $request->file('word');
 
-            // Сохраняем оригинальный файл в storage/app/lectures (приватно)
             $path = $file->store('lectures', 'local');
 
-            // Конвертируем в HTML для content
             $fullPath = Storage::disk('local')->path($path);
             $content = WordToHtmlConverter::convert($fullPath);
 
@@ -100,12 +100,12 @@ class LectureController extends Controller
                 return back()->withErrors(['word' => 'Документ Word пуст или не содержит текста.'])->withInput();
             }
 
-            $lecture = $course->lectures()->create([
+            $data = [
                 'title' => $request->title,
-                'pdf_path' => $path,          // храним путь к .docx
+                'pdf_path' => $path,
                 'content' => $content,
                 'content_type' => Lecture::CONTENT_TYPE_HTML,
-            ]);
+            ];
         } else {
             $request->validate([
                 'title' => 'required|string|max:255',
@@ -117,15 +117,27 @@ class LectureController extends Controller
                 return back()->withErrors(['content' => 'Введите текст лекции.'])->withInput();
             }
 
-            $lecture = $course->lectures()->create([
+            $data = [
                 'title' => $request->title,
                 'pdf_path' => null,
                 'content' => $content,
                 'content_type' => Lecture::CONTENT_TYPE_HTML,
-            ]);
+            ];
         }
 
-        return redirect()->route('courses.show', $course)->with('success', 'Lecture created!');
+        if ($addToBank) {
+            $data['is_global'] = true;
+            $data['user_id'] = null;
+            $data['course_id'] = null;
+            $lecture = Lecture::create($data);
+        } else {
+            $data['is_global'] = false;
+            $data['user_id'] = $request->user()->id;
+            $data['course_id'] = null;
+            $lecture = $course->lectures()->create($data);
+        }
+
+        return redirect()->route('courses.show', $course)->with('success', 'Лекция создана!');
     }
 
     public function show(Course $course, Lecture $lecture)
@@ -183,16 +195,14 @@ class LectureController extends Controller
                 $text .= $pages[$i]->getText()."\n\n";
             }
 
-            $lecture->update([
+            $updateData = [
                 'title' => $request->title,
                 'pdf_path' => $path,
                 'content' => trim($text),
                 'content_type' => Lecture::CONTENT_TYPE_TEXT,
-            ]);
+            ];
         } elseif ($contentSource === 'word' && $request->hasFile('word')) {
-            // Удаляем старый файл
             if ($lecture->pdf_path) {
-                // Пробуем оба диска
                 Storage::disk('local')->exists($lecture->pdf_path)
                     ? Storage::disk('local')->delete($lecture->pdf_path)
                     : Storage::disk('public')->delete($lecture->pdf_path);
@@ -209,12 +219,12 @@ class LectureController extends Controller
                 return back()->withErrors(['word' => 'Документ Word пуст или не содержит текста.'])->withInput();
             }
 
-            $lecture->update([
+            $updateData = [
                 'title' => $request->title,
                 'pdf_path' => $path,
                 'content' => $content,
                 'content_type' => Lecture::CONTENT_TYPE_HTML,
-            ]);
+            ];
         } elseif ($contentSource === 'manual') {
             $content = $request->input('content');
             if ($content === null || strip_tags($content) === '' || trim(strip_tags($content)) === '') {
@@ -230,13 +240,27 @@ class LectureController extends Controller
                 Storage::disk('public')->delete($lecture->pdf_path);
                 $updateData['pdf_path'] = null;
             }
-            $lecture->update($updateData);
         } else {
-            // PDF или Word выбраны но нет нового файла - просто обновляем название
-            $lecture->update(['title' => $request->title]);
+            $updateData = ['title' => $request->title];
         }
 
-        return redirect()->route('courses.show', $lecture->course_id)->with('success', 'Лекция успешно обновлена!');
+        if ($request->has('add_to_bank')) {
+            $updateData['is_global'] = true;
+            $updateData['user_id'] = null;
+            $updateData['course_id'] = null;
+        } else {
+            $updateData['is_global'] = false;
+            $updateData['user_id'] = $request->user()->id;
+            $updateData['course_id'] = null;
+        }
+
+        $lecture->update($updateData);
+
+        if ($lecture->course_id) {
+            return redirect()->route('courses.show', $lecture->course_id)->with('success', 'Лекция успешно обновлена!');
+        }
+
+        return redirect()->route('admin.lectures.index')->with('success', 'Лекция успешно обновлена!');
     }
 
     public function destroy(Lecture $lecture)

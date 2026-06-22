@@ -52,6 +52,15 @@
             gap: 1rem;
         }
 
+        html.dark .test-topbar {
+            background: rgba(26, 32, 44, .94);
+            border-bottom-color: var(--color-border, #2d3748);
+        }
+
+        html.dark .test-topbar__title {
+            color: var(--color-text-primary, #e2e8f0);
+        }
+
         .test-topbar__title {
             font-size: 15px;
             font-weight: 700;
@@ -942,7 +951,7 @@
                             </div>
                             <div class="sidebar-progress__label" id="progressLabel">
                                 @if ($initialAnsweredCount === $totalQuestions && $totalQuestions > 0)
-                                    Все вопросы отвечены ✓
+                                    Все вопросы отвечены 
                                 @else
                                     Осталось: {{ $totalQuestions - $initialAnsweredCount }}
                                 @endif
@@ -1167,7 +1176,7 @@
                 const pct = TOTAL > 0 ? Math.round((count / TOTAL) * 100) : 0;
                 progressFill.style.width = pct + '%';
                 progressLabel.textContent = count === TOTAL ?
-                    'Все вопросы отвечены ✓' :
+                    'Все вопросы отвечены ' :
                     `Осталось: ${TOTAL - count}`;
             }
 

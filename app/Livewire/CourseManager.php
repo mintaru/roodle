@@ -153,18 +153,70 @@ class CourseManager extends Component
         $globalTests = $globalTestsQuery->get()->map(fn ($t) => ['id' => $t->id, 'title' => $t->title])->values()->toArray();
         $myTests = $myTestsQuery->get()->map(fn ($t) => ['id' => $t->id, 'title' => $t->title])->values()->toArray();
 
+        // Собираем лекции: привязанные к курсу, общий банк и мои личные лекции
+        $courseLectures = $this->course->lectures->where('status', \App\Models\Lecture::STATUS_ACTIVE)
+            ->whereNotIn('id', $addedLectureIds)->map(fn ($l) => ['id' => $l->id, 'title' => $l->title])->values()->toArray();
+
+        $globalLecturesQuery = \App\Models\Lecture::where('is_global', true)
+            ->where('status', \App\Models\Lecture::STATUS_ACTIVE)
+            ->whereNotIn('id', $addedLectureIds);
+
+        $myLecturesQuery = \App\Models\Lecture::where('user_id', auth()->id())
+            ->where('status', \App\Models\Lecture::STATUS_ACTIVE)
+            ->whereNotIn('id', $addedLectureIds);
+
+        $globalLectures = $globalLecturesQuery->get()->map(fn ($l) => ['id' => $l->id, 'title' => $l->title])->values()->toArray();
+        $myLectures = $myLecturesQuery->get()->map(fn ($l) => ['id' => $l->id, 'title' => $l->title])->values()->toArray();
+
+        // Собираем материалы: привязанные к курсу, общий банк и мои личные
+        $courseMaterials = $this->course->materials->where('status', \App\Models\Material::STATUS_ACTIVE)
+            ->whereNotIn('id', $addedMaterialIds)->map(fn ($m) => ['id' => $m->id, 'title' => $m->title])->values()->toArray();
+
+        $globalMaterialsQuery = \App\Models\Material::where('is_global', true)
+            ->where('status', \App\Models\Material::STATUS_ACTIVE)
+            ->whereNotIn('id', $addedMaterialIds);
+
+        $myMaterialsQuery = \App\Models\Material::where('user_id', auth()->id())
+            ->where('status', \App\Models\Material::STATUS_ACTIVE)
+            ->whereNotIn('id', $addedMaterialIds);
+
+        $globalMaterials = $globalMaterialsQuery->get()->map(fn ($m) => ['id' => $m->id, 'title' => $m->title])->values()->toArray();
+        $myMaterials = $myMaterialsQuery->get()->map(fn ($m) => ['id' => $m->id, 'title' => $m->title])->values()->toArray();
+
         return [
             'tests' => [
                 'course' => $courseTests,
                 'global' => $globalTests,
                 'mine' => $myTests,
             ],
-            'lectures' => $this->course->lectures->where('status', \App\Models\Lecture::STATUS_ACTIVE)
-                ->whereNotIn('id', $addedLectureIds)->map(fn ($l) => ['id' => $l->id, 'title' => $l->title])->values()->toArray(),
-            'materials' => $this->course->materials->where('status', \App\Models\Material::STATUS_ACTIVE)
-                ->whereNotIn('id', $addedMaterialIds)->map(fn ($m) => ['id' => $m->id, 'title' => $m->title])->values()->toArray(),
-            'assignments' => $this->course->assignments->where('status', \App\Models\Assignment::STATUS_ACTIVE)
-                ->whereNotIn('id', $addedAssignmentIds)->map(fn ($a) => ['id' => $a->id, 'title' => $a->title])->values()->toArray(),
+            'lectures' => [
+                'course' => $courseLectures,
+                'global' => $globalLectures,
+                'mine' => $myLectures,
+            ],
+            'materials' => [
+                'course' => $courseMaterials,
+                'global' => $globalMaterials,
+                'mine' => $myMaterials,
+            ],
+            'assignments' => [
+                'course' => $this->course->assignments->where('status', \App\Models\Assignment::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedAssignmentIds)->map(fn ($a) => ['id' => $a->id, 'title' => $a->title])->values()->toArray(),
+                'global' => \App\Models\Assignment::where('is_global', true)
+                    ->where('status', \App\Models\Assignment::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedAssignmentIds)
+                    ->get()
+                    ->map(fn ($a) => ['id' => $a->id, 'title' => $a->title])
+                    ->values()
+                    ->toArray(),
+                'mine' => \App\Models\Assignment::where('user_id', auth()->id())
+                    ->where('status', \App\Models\Assignment::STATUS_ACTIVE)
+                    ->whereNotIn('id', $addedAssignmentIds)
+                    ->get()
+                    ->map(fn ($a) => ['id' => $a->id, 'title' => $a->title])
+                    ->values()
+                    ->toArray(),
+            ],
         ];
     }
 
@@ -230,20 +282,64 @@ class CourseManager extends Component
                 if (($item->status ?? 'active') === Test::STATUS_ARCHIVED) {
                     throw new \Exception('Нельзя добавить архивный тест в секцию');
                 }
+
+                // Если тест из общего банка — создаём его независимую копию для этого курса
+                if ($item->is_global) {
+                    $item = $item->createCopyForUser(auth()->user());
+                }
             } elseif ($itemType === 'lecture') {
-                $item = Lecture::where('course_id', $this->course->id)->findOrFail($itemId);
+                $item = Lecture::findOrFail($itemId);
+
+                $allowed = ($item->is_global ?? false)
+                    || ($item->user_id && $item->user_id === auth()->id())
+                    || ($item->course_id && $item->course_id === $this->course->id);
+
+                if (! $allowed) {
+                    throw new \Exception('У вас нет прав добавить эту лекцию в курс');
+                }
+
                 if (($item->status ?? 'active') === Lecture::STATUS_ARCHIVED) {
                     throw new \Exception('Нельзя добавить архивную лекцию в секцию');
                 }
+
+                if ($item->is_global) {
+                    $item = $item->createCopyForUser(auth()->user());
+                }
             } elseif ($itemType === 'assignment') {
-                $item = \App\Models\Assignment::where('course_id', $this->course->id)->findOrFail($itemId);
+                $item = \App\Models\Assignment::findOrFail($itemId);
+
+                $allowed = ($item->is_global ?? false)
+                    || ($item->user_id && $item->user_id === auth()->id())
+                    || ($item->course_id && $item->course_id === $this->course->id);
+
+                if (! $allowed) {
+                    throw new \Exception('У вас нет прав добавить это задание в курс');
+                }
+
                 if (($item->status ?? 'active') === \App\Models\Assignment::STATUS_ARCHIVED) {
                     throw new \Exception('Нельзя добавить архивное задание в секцию');
                 }
+
+                if ($item->is_global) {
+                    $item = $item->createCopyForUser(auth()->user());
+                }
             } else {
-                $item = Material::where('course_id', $this->course->id)->findOrFail($itemId);
+                $item = Material::findOrFail($itemId);
+
+                $allowed = ($item->is_global ?? false)
+                    || ($item->user_id && $item->user_id === auth()->id())
+                    || ($item->course_id && $item->course_id === $this->course->id);
+
+                if (! $allowed) {
+                    throw new \Exception('У вас нет прав добавить этот материал в курс');
+                }
+
                 if (($item->status ?? 'active') === Material::STATUS_ARCHIVED) {
                     throw new \Exception('Нельзя добавить архивный материал в секцию');
+                }
+
+                if ($item->is_global) {
+                    $item = $item->createCopyForUser(auth()->user());
                 }
             }
 

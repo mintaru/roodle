@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\CourseSectionItem;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -166,6 +167,26 @@ public function getMaxAttemptsForUser($userId): int
         ->first();
 
     return $this->max_attempts + ($extraAttempts ? $extraAttempts->extra_attempts : 0);
+}
+
+public function createCopyForUser(User $user): self
+{
+    $copy = $this->replicate(['is_global', 'user_id', 'course_id']);
+
+    $copy->is_global = false;
+    $copy->user_id = $user->id;
+    $copy->course_id = null;
+    $copy->save();
+
+    $questions = $this->questions()->withPivot('question_order', 'page_number')->get();
+    foreach ($questions as $question) {
+        $copy->questions()->attach($question->id, [
+            'question_order' => $question->pivot->question_order,
+            'page_number' => $question->pivot->page_number,
+        ]);
+    }
+
+    return $copy;
 }
 }
 

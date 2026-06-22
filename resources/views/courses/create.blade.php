@@ -6,6 +6,11 @@
     <title>Создание курса</title>
     <link rel="icon" href="{{ asset('images/favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body>
 
@@ -82,10 +87,10 @@
 
                         <div style="display: flex; gap: 8px; margin-bottom: 10px;">
                             <button type="button" id="generate-pattern" class="btn btn-primary" style="font-size: 13px; padding: 7px 14px;">
-                                🎲 Случайная обложка
+                                 Случайная обложка
                             </button>
                             <button type="button" id="clear-pattern" class="btn btn-ghost" style="font-size: 13px; padding: 7px 14px; display: none;">
-                                ✕ Убрать
+                                 Убрать
                             </button>
                         </div>
 
@@ -454,7 +459,7 @@ function renderModalList(query) {
                     "
                 >
                     <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                    ${(state.start || state.end) ? 'Даты ✓' : 'Даты'}
+                    ${(state.start || state.end) ? 'Даты ' : 'Даты'}
                 </button>
                 ` : ''}
             </div>

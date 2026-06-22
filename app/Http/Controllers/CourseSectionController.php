@@ -88,19 +88,50 @@ class CourseSectionController extends Controller
         ]);
 
         if ($data['item_type'] === 'test') {
-            $item = Test::where('course_id', $course->id)->findOrFail($data['item_id']);
+            $item = Test::findOrFail($data['item_id']);
+            $allowed = ($item->is_global ?? false)
+                || ($item->user_id && $item->user_id === auth()->id())
+                || ($item->course_id && $item->course_id === $course->id);
+            if (! $allowed) {
+                abort(404);
+            }
             if (($item->status ?? 'active') === Test::STATUS_ARCHIVED) {
                 return back()->with('error', 'Нельзя добавить архивный тест в секцию');
             }
+
+            // Если тест из общего банка — создаём его независимую копию
+            if ($item->is_global) {
+                $item = $item->createCopyForUser(auth()->user());
+            }
         } elseif ($data['item_type'] === 'lecture') {
-            $item = Lecture::where('course_id', $course->id)->findOrFail($data['item_id']);
+            $item = Lecture::findOrFail($data['item_id']);
+            $allowed = ($item->is_global ?? false)
+                || ($item->user_id && $item->user_id === auth()->id())
+                || ($item->course_id && $item->course_id === $course->id);
+            if (! $allowed) {
+                abort(404);
+            }
             if (($item->status ?? 'active') === Lecture::STATUS_ARCHIVED) {
                 return back()->with('error', 'Нельзя добавить архивную лекцию в секцию');
             }
+
+            if ($item->is_global) {
+                $item = $item->createCopyForUser(auth()->user());
+            }
         } else {
-            $item = Material::where('course_id', $course->id)->findOrFail($data['item_id']);
+            $item = Material::findOrFail($data['item_id']);
+            $allowed = ($item->is_global ?? false)
+                || ($item->user_id && $item->user_id === auth()->id())
+                || ($item->course_id && $item->course_id === $course->id);
+            if (! $allowed) {
+                abort(404);
+            }
             if (($item->status ?? 'active') === Material::STATUS_ARCHIVED) {
                 return back()->with('error', 'Нельзя добавить архивный материал в секцию');
+            }
+
+            if ($item->is_global) {
+                $item = $item->createCopyForUser(auth()->user());
             }
         }
 

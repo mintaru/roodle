@@ -5,6 +5,11 @@
     <meta charset="UTF-8">
     <title>Управление доступом: {{ $user->name }}</title>
     <link href="{{ asset('css/tailwind.min.css') }}" rel="stylesheet">
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 
 <body class="bg-gray-100 p-8">
@@ -71,13 +76,13 @@
                                     <input type="checkbox" name="permissions[{{ $course->id }}][can_edit]" value="1"
                                         {{ $isPermitted && $permission?->can_edit ? 'checked' : '' }}
                                         class="w-4 h-4" onchange="validatePermissions({{ $course->id }})">
-                                    <span class="text-sm">✏️ Редактирование курса</span>
+                                    <span class="text-sm"> Редактирование курса</span>
                                 </label>
                                 <label class="flex items-center gap-2 cursor-pointer">
                                     <input type="checkbox" name="permissions[{{ $course->id }}][can_delete]" value="1"
                                         {{ $isPermitted && $permission?->can_delete ? 'checked' : '' }}
                                         class="w-4 h-4" onchange="validatePermissions({{ $course->id }})">
-                                    <span class="text-sm">🗑️ Удаление курса</span>
+                                    <span class="text-sm"> Удаление курса</span>
                                 </label>
                             </div>
                         </div>

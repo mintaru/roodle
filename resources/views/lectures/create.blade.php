@@ -194,6 +194,11 @@
             transform: translateY(-1px);
         }
     </style>
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body>
 
@@ -488,7 +493,7 @@
                             <button type="button"
                                     id="reset-color">
 
-                                ✕
+                                
 
                             </button>
 
@@ -613,6 +618,29 @@
                             Поддерживаются .doc и .docx. Форматирование сохранится автоматически.
                         </p>
 
+                    </div>
+
+                    {{-- Add to bank --}}
+                    <div style="
+                        display:flex;
+                        align-items:center;
+                        gap:10px;
+                        margin-top:1.5rem;
+                        padding:10px 14px;
+                        background:var(--gray-50);
+                        border-radius:var(--r-md);
+                        border:1px solid var(--color-border);
+                    ">
+                        <input type="checkbox"
+                               id="add_to_bank"
+                               name="add_to_bank"
+                               value="1"
+                               checked
+                               style="width:16px;height:16px;accent-color:var(--teal-500);cursor:pointer;">
+                        <label for="add_to_bank"
+                               style="font-size:13px;font-weight:500;color:var(--gray-700);cursor:pointer;">
+                            Добавить в общий банк лекций (видно всем преподавателям)
+                        </label>
                     </div>
 
                     {{-- Actions --}}

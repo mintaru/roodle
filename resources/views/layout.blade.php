@@ -11,6 +11,11 @@
     <link rel="stylesheet" href="{{ asset('css/roodle-tokens.css') }}">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 
+    <script>
+        if (localStorage.getItem('dark-mode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 
     <script defer src="{{ asset('js/alpine.min.js') }}"></script>
     @yield('head')

@@ -1,5 +1,5 @@
 <div class="search-box" style="margin-bottom: 1.5rem;">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;" class="admin-search-grid">
         <div>
             <label>Искать по колонке:</label>
             <select wire:model.live="searchColumn">
