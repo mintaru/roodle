@@ -9,6 +9,7 @@
 [![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
+
 *Гибкая и мощная платформа для онлайн-обучения*
 
 </div>
@@ -60,39 +61,61 @@
 
 ## Установка (Docker)
 
+
+
 ### 1. Клонировать репозиторий
+
 ```bash
 git clone https://github.com/mintaru/roodle.git
 cd roodle
 ```
+
 ### 2. Настройка окружения
+
 ```bash
 cp .env.example .env
 ```
-### 3. Запустить контейнеры
-```bash
-docker-compose up -d --build
-docker-compose build --progress=plain
-```
-### 4. Сгенерировать ключ приложения
-```bash
-docker-compose exec app php artisan key:generate
-docker-compose exec app php artisan storage:link
-```
-### 5. Запустить миграции
-```bash
-docker-compose exec app php artisan migrate 
-```
-Для заполнения тестовыми данными и пользователями:
-```bash
-docker-compose exec app php artisan db:seed
+
+Отредактируй `.env`, указав параметры подключения для Docker:
+
+```env
+APP_URL=http://localhost:8080
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=roodle
+DB_USERNAME=roodle
+DB_PASSWORD=roodlepassword
 ```
 
-Приложение будет доступно по адресу: [http://localhost:8080](http://localhost:8080)
-Если будет ошибка, возможно поможет
+### 3. Собрать и запустить контейнеры
+
 ```bash
-docker-compose exec app npm run build
+docker compose up -d --build
 ```
+
+### 4. Сгенерировать ключ приложения
+
+```bash
+docker compose exec app php artisan key:generate
+```
+
+### 5. Запустить миграции
+
+```bash
+docker compose exec app php artisan migrate
+```
+
+### 6. Заполнить тестовыми данными (опционально)
+
+```bash
+docker compose exec app php artisan db:seed
+```
+
+### Готово
+
+Приложение будет доступно по адресу: [http://localhost:8080](http://localhost:8080)
+
+---
 
 ## Установка (обычная)
 
@@ -126,9 +149,10 @@ php artisan key:generate
 php artisan storage:link
 ```
 
-Отредактируйте файл `.env`, указав параметры подключения к базе данных:
+Отредактируй `.env`:
 
 ```env
+APP_URL=http://localhost
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -137,17 +161,33 @@ DB_USERNAME=your_db_user
 DB_PASSWORD=your_db_password
 ```
 
-
-### 4. Запуск миграций и сервера разработки
+### 4. Запуск миграций
 
 ```bash
 php artisan migrate
 ```
-Для заполнения тестовыми данными и пользователями:
+
+Для заполнения тестовыми данными:
+
 ```bash
 php artisan db:seed
 ```
 
+### 5. Запуск сервера разработки
+
+```bash
+php artisan serve
+```
+
+### Тестовые пользователи
+
+После выполнения `db:seed` доступны следующие аккаунты (пароль для всех: `password`):
+
+| Роль          | Логин   |
+| ------------- | ------- |
+| Администратор | admin   |
+| Преподаватель | teacher |
+| Студент       | student |
 ## Скриншоты
 ![Скриншот интерфейса](https://github.com/mintaru/roodle/blob/main/screenshots/screenshot2.jpg)
 
