@@ -66,7 +66,7 @@
     @if ($lecture->pdf_path)
         @php
             $ext = strtolower(pathinfo($lecture->pdf_path, PATHINFO_EXTENSION));
-            $fileUrl = route('lectures.file', [$lecture->course, $lecture]);
+            $fileUrl = route('lectures.file', [$course, $lecture]);
         @endphp
 
         @if ($ext === 'pdf')
