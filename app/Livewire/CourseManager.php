@@ -282,6 +282,11 @@ class CourseManager extends Component
                 if (($item->status ?? 'active') === Test::STATUS_ARCHIVED) {
                     throw new \Exception('Нельзя добавить архивный тест в секцию');
                 }
+
+                // Если тест из общего банка — создаём его независимую копию для этого курса
+                if ($item->is_global) {
+                    $item = $item->createCopyForUser(auth()->user());
+                }
             } elseif ($itemType === 'lecture') {
                 $item = Lecture::findOrFail($itemId);
 
@@ -295,6 +300,10 @@ class CourseManager extends Component
 
                 if (($item->status ?? 'active') === Lecture::STATUS_ARCHIVED) {
                     throw new \Exception('Нельзя добавить архивную лекцию в секцию');
+                }
+
+                if ($item->is_global) {
+                    $item = $item->createCopyForUser(auth()->user());
                 }
             } elseif ($itemType === 'assignment') {
                 $item = \App\Models\Assignment::findOrFail($itemId);
@@ -310,6 +319,10 @@ class CourseManager extends Component
                 if (($item->status ?? 'active') === \App\Models\Assignment::STATUS_ARCHIVED) {
                     throw new \Exception('Нельзя добавить архивное задание в секцию');
                 }
+
+                if ($item->is_global) {
+                    $item = $item->createCopyForUser(auth()->user());
+                }
             } else {
                 $item = Material::findOrFail($itemId);
 
@@ -323,6 +336,10 @@ class CourseManager extends Component
 
                 if (($item->status ?? 'active') === Material::STATUS_ARCHIVED) {
                     throw new \Exception('Нельзя добавить архивный материал в секцию');
+                }
+
+                if ($item->is_global) {
+                    $item = $item->createCopyForUser(auth()->user());
                 }
             }
 

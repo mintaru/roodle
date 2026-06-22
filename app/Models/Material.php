@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 class Material extends Model
@@ -53,5 +54,17 @@ class Material extends Model
     public function scopeArchived($query)
     {
         return $query->where('status', self::STATUS_ARCHIVED);
+    }
+
+    public function createCopyForUser(User $user): self
+    {
+        $copy = $this->replicate(['is_global', 'user_id', 'course_id']);
+
+        $copy->is_global = false;
+        $copy->user_id = $user->id;
+        $copy->course_id = null;
+        $copy->save();
+
+        return $copy;
     }
 }

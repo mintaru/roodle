@@ -699,13 +699,14 @@
                             $totalQuestions = count($questionDetails);
                             $pct = $totalQuestions > 0 ? ($correctAnswers / $totalQuestions) * 100 : 0;
                             $grade = 2 + $pct * 3 / 100;
-                            if ($pct >= 85) {
+                            $roundedGrade = ceil($grade);
+                            if ($roundedGrade >= 5) {
                                 $fiveLabel = 'Отлично';
                                 $scoreClass = 'score-lime';
-                            } elseif ($pct >= 70) {
+                            } elseif ($roundedGrade >= 4) {
                                 $fiveLabel = 'Хорошо';
                                 $scoreClass = 'score-high';
-                            } elseif ($pct >= 50) {
+                            } elseif ($roundedGrade >= 3) {
                                 $fiveLabel = 'Удовлетворительно';
                                 $scoreClass = 'score-mid';
                             } else {
@@ -832,7 +833,7 @@
                                         <div class="q-badge">{{ $index + 1 }}</div>
                                         <div class="q-card__meta">
                                             <div class="q-card__number">Вопрос {{ $index + 1 }}</div>
-                                            <div class="q-card__text">{{ strip_tags($question->question_text) }}</div>
+                                            <div class="q-card__text">{{ strip_tags(preg_replace('/<figcaption[^>]*>.*?<\/figcaption>/si', '', $question->question_text)) }}</div>
                                             @if (!$isSelfView)<span class="q-type-chip">{{ $typeLabel }}</span>@endif
                                         </div>
                                     </div>

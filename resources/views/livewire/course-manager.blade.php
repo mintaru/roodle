@@ -263,16 +263,16 @@
                                             style="width: 36px; height: 36px;">
                                     </div>
                                     <div style="flex: 1;">
-                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                                            <strong
-                                                style="color: var(--amber-600); font-size: 12px; text-transform: uppercase;">Задание</strong>
-                                            @if (($item->status ?? 'active') === \App\Models\Assignment::STATUS_ARCHIVED)
-                                                <span
-                                                    style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивировано]</span>
-                                            @endif
-                                        </div>
-                                        <a href="{{ route('assignments.view', ['course' => $course, 'assignment' => $item]) }}"
-                                            style="color: var(--amber-600); text-decoration: none; font-weight: 600; font-size: 14px;">{{ $item->title }}</a>
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                        <strong
+                                            style="color: var(--teal-600); font-size: 12px; text-transform: uppercase;">Задание</strong>
+                                        @if (($item->status ?? 'active') === \App\Models\Assignment::STATUS_ARCHIVED)
+                                            <span
+                                                style="color: var(--amber-500); font-size: 12px; font-weight: 600;">[архивировано]</span>
+                                        @endif
+                                    </div>
+                                    <a href="{{ route('assignments.view', ['course' => $course, 'assignment' => $item]) }}"
+                                        style="color: var(--teal-600); text-decoration: none; font-weight: 600; font-size: 14px;">{{ $item->title }}</a>
                                         @if ($item->due_date)
                                             <p style="font-size: 12px; color: var(--color-text-muted); margin: 4px 0;">
                                                 Срок сдачи: {{ $item->due_date->format('d.m.Y H:i') }}

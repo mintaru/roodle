@@ -56,9 +56,15 @@ class AssignmentSubmissionController extends Controller
             ]
         );
 
+        // Не даём перезаписать уже оценённый ответ
+        abort_if($submission->isGraded(), 403, 'Нельзя изменить ответ после проверки');
+
         $submission->update([
             'answer_text' => $request->input('answer_text'),
             'submitted_at' => now(),
+            'score' => null,
+            'teacher_comment' => null,
+            'graded_at' => null,
         ]);
 
         // Handle file uploads for submission
@@ -136,7 +142,7 @@ class AssignmentSubmissionController extends Controller
         $this->authorize('edit courses');
 
         $request->validate([
-            'score' => 'required|numeric|min:0',
+            'score' => 'required|numeric|min:2|max:5',
             'teacher_comment' => 'nullable|string',
         ]);
 
@@ -146,6 +152,6 @@ class AssignmentSubmissionController extends Controller
             'graded_at' => now(),
         ]);
 
-        return back()->with('success', 'Оценка выставлена!');
+        return back()->with('success', 'Оценка сохранена!');
     }
 }

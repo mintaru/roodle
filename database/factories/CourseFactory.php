@@ -24,7 +24,6 @@ class CourseFactory extends Factory
 
         return [
             'title' => fake()->words(3, true),
-            'description' => fake()->sentence(15),
             'image_path' => null,
             'user_id' => 1,
             'period_start' => $startDate,

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\CourseSectionItem;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -60,5 +61,17 @@ class Lecture extends Model
     public function scopeArchived($query)
     {
         return $query->where('status', self::STATUS_ARCHIVED);
+    }
+
+    public function createCopyForUser(User $user): self
+    {
+        $copy = $this->replicate(['is_global', 'user_id', 'course_id']);
+
+        $copy->is_global = false;
+        $copy->user_id = $user->id;
+        $copy->course_id = null;
+        $copy->save();
+
+        return $copy;
     }
 }

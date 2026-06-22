@@ -69,11 +69,11 @@
 @mouseleave="$el.style.background='var(--color-surface)'">Редактировать</a>
     @elseif ($type === 'assignment')
         <a href="{{ route('assignments.edit', ['course' => $course, 'assignment' => $item]) }}"
-            style="display:block; padding:7px 14px; font-size:13px; color:var(--amber-600); text-decoration:none;"
+            style="display:block; padding:7px 14px; font-size:13px; color:var(--teal-600); text-decoration:none;"
             @mouseenter="$el.style.background='var(--color-surface-2)'"
 @mouseleave="$el.style.background='var(--color-surface)'">Редактировать</a>
-        <a href="{{ route('assignments.view', ['course' => $course, 'assignment' => $item]) }}"
-            style="display:block; padding:7px 14px; font-size:13px; color:var(--amber-600); text-decoration:none;"
+        <a href="{{ route('assignments.show', ['course' => $course, 'assignment' => $item]) }}"
+            style="display:block; padding:7px 14px; font-size:13px; color:var(--teal-600); text-decoration:none;"
             @mouseenter="$el.style.background='var(--color-surface-2)'"
 @mouseleave="$el.style.background='var(--color-surface)'">Обзор</a>
     @endif

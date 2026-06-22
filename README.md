@@ -65,34 +65,74 @@
 git clone https://github.com/mintaru/roodle.git
 cd roodle
 ```
+
 ### 2. Настройка окружения
 ```bash
 cp .env.example .env
 ```
-### 3. Запустить контейнеры
+
+> **Важно:** Для Docker отредактируйте `.env`, указав параметры подключения:
+> ```env
+> APP_URL=http://localhost:8080
+> DB_HOST=mysql
+> DB_PORT=3306
+> DB_DATABASE=roodle
+> DB_USERNAME=roodle
+> DB_PASSWORD=roodlepassword
+> ```
+
+### 3. Собрать и запустить контейнеры
 ```bash
-docker-compose up -d --build
-docker-compose build --progress=plain
-```
-### 4. Сгенерировать ключ приложения
-```bash
-docker-compose exec app php artisan key:generate
-docker-compose exec app php artisan storage:link
-```
-### 5. Запустить миграции
-```bash
-docker-compose exec app php artisan migrate 
-```
-Для заполнения тестовыми данными и пользователями:
-```bash
-docker-compose exec app php artisan db:seed
+docker compose up -d --build
 ```
 
-Приложение будет доступно по адресу: [http://localhost:8080](http://localhost:8080)
-Если будет ошибка, возможно поможет
+### 4. Сгенерировать ключ приложения
 ```bash
-docker-compose exec app npm run build
+docker compose exec app php artisan key:generate
 ```
+
+### 5. Запустить миграции
+```bash
+docker compose exec app php artisan migrate
+```
+
+### 6. Создать симлинк для storage
+```bash
+docker compose exec app php artisan storage:link
+```
+
+Для заполнения тестовыми данными и пользователями:
+```bash
+docker compose exec app php artisan db:seed
+```
+
+### Готово!
+Приложение будет доступно по адресу: [http://localhost:8080](http://localhost:8080)
+
+<details>
+<summary>Полезные команды</summary>
+
+```bash
+# Остановить контейнеры
+docker compose down
+
+# Пересобрать образы (если меняли Dockerfile)
+docker compose build --progress=plain
+
+# Посмотреть логи
+docker compose logs -f
+
+# Зайти внутрь контейнера
+docker compose exec app bash
+
+# Пересобрать фронтенд
+docker compose exec app npm run build
+
+# Создать симлинк для storage (если не создался автоматически)
+docker compose exec app php artisan storage:link
+```
+
+</details>
 
 ## Установка (обычная)
 
@@ -126,9 +166,10 @@ php artisan key:generate
 php artisan storage:link
 ```
 
-Отредактируйте файл `.env`, указав параметры подключения к базе данных:
+Отредактируйте файл `.env`, указав параметры подключения к базе данных (для локальной установки):
 
 ```env
+APP_URL=http://localhost
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -137,15 +178,21 @@ DB_USERNAME=your_db_user
 DB_PASSWORD=your_db_password
 ```
 
-
 ### 4. Запуск миграций и сервера разработки
 
 ```bash
 php artisan migrate
 ```
+
 Для заполнения тестовыми данными и пользователями:
 ```bash
 php artisan db:seed
+```
+
+### 5. Запуск сервера разработки
+
+```bash
+php artisan serve
 ```
 
 ## Скриншоты

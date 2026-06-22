@@ -27,6 +27,7 @@ class TestFactory extends Factory
             'title' => fake()->words(3, true),
             'description' => fake()->sentence(10),
             'course_id' => Course::factory(),
+            'is_global' => false,
             'status' => fake()->randomElement([Test::STATUS_ACTIVE, Test::STATUS_ARCHIVED]),
             'max_attempts' => fake()->numberBetween(1, 5),
             'time_limit' => fake()->randomElement([30, 45, 60, 90, 120, null]),
@@ -35,6 +36,15 @@ class TestFactory extends Factory
             'randomize_questions' => fake()->boolean(60),
             'display_mode' => fake()->randomElement(['full', 'one_per_page', 'review_only']),
         ];
+    }
+
+    public function globalBank(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_global' => true,
+            'course_id' => null,
+            'user_id' => null,
+        ]);
     }
 
     public function active(): static

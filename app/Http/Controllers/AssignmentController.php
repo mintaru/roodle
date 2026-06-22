@@ -82,10 +82,12 @@ class AssignmentController extends Controller
         $this->authorize('edit courses');
 
         $submissions = $assignment->submissions()
-            ->with('user', 'files')
+            ->with('user.groups', 'files')
             ->get();
 
-        return view('assignments.show', compact('course', 'assignment', 'submissions'));
+        $groups = $course->groups()->with('users')->get();
+
+        return view('assignments.show', compact('course', 'assignment', 'submissions', 'groups'));
     }
 
     public function edit(Course $course, Assignment $assignment)

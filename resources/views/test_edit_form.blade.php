@@ -487,19 +487,18 @@
 
                 {{-- Footer --}}
                 <div class="form-footer">
-                    <span class="form-footer-hint">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M12 8v4M12 16h.01"/>
-                        </svg>
-                        Изменения применяются сразу после сохранения
-                    </span>
-                    <button type="submit" class="btn btn-primary">
-                        Сохранить изменения
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                        </svg>
-                    </button>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" name="action" value="view" class="btn">
+                            Сохранить и перейти к тесту
+                        </button>
+                        <button type="submit" name="action" value="questions" class="btn btn-primary">
+                            Сохранить и редактировать вопросы
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
             </form>

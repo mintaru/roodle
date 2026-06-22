@@ -77,8 +77,18 @@ RouteFacade::bind('lecture', function ($value) {
     }
 
     $course = $lecture->course;
+    // Лекции из общего банка (копии) не привязаны к курсу напрямую — ищем через секции
     if (! $course) {
-        abort(404);
+        $sectionItem = \App\Models\CourseSectionItem::where('item_type', \App\Models\Lecture::class)
+            ->where('item_id', $lecture->id)
+            ->with('section.course')
+            ->first();
+        $course = $sectionItem?->section?->course;
+    }
+
+    // Если курс всё ещё не найден — возможно это шаблон из банка, не привязанный ни к одному курсу
+    if (! $course) {
+        return $lecture;
     }
 
     if (\Illuminate\Support\Facades\Auth::check()) {
@@ -281,10 +291,15 @@ Route::post('/tests/{test}/users/{user}/grant-attempts', [TestController::class,
 
 // Эти маршруты показывают, как можно их вынести в контроллер для единообразия.
 
-// Страница для начала прохождения теста
+// Страница для продолжения прохождения теста (GET — только если уже есть активная попытка)
 Route::get('/tests/{test}/attempt', [TestController::class, 'attempt'])
     ->middleware('auth')
     ->name('tests.attempt');
+
+// Запуск новой попытки (POST — требует явного действия пользователя)
+Route::post('/tests/{test}/attempt/start', [TestController::class, 'startAttempt'])
+    ->middleware('auth')
+    ->name('tests.attempt.start');
 
 Route::post('/tests/{test}/attempt/force-new', [TestController::class, 'forceNewAttempt'])
     ->middleware('auth')
@@ -360,7 +375,7 @@ Route::get('/courses/{course}/assignments/{assignment}/files/{file}/download', [
 Route::post('/courses/{course}/assignments/{assignment}/move', [AssignmentController::class, 'move'])->middleware(['auth','role:admin|teacher'])->name('assignments.move');
 
 // Маршруты для ответов на задания
-Route::get('/courses/{course}/assignments/{assignment}/view', [AssignmentSubmissionController::class, 'view'])->middleware(['auth','role:admin|teacher'])->name('assignments.view');
+Route::get('/courses/{course}/assignments/{assignment}/view', [AssignmentSubmissionController::class, 'view'])->middleware('auth')->name('assignments.view');
 Route::post('/courses/{course}/assignments/{assignment}/submit', [AssignmentSubmissionController::class, 'submit'])->middleware('auth')->name('assignments.submit');
 Route::post('/courses/{course}/assignments/{assignment}/submissions/{submission}/grade', [AssignmentSubmissionController::class, 'grade'])->middleware(['auth','role:admin|teacher'])->name('assignments.grade');
 Route::get('/courses/{course}/assignments/{assignment}/submissions/{submission}/files/{file}/download', [AssignmentSubmissionController::class, 'downloadSubmissionFile'])->middleware('auth')->name('assignments.download-submission-file');

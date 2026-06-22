@@ -98,6 +98,11 @@ class CourseSectionController extends Controller
             if (($item->status ?? 'active') === Test::STATUS_ARCHIVED) {
                 return back()->with('error', 'Нельзя добавить архивный тест в секцию');
             }
+
+            // Если тест из общего банка — создаём его независимую копию
+            if ($item->is_global) {
+                $item = $item->createCopyForUser(auth()->user());
+            }
         } elseif ($data['item_type'] === 'lecture') {
             $item = Lecture::findOrFail($data['item_id']);
             $allowed = ($item->is_global ?? false)
@@ -109,6 +114,10 @@ class CourseSectionController extends Controller
             if (($item->status ?? 'active') === Lecture::STATUS_ARCHIVED) {
                 return back()->with('error', 'Нельзя добавить архивную лекцию в секцию');
             }
+
+            if ($item->is_global) {
+                $item = $item->createCopyForUser(auth()->user());
+            }
         } else {
             $item = Material::findOrFail($data['item_id']);
             $allowed = ($item->is_global ?? false)
@@ -119,6 +128,10 @@ class CourseSectionController extends Controller
             }
             if (($item->status ?? 'active') === Material::STATUS_ARCHIVED) {
                 return back()->with('error', 'Нельзя добавить архивный материал в секцию');
+            }
+
+            if ($item->is_global) {
+                $item = $item->createCopyForUser(auth()->user());
             }
         }
 

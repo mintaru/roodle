@@ -471,6 +471,12 @@
             padding-bottom: 1.25rem;
             border-bottom: 1px solid var(--color-border);
         }
+        .detail-qtext img,
+        #detail-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--r-md);
+        }
 
         .detail-section-label {
             font-size: 11px;
@@ -912,8 +918,8 @@
                     @endphp
                     <li class="tq-row">
                         <div class="tq-row__num">{{ $loop->iteration }}</div>
-                        <div class="tq-row__text" title="{{ strip_tags($question->question_text) }}">
-                            {{ strip_tags($question->question_text) }}
+                        <div class="tq-row__text" title="{{ strip_tags(preg_replace('/<figcaption[^>]*>.*?<\/figcaption>/si', '', $question->question_text)) }}">
+                            {{ strip_tags(preg_replace('/<figcaption[^>]*>.*?<\/figcaption>/si', '', $question->question_text)) }}
                         </div>
                         <span class="tq-row__type {{ $ti[1] }}">{{ $ti[0] }}</span>
 
@@ -1132,9 +1138,9 @@
                             style="height:auto;padding:0;">
                             @foreach ($allQuestions as $q)
                                 <option value="{{ $q->id }}"
-                                    data-q="{{ strtolower(strip_tags($q->question_text)) }}"
+                                    data-q="{{ strtolower(strip_tags(preg_replace('/<figcaption[^>]*>.*?<\/figcaption>/si', '', $q->question_text))) }}"
                                     style="padding:8px 10px;border-bottom:1px solid var(--color-border);">
-                                    {{ strip_tags($q->question_text) }}
+                                    {{ strip_tags(preg_replace('/<figcaption[^>]*>.*?<\/figcaption>/si', '', $q->question_text)) }}
                                 </option>
                             @endforeach
                         </select>
@@ -1151,7 +1157,7 @@
 
     {{-- ═══ MODAL: детали вопроса ═══ --}}
     <div class="modal-overlay" id="modal-detail" onclick="overlayClick(event,'modal-detail')">
-        <div class="modal modal--md">
+        <div class="modal modal--lg">
             <div class="modal__head">
                 <div>
                     <div class="modal__title">Детали вопроса</div>
@@ -1576,28 +1582,26 @@ async function generateQuestion() {
         });
 
         /* ── IMAGE UPLOAD ── */
-        document.addEventListener('trix-attachment-add', e => {
-            if (e.attachment.file) upload(e.attachment);
-        });
-
-        function upload(att) {
+        document.addEventListener('trix-file-accept', function(e) {
+            if (!e.file.type.startsWith('image/')) return;
+            e.preventDefault();
             const fd = new FormData();
-            fd.append('file', att.file);
+            fd.append('file', e.file);
             fetch("{{ route('questions.upload') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: fd,
-                    credentials: 'same-origin'
-                }).then(r => r.json()).then(d => {
-                    if (d.location) att.setAttributes({
-                        url: d.location,
-                        href: d.location
-                    });
-                })
-                .catch(() => showNotification('Ошибка загрузки изображения'));
-        }
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: fd,
+                credentials: 'same-origin'
+            }).then(r => r.json()).then(d => {
+                if (d.location) {
+                    document.querySelector('trix-editor').editor.insertHTML(
+                        `<figure class="attachment attachment--preview attachment--image"><img src="${d.location}" loading="lazy"></figure>`
+                    );
+                }
+            }).catch(() => showNotification('Ошибка загрузки изображения'));
+        });
 
         document.getElementById('question-form').addEventListener('submit', function(e) {
             const t = qType.value;
